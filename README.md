@@ -8,3 +8,4 @@ This is a simple Angular starter template with some common configured items.
 - EsLint
 - Commit-lint
 - Husky(with commit lint and pretty quick)
+- TailwindCSS
