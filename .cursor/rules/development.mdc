@@ -1,0 +1,21 @@
+---
+description: This rule provides tools and library preferences focusing on package manager, module bundler, and linting.
+globs: **/*.html,**/*.scss,**/*.css,**/*.ts,**/*.js
+alwaysApply: true
+---
+# Development Best Practices
+
+This project's JavaScript/TypeScript codes adheres to clean, consistent, and maintainable code which reduces the risk of bugs and improves overall code quality.
+
+## ES-lint Configuration File
+
+* **Configuration File Location:** Always use the `eslint.config.mjs` file located at the root folder of this project.
+
+## Package Manager
+
+* **Package Manager Preference:** Always use `pnpm` as package manager.
+
+## Module Bundler
+
+* **Module Bundler Preference:** Always use `vite` as module bundler.
+
