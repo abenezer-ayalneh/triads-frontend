@@ -4,6 +4,7 @@ import tsEslint from 'typescript-eslint'
 import angular from 'angular-eslint'
 import simpleImportSort from 'eslint-plugin-simple-import-sort'
 import unusedImports from 'eslint-plugin-unused-imports'
+import stylistic from '@stylistic/eslint-plugin'
 
 export default tsEslint.config(
 	{
@@ -40,9 +41,13 @@ export default tsEslint.config(
 		plugins: {
 			'simple-import-sort': simpleImportSort,
 			'unused-imports': unusedImports,
+			'@stylistic': stylistic,
 		},
 		rules: {
-			'no-console': 'warn',
+			'@angular-eslint/template/interactive-supports-focus': 'off',
+			'@angular-eslint/template/click-events-have-key-events': 'off',
+			'@angular-eslint/component-class-suffix': 'off',
+			'@stylistic/lines-between-class-members': 'warn',
 			'simple-import-sort/imports': 'error',
 			'simple-import-sort/exports': 'error',
 			'no-unused-vars': 'off', // or "@typescript-eslint/no-unused-vars": "off",

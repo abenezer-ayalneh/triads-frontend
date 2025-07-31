@@ -1,0 +1,13 @@
+<div class="w-screen h-screen bg-neutral-900/50 flex justify-center items-center px-4 fixed z-50 inset-0 overflow-y-auto">
+	<form #usernameForm="ngForm" (ngSubmit)="onSubmit()" class="w-fit h-fit flex flex-col justify-start items-start gap-2 px-4 py-6 bg-base-100 rounded-lg">
+		<h3 class="text-lg font-bold">User info</h3>
+		<p>Hello stranger!</p>
+		<p>
+			I don't think we've met. Will you be happy to go by <span class="font-bold">{{ generatedUsername }}</span>? You can enter a different name in the
+			box below.
+		</p>
+		<input #usernameInput type="text" name="username" required minlength="3" [(ngModel)]="usernameModel" placeholder="Username" class="input" />
+		<br />
+		<button class="btn" [disabled]="usernameForm.form.invalid">Set username</button>
+	</form>
+</div>

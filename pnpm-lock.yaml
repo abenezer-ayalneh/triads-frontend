@@ -31,6 +31,9 @@ importers:
             '@angular/router':
                 specifier: ^20.1.2
                 version: 20.1.2(@angular/common@20.1.2(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1))(@angular/platform-browser@20.1.2(@angular/animations@20.1.2(@angular/common@20.1.2(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1)))(@angular/common@20.1.2(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1)))(rxjs@7.8.2)
+            '@ngrx/signals':
+                specifier: ^19.2.1
+                version: 19.2.1(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
             '@tailwindcss/postcss':
                 specifier: ^4.1.11
                 version: 4.1.11
@@ -71,6 +74,9 @@ importers:
             '@eslint/js':
                 specifier: ^9.31.0
                 version: 9.31.0
+            '@stylistic/eslint-plugin':
+                specifier: ^5.2.2
+                version: 5.2.2(eslint@9.31.0(jiti@2.4.2))
             '@types/jasmine':
                 specifier: ~5.1.8
                 version: 5.1.8
@@ -83,6 +89,9 @@ importers:
             angular-eslint:
                 specifier: 20.1.1
                 version: 20.1.1(chokidar@4.0.3)(eslint@9.31.0(jiti@2.4.2))(typescript-eslint@8.38.0(eslint@9.31.0(jiti@2.4.2))(typescript@5.8.3))(typescript@5.8.3)
+            daisyui:
+                specifier: ^5.0.47
+                version: 5.0.47
             eslint:
                 specifier: ^9.31.0
                 version: 9.31.0(jiti@2.4.2)
@@ -1595,6 +1604,15 @@ packages:
         resolution: { integrity: sha512-Sqih1YARrmMoHlXGgI9JrrgkzxcaaEso0AH+Y7j8NHonUs+xe4iDsgC3IBIDNdzEewbNpccNN6hip+b5vmyRLw== }
         engines: { node: '>= 10' }
 
+    '@ngrx/signals@19.2.1':
+        resolution: { integrity: sha512-Tajd2TVjkxxyFMhnMSWLa5pAWfynjP0VM0B/BCMaLiBrwBBxybxRVENoUDU5tGyiKSax/2tBJC3+sOglmxm27A== }
+        peerDependencies:
+            '@angular/core': ^19.0.0
+            rxjs: ^6.5.3 || ^7.4.0
+        peerDependenciesMeta:
+            rxjs:
+                optional: true
+
     '@ngtools/webpack@20.1.1':
         resolution: { integrity: sha512-HBF/bQyDjGlzv2uOXlwjrLFxdERynen7JuX3ZgI1vijc41aBX/nyMNa4MsKiOwNOQmpHGJU6qn6/gAN4DhocKQ== }
         engines: { node: ^20.19.0 || ^22.12.0 || >=24.0.0, npm: ^6.11.0 || ^7.5.6 || >=8.0.0, yarn: '>= 1.13.0' }
@@ -1875,6 +1893,12 @@ packages:
 
     '@socket.io/component-emitter@3.1.2':
         resolution: { integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA== }
+
+    '@stylistic/eslint-plugin@5.2.2':
+        resolution: { integrity: sha512-bE2DUjruqXlHYP3Q2Gpqiuj2bHq7/88FnuaS0FjeGGLCy+X6a07bGVuwtiOYnPSLHR6jmx5Bwdv+j7l8H+G97A== }
+        engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
+        peerDependencies:
+            eslint: '>=9.0.0'
 
     '@tailwindcss/node@4.1.11':
         resolution: { integrity: sha512-yzhzuGRmv5QyU9qLNg4GTlYI6STedBWRE7NjxP45CsFYYq9taI0zJXZBMqIC/c8fViNLhmrbpSFS57EoxUmD6Q== }
@@ -2656,6 +2680,9 @@ packages:
 
     custom-event@1.0.1:
         resolution: { integrity: sha512-GAj5FOq0Hd+RsCGVJxZuKaIDXDf3h6GQoNEjFgbLLI/trgtavwUbSnZ5pVfg27DVCaWjIohryS0JFwIJyT2cMg== }
+
+    daisyui@5.0.47:
+        resolution: { integrity: sha512-RuYjjVKpodDoOYAHIvG6qC3BeRxhlyj4JCO+6aV0VzK+i3RWD7cmICh0m5+Xfr5938mV0Mk7FUOQ00msz8H8dw== }
 
     dargs@8.1.0:
         resolution: { integrity: sha512-wAV9QHOsNbwnWdNW2FYvE1P56wtgSbM+3SZcdGiWQILwVjACCXDCI3Ai8QlCjMDB8YK5zySiXZYBiwGmNY3lnw== }
@@ -7207,6 +7234,13 @@ snapshots:
             '@napi-rs/nice-win32-x64-msvc': 1.0.4
         optional: true
 
+    '@ngrx/signals@19.2.1(@angular/core@20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)':
+        dependencies:
+            '@angular/core': 20.1.2(@angular/compiler@20.1.2)(rxjs@7.8.2)(zone.js@0.15.1)
+            tslib: 2.8.1
+        optionalDependencies:
+            rxjs: 7.8.2
+
     '@ngtools/webpack@20.1.1(@angular/compiler-cli@20.1.2(@angular/compiler@20.1.2)(typescript@5.8.3))(typescript@5.8.3)(webpack@5.99.9(esbuild@0.25.5))':
         dependencies:
             '@angular/compiler-cli': 20.1.2(@angular/compiler@20.1.2)(typescript@5.8.3)
@@ -7453,6 +7487,16 @@ snapshots:
             '@sigstore/protobuf-specs': 0.4.3
 
     '@socket.io/component-emitter@3.1.2': {}
+
+    '@stylistic/eslint-plugin@5.2.2(eslint@9.31.0(jiti@2.4.2))':
+        dependencies:
+            '@eslint-community/eslint-utils': 4.7.0(eslint@9.31.0(jiti@2.4.2))
+            '@typescript-eslint/types': 8.38.0
+            eslint: 9.31.0(jiti@2.4.2)
+            eslint-visitor-keys: 4.2.1
+            espree: 10.4.0
+            estraverse: 5.3.0
+            picomatch: 4.0.3
 
     '@tailwindcss/node@4.1.11':
         dependencies:
@@ -8385,6 +8429,8 @@ snapshots:
     cssesc@3.0.0: {}
 
     custom-event@1.0.1: {}
+
+    daisyui@5.0.47: {}
 
     dargs@8.1.0: {}
 

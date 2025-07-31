@@ -1,0 +1,7 @@
+<div class="w-full h-full">
+	@if (store.username()) {
+	<p>Hello {{ store.username() }}!</p>
+	} @else {
+	<app-user-info-dialog />
+	}
+</div>
