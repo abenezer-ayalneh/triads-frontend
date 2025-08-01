@@ -1,12 +1,14 @@
 import { Component, ElementRef, inject, model, OnInit, viewChild } from '@angular/core'
 import { FormsModule } from '@angular/forms'
+import { MatTooltip } from '@angular/material/tooltip'
+import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
 import { GlobalStore } from '../../../../state/global.store'
 import { UserInfoDialogService } from './user-info-dialog.service'
 
 @Component({
 	selector: 'app-user-info-dialog',
-	imports: [FormsModule],
+	imports: [FormsModule, LottieComponent, MatTooltip],
 	templateUrl: './user-info-dialog.html',
 	styleUrl: './user-info-dialog.scss',
 })
@@ -19,14 +21,22 @@ export class UserInfoDialog implements OnInit {
 
 	generatedUsername: string | null = null
 
+	infoButtonLottieAnimationOptions: AnimationOptions = {
+		path: '/lotties/how-to-play-lottie.json',
+	}
+
+	playButtonLottieAnimationOptions: AnimationOptions = {
+		path: '/lotties/play-button-lottie.json',
+	}
+
 	private readonly elementRef = inject(ElementRef)
 
 	private readonly userInfoDialogService = inject(UserInfoDialogService)
 
 	ngOnInit() {
 		document.body.appendChild(this.elementRef.nativeElement)
-		this.usernameInput().nativeElement.focus()
 		this.generateUsername()
+		this.usernameInput().nativeElement.focus()
 	}
 
 	onSubmit() {
@@ -35,6 +45,10 @@ export class UserInfoDialog implements OnInit {
 			this.userInfoDialogService.setUsername(username)
 			this.store.setUsername(username)
 		}
+	}
+
+	toggleHowToPlay() {
+		this.store.setShowHowToPlay(true)
 	}
 
 	private generateUsername() {

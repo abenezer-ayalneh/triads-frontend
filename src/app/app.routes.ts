@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router'
 
+import { usernameGuard } from './layouts/main-layout/guards/username-guard'
 import { MainLayout } from './layouts/main-layout/main-layout'
-import { BubblesPage } from './pages/bubbles/bubbles.page'
 import { GamePlay } from './pages/game-play/game-play'
 import { HomePage } from './pages/home/home.page'
 
@@ -11,17 +11,15 @@ export const routes: Routes = [
 		component: MainLayout,
 		children: [
 			{
-				path: '',
+				path: 'home',
 				component: HomePage,
 			},
 			{
 				path: 'play',
 				component: GamePlay,
+				canActivate: [usernameGuard],
 			},
-			{
-				path: 'bubbles',
-				component: BubblesPage,
-			},
+			{ path: '', redirectTo: 'home', pathMatch: 'full' },
 		],
 	},
 ]

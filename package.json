@@ -16,16 +16,19 @@
 	"private": true,
 	"dependencies": {
 		"@angular/animations": "^20.1.2",
+		"@angular/cdk": "20.1.4",
 		"@angular/common": "^20.1.2",
 		"@angular/compiler": "^20.1.2",
 		"@angular/core": "^20.1.2",
 		"@angular/forms": "^20.1.2",
+		"@angular/material": "20.1.4",
 		"@angular/platform-browser": "^20.1.2",
 		"@angular/platform-browser-dynamic": "^20.1.2",
 		"@angular/router": "^20.1.2",
 		"@ngrx/signals": "^19.2.1",
 		"@tailwindcss/postcss": "^4.1.11",
 		"lottie-web": "^5.13.0",
+		"ngx-lottie": "^20.0.0",
 		"postcss": "^8.5.6",
 		"rxjs": "~7.8.2",
 		"tailwindcss": "^4.1.11",
@@ -60,9 +63,15 @@
 		"karma-jasmine": "~5.1.0",
 		"karma-jasmine-html-reporter": "~2.1.0",
 		"lint-staged": "^16.1.2",
+		"msw": "^2.10.4",
 		"prettier": "^3.6.2",
 		"pretty-quick": "^4.2.2",
 		"typescript": "~5.8.3",
 		"typescript-eslint": "^8.38.0"
+	},
+	"msw": {
+		"workerDirectory": [
+			"public"
+		]
 	}
 }

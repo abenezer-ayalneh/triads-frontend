@@ -1,4 +1,4 @@
-import { patchState, signalStore, withMethods, withState } from '@ngrx/signals'
+import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals'
 
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 
@@ -18,4 +18,9 @@ export const GlobalStore = signalStore(
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
 		},
 	})),
+	withHooks({
+		onInit(store) {
+			store.setUsername(localStorage.getItem('username'))
+		},
+	}),
 )

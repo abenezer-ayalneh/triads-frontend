@@ -1,24 +1,10 @@
 import { CommonModule } from '@angular/common'
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core'
+import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, input, OnDestroy, OnInit, signal } from '@angular/core'
 import lottie, { AnimationItem } from 'lottie-web'
 
 import { GlobalStore } from '../../state/global.store'
-
-interface Bubble {
-	id: number
-	text: string
-	color: string
-	originalColor: string
-	x: number
-	y: number
-	vx: number
-	vy: number
-	radius: number
-	originalRadius: number // Store the original radius for deselection
-	opacity: number
-	isBursting: boolean
-	isSelected: boolean
-}
+import { CueGroup } from '../game-play/interfaces/cue.interface'
+import { Bubble } from './interfaces/bubble.interface'
 
 @Component({
 	selector: 'app-bubbles-page',
@@ -28,27 +14,21 @@ interface Bubble {
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
+	cueGroups = input.required<CueGroup[]>()
+
 	readonly store = inject(GlobalStore)
 
-	@ViewChild('bubblesContainer', { static: true }) bubblesContainer!: ElementRef<HTMLElement>
+	readonly bubblesContainer = inject(ElementRef)
 
 	private animationFrameId: number | null = null
 
 	private readonly bubbles = signal<Bubble[]>([])
 
-	private readonly turns = signal(3)
-
-	private readonly hints = signal(2)
+	readonly bubblesSignal = this.bubbles.asReadonly()
 
 	private lottieAnimations: AnimationItem[] = []
 
 	private resizeObserver: ResizeObserver | null = null
-
-	readonly bubblesSignal = this.bubbles.asReadonly()
-
-	readonly turnsSignal = this.turns.asReadonly()
-
-	readonly hintsSignal = this.hints.asReadonly()
 
 	private readonly gameWords = ['VOLLEYBALL', 'BOAT', 'KNOX', 'HOLD THE', 'RELENT', 'IS MORE', 'WORK', 'BREATH', 'HAIR']
 
@@ -63,6 +43,8 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		'#696969', // dark gray
 		'#556B2F', // dark green-gray
 	]
+
+	private resizeTimeout: ReturnType<typeof setTimeout> | undefined = undefined
 
 	ngOnInit(): void {
 		this.initializeBubbles()
@@ -81,21 +63,6 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		this.resizeTimeout = setTimeout(() => {
 			this.initializeBubbles()
 		}, 250)
-	}
-
-	private resizeTimeout: ReturnType<typeof setTimeout> | undefined = undefined
-
-	private setupResizeObserver(): void {
-		if (this.bubblesContainer?.nativeElement && 'ResizeObserver' in window) {
-			this.resizeObserver = new ResizeObserver(() => {
-				// Debounce resize observer events
-				clearTimeout(this.resizeTimeout)
-				this.resizeTimeout = setTimeout(() => {
-					this.initializeBubbles()
-				}, 250)
-			})
-			this.resizeObserver.observe(this.bubblesContainer.nativeElement)
-		}
 	}
 
 	ngOnDestroy(): void {
@@ -118,8 +85,105 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		})
 	}
 
+	onBubbleClick(bubble: Bubble): void {
+		if (bubble.isBursting) return
+
+		const currentBubbles = this.bubbles()
+		const selectedBubbles = currentBubbles.filter((b) => b.isSelected && !b.isBursting)
+		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
+
+		if (bubble.isSelected) {
+			// Deselect the bubble - return to original size
+			const updatedBubbles = currentBubbles.map((b) =>
+				b.id === bubble.id
+					? {
+							...b,
+							isSelected: false,
+							color: b.originalColor,
+							radius: b.originalRadius, // Use the stored original radius
+						}
+					: b,
+			)
+			this.bubbles.set(updatedBubbles)
+
+			// Restart Lottie animation for deselected bubble
+			if (this.lottieAnimations[bubble.id]) {
+				this.lottieAnimations[bubble.id].play()
+			}
+		} else {
+			// Check if we can select more bubbles (max 3)
+			if (selectedBubbles.length >= 3) {
+				return // Don't allow selection of 4th bubble
+			}
+
+			// Select the bubble - scale up by 50% with responsive scaling
+			let maxRadius = Math.min(containerWidth, containerHeight) * 0.15
+			if (containerWidth < 768) {
+				maxRadius = Math.min(containerWidth, containerHeight) * 0.18 // Allow slightly larger on tablets
+			}
+			if (containerWidth < 480) {
+				maxRadius = Math.min(containerWidth, containerHeight) * 0.2 // Allow even larger on mobile
+			}
+
+			// Calculate responsive scaling factor based on screen size
+			let scaleFactor = 1.5 // Default 50% increase
+			if (containerWidth < 768) {
+				scaleFactor = 1.3 // 30% increase on tablets
+			}
+			if (containerWidth < 480) {
+				scaleFactor = 1.2 // 20% increase on mobile
+			}
+
+			// Ensure the selected radius is at least 20% larger than original
+			const minSelectedRadius = bubble.originalRadius * 1.2
+			const calculatedSelectedRadius = bubble.originalRadius * scaleFactor
+			const selectedRadius = Math.max(minSelectedRadius, Math.min(calculatedSelectedRadius, maxRadius))
+
+			const updatedBubbles = currentBubbles.map((b) =>
+				b.id === bubble.id
+					? {
+							...b,
+							isSelected: true,
+							color: '#FFFFFF', // White background
+							radius: selectedRadius,
+						}
+					: b,
+			)
+			this.bubbles.set(updatedBubbles)
+
+			// Pause Lottie animation for selected bubble
+			if (this.lottieAnimations[bubble.id]) {
+				this.lottieAnimations[bubble.id].pause()
+			}
+		}
+	}
+
+	getBubbleStyle(bubble: Bubble): Record<string, string> {
+		return {
+			left: `${bubble.x - bubble.radius}px`,
+			top: `${bubble.y - bubble.radius}px`,
+			width: `${bubble.radius * 2}px`,
+			height: `${bubble.radius * 2}px`,
+			opacity: bubble.opacity.toString(),
+			transition: 'all 0.2s ease',
+		}
+	}
+
+	private setupResizeObserver(): void {
+		if (this.bubblesContainer.nativeElement && 'ResizeObserver' in window) {
+			this.resizeObserver = new ResizeObserver(() => {
+				// Debounce resize observer events
+				clearTimeout(this.resizeTimeout)
+				this.resizeTimeout = setTimeout(() => {
+					this.initializeBubbles()
+				}, 250)
+			})
+			this.resizeObserver.observe(this.bubblesContainer.nativeElement)
+		}
+	}
+
 	private getContainerDimensions(): { width: number; height: number } {
-		if (this.bubblesContainer?.nativeElement) {
+		if (this.bubblesContainer.nativeElement) {
 			const rect = this.bubblesContainer.nativeElement.getBoundingClientRect()
 			return {
 				width: rect.width,
@@ -197,24 +261,26 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			y: Math.max(uniformRadius, Math.min(containerHeight - uniformRadius, pos.y)),
 		}))
 
-		this.gameWords.forEach((word, index) => {
-			if (index < adjustedPositions.length) {
-				newBubbles.push({
-					id: index,
-					text: word,
-					color: this.bubbleColors[index],
-					originalColor: this.bubbleColors[index],
-					x: adjustedPositions[index].x,
-					y: adjustedPositions[index].y,
-					vx: (Math.random() - 0.5) * 0.8, // Reduced speed
-					vy: (Math.random() - 0.5) * 0.8, // Reduced speed
-					radius: uniformRadius,
-					originalRadius: uniformRadius, // Store the original radius
-					opacity: 1,
-					isBursting: false,
-					isSelected: false,
-				})
-			}
+		this.cueGroups().forEach((cueGroup, index) => {
+			cueGroup.cues.forEach((cue) => {
+				if (index < adjustedPositions.length) {
+					newBubbles.push({
+						id: cue.id,
+						text: cue.name,
+						color: this.bubbleColors[index],
+						originalColor: this.bubbleColors[index],
+						x: adjustedPositions[index].x,
+						y: adjustedPositions[index].y,
+						vx: (Math.random() - 0.5) * 0.8, // Reduced speed
+						vy: (Math.random() - 0.5) * 0.8, // Reduced speed
+						radius: uniformRadius,
+						originalRadius: uniformRadius, // Store the original radius
+						opacity: 1,
+						isBursting: false,
+						isSelected: false,
+					})
+				}
+			})
 		})
 
 		this.bubbles.set(newBubbles)
@@ -439,89 +505,5 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		}
 
 		return updatedBubbles
-	}
-
-	onBubbleClick(bubble: Bubble): void {
-		if (bubble.isBursting) return
-
-		const currentBubbles = this.bubbles()
-		const selectedBubbles = currentBubbles.filter((b) => b.isSelected && !b.isBursting)
-		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
-
-		if (bubble.isSelected) {
-			// Deselect the bubble - return to original size
-			const updatedBubbles = currentBubbles.map((b) =>
-				b.id === bubble.id
-					? {
-							...b,
-							isSelected: false,
-							color: b.originalColor,
-							radius: b.originalRadius, // Use the stored original radius
-						}
-					: b,
-			)
-			this.bubbles.set(updatedBubbles)
-
-			// Restart Lottie animation for deselected bubble
-			if (this.lottieAnimations[bubble.id]) {
-				this.lottieAnimations[bubble.id].play()
-			}
-		} else {
-			// Check if we can select more bubbles (max 3)
-			if (selectedBubbles.length >= 3) {
-				return // Don't allow selection of 4th bubble
-			}
-
-			// Select the bubble - scale up by 50% with responsive scaling
-			let maxRadius = Math.min(containerWidth, containerHeight) * 0.15
-			if (containerWidth < 768) {
-				maxRadius = Math.min(containerWidth, containerHeight) * 0.18 // Allow slightly larger on tablets
-			}
-			if (containerWidth < 480) {
-				maxRadius = Math.min(containerWidth, containerHeight) * 0.2 // Allow even larger on mobile
-			}
-
-			// Calculate responsive scaling factor based on screen size
-			let scaleFactor = 1.5 // Default 50% increase
-			if (containerWidth < 768) {
-				scaleFactor = 1.3 // 30% increase on tablets
-			}
-			if (containerWidth < 480) {
-				scaleFactor = 1.2 // 20% increase on mobile
-			}
-
-			// Ensure the selected radius is at least 20% larger than original
-			const minSelectedRadius = bubble.originalRadius * 1.2
-			const calculatedSelectedRadius = bubble.originalRadius * scaleFactor
-			const selectedRadius = Math.max(minSelectedRadius, Math.min(calculatedSelectedRadius, maxRadius))
-
-			const updatedBubbles = currentBubbles.map((b) =>
-				b.id === bubble.id
-					? {
-							...b,
-							isSelected: true,
-							color: '#FFFFFF', // White background
-							radius: selectedRadius,
-						}
-					: b,
-			)
-			this.bubbles.set(updatedBubbles)
-
-			// Pause Lottie animation for selected bubble
-			if (this.lottieAnimations[bubble.id]) {
-				this.lottieAnimations[bubble.id].pause()
-			}
-		}
-	}
-
-	getBubbleStyle(bubble: Bubble): Record<string, string> {
-		return {
-			left: `${bubble.x - bubble.radius}px`,
-			top: `${bubble.y - bubble.radius}px`,
-			width: `${bubble.radius * 2}px`,
-			height: `${bubble.radius * 2}px`,
-			opacity: bubble.opacity.toString(),
-			transition: 'all 0.2s ease',
-		}
 	}
 }
