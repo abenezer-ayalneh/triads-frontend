@@ -1,6 +1,8 @@
 <div class="w-full h-full">
 	@if (store.username()) {
-	<p>Hello {{ store.username() }}!</p>
+	<div class="w-full h-full flex justify-center items-center">
+		<a routerLink="play" class="w-80 triad-gradient btn btn-lg border-none text-primary-content">Play Triads</a>
+	</div>
 	} @else {
 	<app-user-info-dialog />
 	}

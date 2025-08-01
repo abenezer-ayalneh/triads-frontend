@@ -1,6 +1,5 @@
 ---
 description: This rule provides tools and library preferences focusing on package manager, module bundler, and linting.
-globs: **/*.html,**/*.scss,**/*.css,**/*.ts,**/*.js
 alwaysApply: true
 ---
 # Development Best Practices
@@ -19,3 +18,89 @@ This project's JavaScript/TypeScript codes adheres to clean, consistent, and mai
 
 * **Module Bundler Preference:** Always use `vite` as module bundler.
 
+## File and Folder Structure
+
+* **Components and Related Files**: Always use the folder structure below when creating new layouts, pages, components, NgRx states, interceptors, pipes, interfaces, constants.
+
+├── src
+│   ├── app
+│   │   ├── app.config.ts
+│   │   ├── app.html
+│   │   ├── app.routes.ts
+│   │   ├── app.scss
+│   │   ├── app.service.spec.ts
+│   │   ├── app.service.ts
+│   │   ├── app.spec.ts
+│   │   ├── app.ts
+│   │   ├── layouts
+│   │   │   └── main-layout
+│   │   │       ├── main-layout.component.html
+│   │   │       ├── main-layout.component.scss
+│   │   │       ├── main-layout.component.spec.ts
+│   │   │       └── main-layout.component.ts
+│   │   ├── pages
+│   │   │   ├── coin-list
+│   │   │   │   ├── coin-list.component.html
+│   │   │   │   ├── coin-list.component.scss
+│   │   │   │   └── coin-list.component.ts
+│   │   │   ├── home
+│   │   │   │   ├── home-api.spec.ts
+│   │   │   │   ├── home-api.ts
+│   │   │   │   ├── home.html
+│   │   │   │   ├── home.scss
+│   │   │   │   ├── home.spec.ts
+│   │   │   │   └── home.ts
+│   │   │   └── login
+│   │   │       ├── auth.service.spec.ts
+│   │   │       ├── auth.service.ts
+│   │   │       ├── guards
+│   │   │       │   ├── auth.guard.spec.ts
+│   │   │       │   └── auth.guard.ts
+│   │   │       ├── login.component.html
+│   │   │       ├── login.component.scss
+│   │   │       ├── login.component.spec.ts
+│   │   │       ├── login.component.ts
+│   │   │       └── types
+│   │   │           ├── login-request.type.ts
+│   │   │           └── login-response.type.ts
+│   │   └── shared
+│   │       ├── components
+│   │       │   ├── form-error-message
+│   │       │   │   ├── form-error-message.component.html
+│   │       │   │   ├── form-error-message.component.scss
+│   │       │   │   ├── form-error-message.component.spec.ts
+│   │       │   │   └── form-error-message.component.ts
+│   │       │   ├── notification-settings
+│   │       │   │   └── notification-settings.component.ts
+│   │       │   └── signal-badge
+│   │       │       └── signal-badge.component.ts
+│   │       ├── constants
+│   │       │   └── global.constant.ts
+│   │       ├── enums
+│   │       │   ├── request-state.enum.ts
+│   │       │   └── signal.enum.ts
+│   │       ├── interceptors
+│   │       │   ├── access-token.interceptor.spec.ts
+│   │       │   ├── access-token.interceptor.ts
+│   │       │   ├── base-url.interceptor.spec.ts
+│   │       │   ├── base-url.interceptor.ts
+│   │       │   ├── http-error.interceptor.spec.ts
+│   │       │   └── http-error.interceptor.ts
+│   │       ├── interfaces
+│   │       │   ├── binance-coin.interface.ts
+│   │       │   ├── coin.interface.ts
+│   │       │   ├── indicator-data.interface.ts
+│   │       │   ├── signal-result.interface.ts
+│   │       │   ├── socket.interface.ts
+│   │       │   └── user-preference.interface.ts
+│   │       └── services
+│   │           ├── api.service.ts
+│   │           ├── socket.service.spec.ts
+│   │           └── socket.service.ts
+│   ├── environments
+│   │   ├── environment.prod.ts
+│   │   └── environment.ts
+│   ├── index.html
+│   ├── main.ts
+│   ├── styles.css
+│   └── styles.scss

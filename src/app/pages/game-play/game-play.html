@@ -1,0 +1,30 @@
+<div class="w-full h-full flex flex-col">
+	<!--Ballons Section-->
+	<div class="w-full grow px-2 py-6 overflow-hidden">
+		<app-bubbles-page />
+	</div>
+
+	<!--Health & Hint Section-->
+	<div class="w-full h-fit flex justify-between items-center px-4 py-2">
+		<!--Health-->
+		<div
+			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-6 py-2 rounded-lg bg-neutral/30 backdrop-blur-sm">
+			<p class="text-base-300 text-lg font-semibold">Turns</p>
+			<div class="w-full flex justify-center items-center gap-1">
+				<span class="w-6 h-6 bg-error heart"></span>
+				<span class="w-6 h-6 bg-base-300/50 heart"></span>
+				<span class="w-6 h-6 bg-base-300/50 heart"></span>
+			</div>
+		</div>
+
+		<!--Hint-->
+		<div
+			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-6 py-2 rounded-lg bg-neutral/30 backdrop-blur-sm">
+			<p class="text-base-300 text-lg font-semibold">Hints</p>
+			<div class="w-full flex justify-center items-center gap-1">
+				<span class="w-6 h-6 circle"><img src="images/lifesaver.svg" alt="hint" /></span>
+				<span class="w-6 h-6 bg-base-100/20 circle"></span>
+			</div>
+		</div>
+	</div>
+</div>

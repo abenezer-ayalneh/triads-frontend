@@ -1,7 +1,7 @@
 ---
 description: This rule provides comprehensive best practices and coding standards for Angular development, focusing on modern TypeScript, standalone components, signals, and performance optimizations.
-globs: **/*.html,**/*.scss,**/*.css,**/*.ts,**/*.js
-alwaysApply: true
+globs: *.html,*.scss,*.css,*.ts
+alwaysApply: false
 ---
 # Angular Best Practices
 
@@ -138,3 +138,5 @@ This project adheres to modern Angular best practices, emphasizing maintainabili
 ## Styles
 
 * **TailwindCSS:** Use TailwindCSS instead of `css` or `scss` styles. When it is not possible to use TailwindCSS, resort to `scss`.
+* **Responsiveness:** Always consider the application is being made for mobile, tablets, and desktop devices and always make the styles responsive.
+* **Loading:** Whenever there is an asynchronous action make sure you add a loading animation in the appropriate place and appropriate size

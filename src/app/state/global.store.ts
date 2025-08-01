@@ -4,6 +4,7 @@ import { GlobalState } from '../shared/interfaces/global-state.interface'
 
 const initialState: GlobalState = {
 	username: null,
+	showHowToPlay: false,
 }
 
 export const GlobalStore = signalStore(
@@ -12,6 +13,9 @@ export const GlobalStore = signalStore(
 	withMethods((store) => ({
 		setUsername: (username: string | null) => {
 			patchState(store, (state) => ({ ...state, username }))
+		},
+		setShowHowToPlay: (value: boolean) => {
+			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
 		},
 	})),
 )

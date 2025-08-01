@@ -37,6 +37,9 @@ importers:
             '@tailwindcss/postcss':
                 specifier: ^4.1.11
                 version: 4.1.11
+            lottie-web:
+                specifier: ^5.13.0
+                version: 5.13.0
             postcss:
                 specifier: ^8.5.6
                 version: 8.5.6
@@ -4004,6 +4007,9 @@ packages:
     log4js@6.9.1:
         resolution: { integrity: sha512-1somDdy9sChrr9/f4UlzhdaGfDR2c/SaD2a4T7qEkG4jTS57/B3qmnjLYePwQ8cqWnUHZI0iAKxMBpCZICiZ2g== }
         engines: { node: '>=8.0' }
+
+    lottie-web@5.13.0:
+        resolution: { integrity: sha512-+gfBXl6sxXMPe8tKQm7qzLnUy5DUPJPKIyRHwtpCpyUEYjHYRJC/5gjUvdkuO2c3JllrPtHXH5UJJK8LRYl5yQ== }
 
     lru-cache@10.4.3:
         resolution: { integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ== }
@@ -9913,6 +9919,8 @@ snapshots:
             streamroller: 3.1.5
         transitivePeerDependencies:
             - supports-color
+
+    lottie-web@5.13.0: {}
 
     lru-cache@10.4.3: {}
 

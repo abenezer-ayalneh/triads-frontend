@@ -1,0 +1,84 @@
+Here is a detailed text file generated from the provided PDF, formatted to be ready for consumption by a code-generation AI like Cursor.
+
+***
+
+# Project: Triads Game Specification
+
+## 1.0 Core Concept
+
+[cite_start]Triads is a single-player, untimed word puzzle game[cite: 2]. [cite_start]The objective is to identify sets of three "CUE" words that share a common "KEY" word[cite: 6, 19]. [cite_start]The game progresses through three initial puzzles to unlock a final challenge, with the ultimate goal of solving all four[cite: 20, 34, 35]. [cite_start]The game should be smooth and error-free on all modern browsers and mobile devices (Apple and Android), with a layout that adapts from landscape to portrait as needed[cite: 8, 10].
+
+## 2.0 Gameplay Loop
+
+1.  [cite_start]**Initial State**: The game presents the player with 9 "CUE" words, each contained within a floating bubble[cite: 19, 69].
+2.  [cite_start]**Find a Triad**: The player selects three CUE words that share a common KEYword[cite: 19].
+3.  [cite_start]**Solve the Triad**: The player inputs their guess for the KEYword[cite: 93].
+4.  [cite_start]**Repeat**: The player repeats this process to solve a second and a third Triad[cite: 20].
+5.  [cite_start]**Final Challenge**: The three KEYwords discovered from the first three Triads become the new CUE words for a final, fourth Triad challenge[cite: 20, 34, 109, 110].
+6.  [cite_start]**Win Condition**: The player wins the game by solving all four Triads[cite: 35].
+7.  [cite_start]**Lose Condition**: The player loses if they accumulate three "strikes"[cite: 35]. [cite_start]A strike is defined as a wrong guess or the use of a clue[cite: 36].
+
+## 3.0 User Flow and Screens
+
+### 3.1 New Player Onboarding (Splash Screen)
+
+[cite_start]For first-time players, a landing page will be displayed[cite: 11].
+* [cite_start]**Title**: "Welcome to Triads! Easy to learn, hard to quit." [cite: 14]
+* [cite_start]**Name Input**: An input field for the player to provide a game name is required[cite: 15, 38].
+* [cite_start]**Directions**: The player must first click on "QuickStart Directions"[cite: 16, 17, 39]. [cite_start]This will reveal the game rules and examples[cite: 19, 20, 21, 31, 34, 35, 36].
+* [cite_start]**Start Button**: After clicking the directions, the "Got it! Let's get going" button (represented by a GO arrow) will change from a dimmed/inactive state to an active state, allowing the player to begin[cite: 18, 39].
+
+### 3.2 Returning Player Flow
+
+* [cite_start]The game will use cookies to recognize returning players[cite: 13, 40].
+* [cite_start]Returning players will bypass the onboarding splash screen and be taken directly to a screen with a "READY TO PLAY?" prompt[cite: 40, 41].
+
+## 4.0 Graphics and Animation
+
+[cite_start]The game will use a "bubbles" theme instead of the previous "balloons" theme[cite: 57, 67]. [cite_start]The background should be an attractive, possibly animated image of water and bubbles[cite: 43, 68].
+
+### 4.1 CUE Bubble Behavior
+
+* [cite_start]**Appearance**: The 9 CUE words are displayed inside colorful bubbles[cite: 69].
+* [cite_start]**Entry Animation**: Bubbles should rise from different, random places at the bottom of the screen[cite: 70].
+* **Ambient Motion**:
+    * [cite_start]Bubbles should "shimmy in place just a tiny bit" while floating[cite: 72].
+    * [cite_start]Bubbles should gently bump into one another as they rise, suggesting a physics-based interaction[cite: 71].
+
+### 4.2 Player Interaction Animations
+
+* [cite_start]**Selection**: When a player clicks on a CUE bubble, it must "light up," pulse, or otherwise become visually prominent to indicate it has been selected[cite: 92].
+* **Guessing**:
+    * [cite_start]When exactly three bubbles are selected, a text input field for the solution appears at the center bottom of the screen[cite: 93, 100]. [cite_start]A maximum of three bubbles can be selected at once[cite: 93].
+    * [cite_start]If the player unclicks one of the three selected bubbles, the solution text field disappears[cite: 98]. [cite_start]A "Cancel" or "Undo" button may be necessary[cite: 99].
+    * [cite_start]If the guess is incorrect, a "TRY AGAIN" message is shown[cite: 101].
+
+### 4.3 Solving a Triad Animation
+
+* [cite_start]**Bursting**: When a Triad is correctly solved, the three corresponding CUE word bubbles must burst with a "pop" sound effect[cite: 58, 105, 107]. [cite_start]This animation is considered important and potentially challenging to create[cite: 107, 108].
+* [cite_start]**KEYword Descent**: After the bubbles burst, the three solved CUE words/phrases should visually descend to a collection area at the bottom of the screen (e.g., a "stack, a box, a pile")[cite: 59, 105].
+
+### 4.4 Final Challenge Animation
+
+* [cite_start]**KEYword Ascent**: After the third Triad is solved, the three collected KEYwords will ascend from their stack at the bottom to become three new CUE bubbles for the final challenge[cite: 59, 66, 110].
+
+## 5.0 UI Elements on Main Game Screen
+
+* [cite_start]**Turns Counter**: Displays the number of turns remaining (3, 2, 1), with the current number highlighted[cite: 84].
+* [cite_start]**Hints Counter**: Displays remaining hints as life preserver icons (starts at 2)[cite: 91].
+* **Profile Icon**: A dropdown that shows the player's name, number of games played, date first played, and cumulative score.
+* **Directions Icon**: A dropdown containing game directions and other information.
+
+## 6.0 Database and Content Logic
+
+[cite_start]The game will be powered by a database of word sets[cite: 123, 211].
+
+* **Structure**: The database is composed of 4-line sets. [cite_start]Each game randomly selects one 4-line set[cite: 215].
+* **Data Format**: Within each set:
+    * [cite_start]The first column contains the KEY word[cite: 213].
+    * [cite_start]The next three columns contain the full CUE word phrase (CUE + KEY)[cite: 213].
+* [cite_start]**Parsing Logic**: The code must parse these strings to show only the CUE portion in the bubbles[cite: 216].
+    * [cite_start]*Example*: For a line with KEY "PAY" and CUE phrases "PAYPAL", "PAY GRADE", "PAY PHONE", the bubbles should display "PAL", "GRADE", and "PHONE"[cite: 214, 217].
+* **Game Progression**:
+    * [cite_start]The first three lines of the selected set provide the three initial Triads[cite: 217].
+    * [cite_start]The KEYwords from these first three lines become the CUE words for the final challenge, which is derived from the fourth line of the set[cite: 218].
