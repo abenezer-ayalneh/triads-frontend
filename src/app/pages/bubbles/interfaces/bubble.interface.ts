@@ -1,5 +1,8 @@
 export interface Bubble {
 	id: number
+	cueId: number
+	cueWord: string
+	commonWordId: number
 	text: string
 	color: string
 	originalColor: string

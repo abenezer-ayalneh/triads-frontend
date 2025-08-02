@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, input, OnDestroy, OnInit, signal } from '@angular/core'
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, input, OnDestroy, OnInit } from '@angular/core'
 import lottie, { AnimationItem } from 'lottie-web'
 
 import { GlobalStore } from '../../state/global.store'
@@ -16,21 +16,22 @@ import { Bubble } from './interfaces/bubble.interface'
 export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	cueGroups = input.required<CueGroup[]>()
 
+	private readonly gameWords = computed(() =>
+		this.cueGroups()
+			.map((cueGroup) => cueGroup.cues)
+			.map((cue) => cue.map((cue) => cue.word))
+			.flat(),
+	)
+
 	readonly store = inject(GlobalStore)
 
 	readonly bubblesContainer = inject(ElementRef)
 
 	private animationFrameId: number | null = null
 
-	private readonly bubbles = signal<Bubble[]>([])
-
-	readonly bubblesSignal = this.bubbles.asReadonly()
-
 	private lottieAnimations: AnimationItem[] = []
 
 	private resizeObserver: ResizeObserver | null = null
-
-	private readonly gameWords = ['VOLLEYBALL', 'BOAT', 'KNOX', 'HOLD THE', 'RELENT', 'IS MORE', 'WORK', 'BREATH', 'HAIR']
 
 	private readonly bubbleColors = [
 		'#D4A574', // light brown/bronze
@@ -85,17 +86,17 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		})
 	}
 
-	onBubbleClick(bubble: Bubble): void {
-		if (bubble.isBursting) return
+	onBubbleClick(chosenBubble: Bubble): void {
+		if (chosenBubble.isBursting) return
 
-		const currentBubbles = this.bubbles()
+		const currentBubbles = this.store.bubbles()
 		const selectedBubbles = currentBubbles.filter((b) => b.isSelected && !b.isBursting)
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
-		if (bubble.isSelected) {
+		if (chosenBubble.isSelected) {
 			// Deselect the bubble - return to original size
 			const updatedBubbles = currentBubbles.map((b) =>
-				b.id === bubble.id
+				b.id === chosenBubble.id
 					? {
 							...b,
 							isSelected: false,
@@ -104,11 +105,11 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						}
 					: b,
 			)
-			this.bubbles.set(updatedBubbles)
+			this.store.setBubbles(updatedBubbles)
 
 			// Restart Lottie animation for deselected bubble
-			if (this.lottieAnimations[bubble.id]) {
-				this.lottieAnimations[bubble.id].play()
+			if (this.lottieAnimations[chosenBubble.id]) {
+				this.lottieAnimations[chosenBubble.id].play()
 			}
 		} else {
 			// Check if we can select more bubbles (max 3)
@@ -135,12 +136,12 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			}
 
 			// Ensure the selected radius is at least 20% larger than original
-			const minSelectedRadius = bubble.originalRadius * 1.2
-			const calculatedSelectedRadius = bubble.originalRadius * scaleFactor
+			const minSelectedRadius = chosenBubble.originalRadius * 1.2
+			const calculatedSelectedRadius = chosenBubble.originalRadius * scaleFactor
 			const selectedRadius = Math.max(minSelectedRadius, Math.min(calculatedSelectedRadius, maxRadius))
 
 			const updatedBubbles = currentBubbles.map((b) =>
-				b.id === bubble.id
+				b.id === chosenBubble.id
 					? {
 							...b,
 							isSelected: true,
@@ -149,11 +150,11 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						}
 					: b,
 			)
-			this.bubbles.set(updatedBubbles)
+			this.store.setBubbles(updatedBubbles)
 
 			// Pause Lottie animation for selected bubble
-			if (this.lottieAnimations[bubble.id]) {
-				this.lottieAnimations[bubble.id].pause()
+			if (this.lottieAnimations[chosenBubble.id]) {
+				this.lottieAnimations[chosenBubble.id].pause()
 			}
 		}
 	}
@@ -211,7 +212,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 		// Find the largest possible size for all bubbles with responsive sizing
 		let maxRadius = 0
-		this.gameWords.forEach((word) => {
+		this.gameWords().forEach((word) => {
 			const textLength = word.length
 			// Adjust text radius calculation based on screen size
 			let textRadius = Math.max(60, textLength * 10)
@@ -266,7 +267,10 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 				if (index < adjustedPositions.length) {
 					newBubbles.push({
 						id: cue.id,
-						text: cue.name,
+						cueId: cue.id,
+						cueWord: cue.word,
+						commonWordId: cueGroup.id,
+						text: cue.word,
 						color: this.bubbleColors[index],
 						originalColor: this.bubbleColors[index],
 						x: adjustedPositions[index].x,
@@ -283,7 +287,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			})
 		})
 
-		this.bubbles.set(newBubbles)
+		this.store.setBubbles(newBubbles)
 	}
 
 	private startAnimation(): void {
@@ -295,7 +299,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private updateBubbles(): void {
-		const currentBubbles = this.bubbles()
+		const currentBubbles = this.store.bubbles()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 		const updatedBubbles = currentBubbles.map((bubble) => {
 			if (bubble.isBursting) {
@@ -337,7 +341,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		// Apply gentle restoration to diamond structure
 		const bubblesWithRestoration = this.restoreDiamondStructure(bubblesWithCollisions, containerWidth, containerHeight)
 
-		this.bubbles.set(bubblesWithRestoration)
+		this.store.setBubbles(bubblesWithRestoration)
 	}
 
 	private restoreDiamondStructure(bubbles: Bubble[], containerWidth: number, containerHeight: number): Bubble[] {
@@ -404,14 +408,13 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			bubbleElements.forEach((element, index) => {
 				const lottieContainer = element.querySelector('.lottie-container') as HTMLElement
 				if (lottieContainer) {
-					const animation = lottie.loadAnimation({
+					this.lottieAnimations[index] = lottie.loadAnimation({
 						container: lottieContainer,
 						renderer: 'svg',
 						loop: true,
 						autoplay: true,
 						path: '/lotties/bubble-lottie.json',
 					})
-					this.lottieAnimations[index] = animation
 				}
 			})
 		}, 100)

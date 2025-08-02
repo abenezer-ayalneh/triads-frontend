@@ -11,9 +11,9 @@ import { GlobalStore } from '../../state/global.store'
 	styleUrl: './main-layout.scss',
 })
 export class MainLayout {
-	protected readonly store = inject(GlobalStore)
+	readonly store = inject(GlobalStore)
 
-	toggleHowToPlay() {
+	showHowToPlay() {
 		this.store.setShowHowToPlay(true)
 	}
 }

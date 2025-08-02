@@ -1,4 +1,3 @@
-import { JsonPipe } from '@angular/common'
 import { Component, inject, OnInit } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { RouterLink } from '@angular/router'
@@ -9,7 +8,7 @@ import { UserInfoDialogService } from './components/user-info-dialog/user-info-d
 
 @Component({
 	selector: 'app-home',
-	imports: [FormsModule, UserInfoDialog, RouterLink, JsonPipe],
+	imports: [FormsModule, UserInfoDialog, RouterLink],
 	templateUrl: './home.page.html',
 	styleUrl: './home.page.scss',
 })

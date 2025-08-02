@@ -12,4 +12,8 @@ export class GamePlayApi {
 	getCues() {
 		return this.httpClient.get<CueGroup[]>('cues')
 	}
+
+	checkAnswer(answer: string) {
+		return this.httpClient.post<boolean>('answer', { answer })
+	}
 }

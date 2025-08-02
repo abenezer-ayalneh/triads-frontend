@@ -1,10 +1,10 @@
 export interface CueGroup {
 	id: number
-	common: string
+	commonWord: string
 	cues: Cue[]
 }
 
 export interface Cue {
 	id: number
-	name: string
+	word: string
 }

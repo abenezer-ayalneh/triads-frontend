@@ -10,31 +10,35 @@ export const handlers = [
 		return HttpResponse.json<CueGroup[]>([
 			{
 				id: 532,
-				common: 'WINNER',
+				commonWord: 'WINNER',
 				cues: [
-					{ id: 1, name: 'PRIZE' },
-					{ id: 2, name: 'OSCAR' },
-					{ id: 3, name: 'BREAD' },
+					{ id: 1, word: 'PRIZE' },
+					{ id: 2, word: 'OSCAR' },
+					{ id: 3, word: 'BREAD' },
 				],
 			},
 			{
 				id: 500,
-				common: 'PIANO',
+				commonWord: 'PIANO',
 				cues: [
-					{ id: 4, name: 'UPRIGHT' },
-					{ id: 5, name: 'TUNER' },
-					{ id: 6, name: 'KEYS' },
+					{ id: 4, word: 'UPRIGHT' },
+					{ id: 5, word: 'TUNER' },
+					{ id: 6, word: 'KEYS' },
 				],
 			},
 			{
 				id: 391,
-				common: 'SLAP',
+				commonWord: 'SLAP',
 				cues: [
-					{ id: 7, name: 'STICK' },
-					{ id: 8, name: 'IN THE FACE' },
-					{ id: 9, name: 'HAPPY' },
+					{ id: 7, word: 'STICK' },
+					{ id: 8, word: 'IN THE FACE' },
+					{ id: 9, word: 'HAPPY' },
 				],
 			},
 		])
+	}),
+	http.post<{ answer: string }>(`${API_URL}/answer`, async ({ request }) => {
+		const requestBody = await request.clone().json()
+		return HttpResponse.json<boolean>(requestBody.answer === 'c')
 	}),
 ]
