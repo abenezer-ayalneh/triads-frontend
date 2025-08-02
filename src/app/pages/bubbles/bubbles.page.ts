@@ -90,20 +90,20 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		if (chosenBubble.isBursting) return
 
 		const currentBubbles = this.store.bubbles()
-		const selectedBubbles = currentBubbles.filter((b) => b.isSelected && !b.isBursting)
+		const selectedBubbles = currentBubbles.filter((bubble) => bubble.isSelected && !bubble.isBursting)
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
 		if (chosenBubble.isSelected) {
 			// Deselect the bubble - return to original size
-			const updatedBubbles = currentBubbles.map((b) =>
-				b.id === chosenBubble.id
+			const updatedBubbles = currentBubbles.map((bubble) =>
+				bubble.id === chosenBubble.id
 					? {
-							...b,
+							...bubble,
 							isSelected: false,
-							color: b.originalColor,
-							radius: b.originalRadius, // Use the stored original radius
+							color: bubble.originalColor,
+							radius: bubble.originalRadius, // Use the stored original radius
 						}
-					: b,
+					: bubble,
 			)
 			this.store.setBubbles(updatedBubbles)
 
@@ -140,15 +140,15 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			const calculatedSelectedRadius = chosenBubble.originalRadius * scaleFactor
 			const selectedRadius = Math.max(minSelectedRadius, Math.min(calculatedSelectedRadius, maxRadius))
 
-			const updatedBubbles = currentBubbles.map((b) =>
-				b.id === chosenBubble.id
+			const updatedBubbles = currentBubbles.map((bubble) =>
+				bubble.id === chosenBubble.id
 					? {
-							...b,
+							...bubble,
 							isSelected: true,
 							color: '#FFFFFF', // White background
 							radius: selectedRadius,
 						}
-					: b,
+					: bubble,
 			)
 			this.store.setBubbles(updatedBubbles)
 

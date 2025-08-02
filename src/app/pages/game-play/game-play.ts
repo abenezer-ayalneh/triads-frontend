@@ -45,9 +45,11 @@ export class GamePlay implements OnInit {
 
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
 
+	private readonly hintUseConfirmationModalRef = viewChild.required<ElementRef<HTMLDialogElement>>('hintUseConfirmationModal')
+
 	constructor() {
 		effect(() => {
-			if (this.store.showAnswerField()) {
+			if (this.store.isAnswerFieldVisible()) {
 				this.answerFieldRef()?.nativeElement.focus()
 				this.answerFormControl.enable()
 			} else {
@@ -84,7 +86,14 @@ export class GamePlay implements OnInit {
 				.subscribe({
 					next: (success) => {
 						if (success) {
-							this.store.setBubbles(this.store.bubbles().map((bubble) => ({ ...bubble, isSelected: false })))
+							this.store.setBubbles(
+								this.store.bubbles().map((bubble) => ({
+									...bubble,
+									isSelected: false,
+									color: bubble.originalColor,
+									radius: bubble.originalRadius,
+								})),
+							)
 						}
 
 						this.answerFormControl.reset()
@@ -94,11 +103,16 @@ export class GamePlay implements OnInit {
 		}
 	}
 
+	useHint() {
+		this.hintUseConfirmationModalRef().nativeElement.close()
+		this.store.useHint()
+	}
+
 	private useCurrentTurn() {
 		const availableTurns = this.store.turns().filter((turn) => turn.available)
 
 		if (availableTurns.length > 0) {
-			this.store.useTurn(availableTurns[availableTurns.length - 1].id)
+			this.store.useTurn()
 		}
 	}
 }

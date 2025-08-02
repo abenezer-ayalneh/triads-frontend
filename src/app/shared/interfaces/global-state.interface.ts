@@ -4,7 +4,7 @@ export interface GlobalState {
 	username: string | null
 	showHowToPlay: boolean
 	bubbles: Bubble[]
-	showAnswerField: boolean
+	isAnswerFieldVisible: boolean
 	turns: { id: number; available: boolean }[]
 	hints: { id: number; available: boolean }[]
 }

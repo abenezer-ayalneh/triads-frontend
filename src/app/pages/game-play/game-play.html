@@ -13,7 +13,7 @@
 	</div>
 
 	<!--Solution Input Section-->
-	@if (store.showAnswerField()) {
+	@if (store.isAnswerFieldVisible()) {
 	<div class="w-full h-fit flex flex-col justify-center items-center px-4 py-2">
 		<div class="w-[80%] h-fit flex justify-center items-center gap-2">
 			<input
@@ -48,11 +48,12 @@
 			<p class="text-base-300 text-lg font-semibold">Hints</p>
 			<div class="w-full flex justify-center items-center gap-1">
 				@for (hint of store.hints(); track hint.id) {
-				<span class="w-6 h-6 bg-base-100/20 circle">
+				<!--TODO: disable the hint buttons if there is no available turn-->
+				<button class="w-6 h-6 bg-base-100/20 circle" (click)="hintUseConfirmationModal.showModal()" [disabled]="!hint.available">
 					@if (hint.available) {
 					<img src="images/lifesaver.svg" alt="hint" />
 					}
-				</span>
+				</button>
 				}
 			</div>
 		</div>
@@ -82,3 +83,20 @@
 	</div>
 	}
 </div>
+
+<!--Hint Use Confirmation Dialog-->
+<dialog #hintUseConfirmationModal class="modal modal-bottom sm:modal-middle">
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Are you sure?</h3>
+		<p class="py-4">Are you sure you want to use a hint? It will cost you one turn.</p>
+		<div class="modal-action">
+			<form method="dialog">
+				<!-- if there is a button in form, it will close the modal -->
+				<div class="w-full h-fit flex justify-between items-center gap-4">
+					<button class="btn">No</button>
+					<button type="button" class="btn" (click)="useHint()">Yes</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</dialog>

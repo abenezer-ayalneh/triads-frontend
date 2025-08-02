@@ -8,7 +8,7 @@ const initialState: GlobalState = {
 	username: null,
 	showHowToPlay: false,
 	bubbles: [],
-	showAnswerField: false,
+	isAnswerFieldVisible: false,
 	turns: [
 		{ id: 1, available: true },
 		{ id: 2, available: true },
@@ -24,7 +24,7 @@ export const GlobalStore = signalStore(
 	{ providedIn: 'root' },
 	withState(initialState),
 	withComputed(({ bubbles }) => ({
-		showAnswerField: computed(() => bubbles().filter((bubble) => bubble.isSelected).length === 3),
+		isAnswerFieldVisible: computed(() => bubbles().filter((bubble) => bubble.isSelected).length === 3),
 	})),
 	withMethods((store) => ({
 		setUsername: (username: string | null) => {
@@ -36,19 +36,35 @@ export const GlobalStore = signalStore(
 		setBubbles: (bubbles: Bubble[]) => {
 			patchState(store, (state) => ({ ...state, bubbles }))
 		},
-		useTurn: (turnId: number) => {
+		useTurn: () => {
 			const turns = store.turns()
-			const usedTurn = turns.find((turn) => turn.id === turnId)
-			const updatedTurns = turns.map((turn) => ({ ...turn, available: turn.id === usedTurn?.id ? false : turn.available }))
+			const availableTurns = turns.filter((turn) => turn.available)
 
-			patchState(store, (state) => ({ ...state, turns: updatedTurns }))
+			if (availableTurns.length > 0) {
+				const updatedTurns = turns.map((turn) => ({
+					...turn,
+					available: turn.id === availableTurns[availableTurns.length - 1].id ? false : turn.available,
+				}))
+				patchState(store, (state) => ({ ...state, turns: updatedTurns }))
+			}
 		},
-		useHint: (hintId: number) => {
+		useHint: () => {
 			const hints = store.hints()
-			const usedHint = hints.find((hint) => hint.id === hintId)
-			const updatedHints = hints.map((hint) => ({ ...hint, available: hint.id !== usedHint?.id }))
+			const turns = store.turns()
+			const availableHints = hints.filter((hint) => hint.available)
+			const availableTurns = turns.filter((turn) => turn.available)
 
-			patchState(store, (state) => ({ ...state, hints: updatedHints }))
+			if (availableHints.length > 0 && availableTurns.length > 0) {
+				const updatedHints = hints.map((hint) => ({
+					...hint,
+					available: hint.id === availableHints[availableHints.length - 1].id ? false : hint.available,
+				}))
+				const updatedTurns = turns.map((turn) => ({
+					...turn,
+					available: turn.id === availableTurns[availableTurns.length - 1].id ? false : turn.available,
+				}))
+				patchState(store, (state) => ({ ...state, hints: updatedHints, turns: updatedTurns }))
+			}
 		},
 	})),
 	withHooks({
