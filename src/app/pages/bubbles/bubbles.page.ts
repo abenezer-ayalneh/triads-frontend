@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, input, OnDestroy, OnInit, signal } from '@angular/core'
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, input, OnDestroy, OnInit } from '@angular/core'
 import lottie, { AnimationItem } from 'lottie-web'
 
 import { GlobalStore } from '../../state/global.store'
@@ -17,8 +17,6 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	readonly store = inject(GlobalStore)
 
 	cueGroups = input.required<CueGroup[]>()
-
-	bubbles = signal<Bubble[]>([])
 
 	selectedBubbleIds = computed(() => this.store.selectedBubbles().map((bubble) => bubble.id))
 
@@ -93,7 +91,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	onBubbleClick(chosenBubble: Bubble): void {
 		if (chosenBubble.isBursting) return
 
-		const currentBubbles = this.bubbles()
+		const currentBubbles = this.store.bubbles()
 		const selectedBubbles = this.store.selectedBubbles()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
@@ -110,7 +108,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						}
 					: bubble,
 			)
-			this.bubbles.set(updatedBubbles)
+			this.store.setBubbles(updatedBubbles)
 			this.store.removeSelectedBubbles(chosenBubble)
 
 			// Restart Lottie animation for deselected bubble
@@ -155,7 +153,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						}
 					: bubble,
 			)
-			this.bubbles.set(updatedBubbles)
+			this.store.setBubbles(updatedBubbles)
 			this.store.addSelectedBubbles(chosenBubble)
 
 			// Pause Lottie animation for selected bubble
@@ -292,7 +290,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			})
 		})
 
-		this.bubbles.set(newBubbles)
+		this.store.setBubbles(newBubbles)
 	}
 
 	private startAnimation(): void {
@@ -304,7 +302,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private updateBubbles(): void {
-		const currentBubbles = this.bubbles()
+		const currentBubbles = this.store.bubbles()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 		const selectedBubblesIds = this.store.selectedBubbles().map((bubble) => bubble.id)
 
@@ -348,7 +346,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		// Apply gentle restoration to diamond structure
 		const bubblesWithRestoration = this.restoreDiamondStructure(bubblesWithCollisions, containerWidth, containerHeight)
 
-		this.bubbles.set(bubblesWithRestoration)
+		this.store.setBubbles(bubblesWithRestoration)
 	}
 
 	private restoreDiamondStructure(bubbles: Bubble[], containerWidth: number, containerHeight: number): Bubble[] {

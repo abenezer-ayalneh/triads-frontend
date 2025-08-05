@@ -1,12 +1,13 @@
 import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals'
 
-import { SelectedBubble } from '../pages/bubbles/interfaces/bubble.interface'
+import { Bubble, SelectedBubble } from '../pages/bubbles/interfaces/bubble.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 
 const initialState: GlobalState = {
 	username: null,
 	showHowToPlay: false,
+	bubbles: [],
 	selectedBubbles: [],
 	turns: [
 		{ id: 1, available: true },
@@ -28,6 +29,9 @@ export const GlobalStore = signalStore(
 		},
 		setShowHowToPlay: (value: boolean) => {
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
+		},
+		setBubbles: (bubbles: Bubble[]) => {
+			patchState(store, (state) => ({ ...state, bubbles }))
 		},
 		setSelectedBubbles: (selectedBubbles: SelectedBubble[]) => {
 			patchState(store, (state) => ({ ...state, selectedBubbles: selectedBubbles }))

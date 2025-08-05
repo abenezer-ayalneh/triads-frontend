@@ -7,7 +7,7 @@
 	</div>
 
 	<!-- Game bubbles -->
-	@for (bubble of bubbles(); track bubble.id) {
+	@for (bubble of store.bubbles(); track bubble.id) {
 	<div class="game-bubble" [ngStyle]="getBubbleStyle(bubble)" (click)="onBubbleClick(bubble)">
 		<!-- Lottie Animation Container -->
 		<div class="lottie-container"></div>

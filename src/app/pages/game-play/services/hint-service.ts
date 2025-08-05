@@ -1,5 +1,6 @@
 import { inject, Injectable } from '@angular/core'
 
+import { Bubble } from '../../bubbles/interfaces/bubble.interface'
 import { TurnAndHint } from '../interfaces/turn-and-hint.interface'
 import { TurnService } from './turn-service'
 
@@ -36,5 +37,20 @@ export class HintService {
 
 		hints[currentHintIndex].available = false
 		return { hints, turns }
+	}
+
+	getHintTriadBubbles(bubbles: Bubble[]) {
+		if (bubbles.length < 3) {
+			throw new Error('Not enough bubbles to get a hint')
+		}
+
+		const [fistBubble] = bubbles
+
+		const bubblesWithCommonKeyword = bubbles.filter((bubble) => bubble.commonWordId === fistBubble.commonWordId)
+		if (bubblesWithCommonKeyword.length < 3) {
+			throw new Error('Not enough bubbles to get a hint')
+		}
+
+		return bubblesWithCommonKeyword
 	}
 }

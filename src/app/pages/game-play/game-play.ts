@@ -89,6 +89,8 @@ export class GamePlay implements OnInit {
 			const useHintResponse = this.hintService.useHint(this.store.hints(), this.store.turns())
 			this.store.setHints(useHintResponse.hints)
 			this.store.setTurns(useHintResponse.turns)
+
+			this.store.setSelectedBubbles(this.hintService.getHintTriadBubbles(this.store.bubbles()))
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
