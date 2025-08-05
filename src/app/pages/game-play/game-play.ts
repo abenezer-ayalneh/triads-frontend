@@ -1,8 +1,8 @@
 import { NgClass } from '@angular/common'
-import { Component, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
+import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
-import { delay, tap } from 'rxjs'
+import { delay, filter, tap } from 'rxjs'
 
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { SnackbarService } from '../../shared/services/snackbar.service'
@@ -26,9 +26,11 @@ export class GamePlay implements OnInit {
 
 	cueGroups = signal<CueGroup[]>([])
 
-	solutionStep = signal<'CHECK_TRIAD' | 'ANSWER' | null>(null)
+	solutionStep = signal<'CHECK_TRIAD' | 'WRONG_TRIAD' | 'ANSWER' | null>(null)
 
 	answerState = signal<'CORRECT' | 'WRONG' | null>(null)
+
+	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
 	answerFormControl = new FormControl<string>('', { validators: [Validators.required] })
 
@@ -45,6 +47,8 @@ export class GamePlay implements OnInit {
 	}
 
 	protected readonly RequestState = RequestState
+
+	protected readonly length = length
 
 	private readonly gamePlayApi = inject(GamePlayApi)
 
@@ -79,6 +83,44 @@ export class GamePlay implements OnInit {
 		})
 	}
 
+	useHint() {
+		this.hintUseConfirmationModalRef().nativeElement.close()
+		try {
+			const useHintResponse = this.hintService.useHint(this.store.hints(), this.store.turns())
+			this.store.setHints(useHintResponse.hints)
+			this.store.setTurns(useHintResponse.turns)
+		} catch (error) {
+			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
+		}
+	}
+
+	checkTriad() {
+		const selectedBubbles = this.store.selectedBubbles()
+
+		if (selectedBubbles.length === 3) {
+			this.gamePlayApi
+				.checkTriad(selectedBubbles.map((bubble) => bubble.cueId))
+				.pipe(
+					tap((success) => {
+						if (success) {
+							this.solutionStep.set('ANSWER')
+							this.answerFieldRef()?.nativeElement.focus()
+						} else {
+							this.solutionStep.set('WRONG_TRIAD')
+							this.useCurrentTurn()
+						}
+					}),
+					filter((success) => !success),
+					delay(3000),
+					tap(() => {
+						this.solutionStep.set(null)
+						this.store.setSelectedBubbles([])
+					}),
+				)
+				.subscribe()
+		}
+	}
+
 	submitAnswer() {
 		if (this.answerFormControl.valid && this.answerFormControl.value) {
 			this.gamePlayApi
@@ -87,6 +129,7 @@ export class GamePlay implements OnInit {
 					tap((success) => {
 						if (success) {
 							this.answerState.set('CORRECT')
+							this.store.setSelectedBubbles([])
 						} else {
 							this.answerState.set('WRONG')
 							this.useCurrentTurn()
@@ -104,34 +147,6 @@ export class GamePlay implements OnInit {
 						this.answerState.set(null)
 					},
 				})
-		}
-	}
-
-	useHint() {
-		this.hintUseConfirmationModalRef().nativeElement.close()
-		try {
-			const useHintResponse = this.hintService.useHint(this.store.hints(), this.store.turns())
-			this.store.setHints(useHintResponse.hints)
-			this.store.setTurns(useHintResponse.turns)
-		} catch (error) {
-			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
-		}
-	}
-
-	checkSolution() {
-		const selectedBubbles = this.store.selectedBubbles()
-
-		if (selectedBubbles.length === 3) {
-			this.gamePlayApi.checkTriad(selectedBubbles.map((bubble) => bubble.cueId)).subscribe({
-				next: (success) => {
-					if (success) {
-						this.solutionStep.set('ANSWER')
-						this.answerFieldRef()?.nativeElement.focus()
-					} else {
-						// 	TODO: show a 'wrong triads' message
-					}
-				},
-			})
 		}
 	}
 

@@ -20,14 +20,16 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 	bubbles = signal<Bubble[]>([])
 
+	selectedBubbleIds = computed(() => this.store.selectedBubbles().map((bubble) => bubble.id))
+
+	readonly bubblesContainer = inject(ElementRef)
+
 	private readonly gameWords = computed(() =>
 		this.cueGroups()
 			.map((cueGroup) => cueGroup.cues)
 			.map((cue) => cue.map((cue) => cue.word))
 			.flat(),
 	)
-
-	readonly bubblesContainer = inject(ElementRef)
 
 	private animationFrameId: number | null = null
 
@@ -92,16 +94,17 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		if (chosenBubble.isBursting) return
 
 		const currentBubbles = this.bubbles()
-		const selectedBubbles = currentBubbles.filter((bubble) => bubble.isSelected && !bubble.isBursting)
+		const selectedBubbles = this.store.selectedBubbles()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
-		if (chosenBubble.isSelected) {
+		const isChosenBubblesSelected = selectedBubbles.some((bubble) => bubble.id === chosenBubble.id)
+
+		if (isChosenBubblesSelected) {
 			// Deselect the bubble - return to original size
 			const updatedBubbles = currentBubbles.map((bubble) =>
 				bubble.id === chosenBubble.id
 					? {
 							...bubble,
-							isSelected: false,
 							color: bubble.originalColor,
 							radius: bubble.originalRadius, // Use the stored original radius
 						}
@@ -135,11 +138,11 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 				scaleFactor = 1.3 // 30% increase on tablets
 			}
 			if (containerWidth < 480) {
-				scaleFactor = 1.2 // 20% increase on mobile
+				scaleFactor = 1.75 // 20% increase on mobile
 			}
 
-			// Ensure the selected radius is at least 20% larger than original
-			const minSelectedRadius = chosenBubble.originalRadius * 1.2
+			// Ensure the selected radius is at least 50% larger than original
+			const minSelectedRadius = chosenBubble.originalRadius * 1.5
 			const calculatedSelectedRadius = chosenBubble.originalRadius * scaleFactor
 			const selectedRadius = Math.max(minSelectedRadius, Math.min(calculatedSelectedRadius, maxRadius))
 
@@ -147,7 +150,6 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 				bubble.id === chosenBubble.id
 					? {
 							...bubble,
-							isSelected: true,
 							color: '#FFFFFF', // White background
 							radius: selectedRadius,
 						}
@@ -285,7 +287,6 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						originalRadius: uniformRadius, // Store the original radius
 						opacity: 1,
 						isBursting: false,
-						isSelected: false,
 					})
 				}
 			})
@@ -305,12 +306,14 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	private updateBubbles(): void {
 		const currentBubbles = this.bubbles()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
+		const selectedBubblesIds = this.store.selectedBubbles().map((bubble) => bubble.id)
+
 		const updatedBubbles = currentBubbles.map((bubble) => {
 			if (bubble.isBursting) {
 				return bubble
 			}
 
-			if (bubble.isSelected) {
+			if (selectedBubblesIds.includes(bubble.id)) {
 				return bubble // Selected bubbles don't move
 			}
 
@@ -352,6 +355,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		const centerX = containerWidth / 2
 		const centerY = containerHeight / 2
 		const uniformRadius = bubbles[0]?.radius || 60
+		const selectedBubblesIds = this.store.selectedBubbles().map((bubble) => bubble.id)
 
 		// Diamond structure positions
 		const diamondPositions = [
@@ -378,7 +382,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		}))
 
 		return bubbles.map((bubble, index) => {
-			if (bubble.isSelected || bubble.isBursting || index >= adjustedPositions.length) {
+			if (selectedBubblesIds.includes(bubble.id) || bubble.isBursting || index >= adjustedPositions.length) {
 				return bubble
 			}
 
@@ -440,7 +444,9 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 				if (bubble2.isBursting) continue
 
 				// Skip if both bubbles are selected (selected bubbles can't collide with each other)
-				if (bubble1.isSelected && bubble2.isSelected) continue
+				if ([bubble1.id, bubble2.id].every((bubbleId) => this.selectedBubbleIds().includes(bubbleId))) {
+					continue
+				}
 
 				// Calculate distance between bubble centers
 				const dx = bubble2.x - bubble1.x
@@ -469,7 +475,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 					// Update velocities with damping
 					// If bubble1 is selected, only update bubble2's velocity
-					if (!bubble1.isSelected) {
+					if (!this.selectedBubbleIds().includes(bubble1.id)) {
 						updatedBubbles[i] = {
 							...bubble1,
 							vx: (vx2 * cos - vy1 * sin) * damping,
@@ -478,7 +484,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 					}
 
 					// If bubble2 is selected, only update bubble1's velocity
-					if (!bubble2.isSelected) {
+					if (!this.selectedBubbleIds().includes(bubble2.id)) {
 						updatedBubbles[j] = {
 							...bubble2,
 							vx: (tempVx * cos - vy2 * sin) * damping,
@@ -492,7 +498,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 					const separationY = (overlap * dy) / distance
 
 					// Only move non-selected bubbles
-					if (!bubble1.isSelected) {
+					if (!this.selectedBubbleIds().includes(bubble1.id)) {
 						updatedBubbles[i] = {
 							...updatedBubbles[i],
 							x: bubble1.x - separationX * 0.6,
@@ -500,7 +506,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						}
 					}
 
-					if (!bubble2.isSelected) {
+					if (!this.selectedBubbleIds().includes(bubble2.id)) {
 						updatedBubbles[j] = {
 							...updatedBubbles[j],
 							x: bubble2.x + separationX * 0.6,

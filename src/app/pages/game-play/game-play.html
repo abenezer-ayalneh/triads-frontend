@@ -14,7 +14,7 @@
 
 	<!--Solution Input Section-->
 	<div class="w-full h-fit flex flex-col justify-center items-center px-4 py-2" [class.hidden]="solutionStep() !== 'CHECK_TRIAD'">
-		<button type="button" (click)="checkSolution()" class="w-80 triad-gradient btn btn-lg border-none text-primary-content">Check Solution</button>
+		<button type="button" (click)="checkTriad()" class="w-80 triad-gradient btn btn-lg border-none text-primary-content">Check Solution</button>
 	</div>
 
 	<div class="w-full h-fit flex flex-col justify-center items-center px-4 py-2" [class.hidden]="solutionStep() !== 'ANSWER'">
@@ -24,12 +24,26 @@
 				[formControl]="answerFormControl"
 				placeholder="Answer here..."
 				(keydown.enter)="submitAnswer()"
-				class="w-full h-10 input focus:outline-none text-center" />
+				class="w-full h-10 input focus:outline-none text-center placeholder:text-neutral-400" />
 			<!--        <button type="button" matIconButton aria-label="Send answer">-->
 			<!--          <mat-icon>send</mat-icon>-->
 			<!--        </button>-->
 		</div>
 	</div>
+
+	@if (solutionStep() === 'WRONG_TRIAD') {
+	<div class="w-full h-full flex justify-center items-center absolute z-10">
+		<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl">
+			<div class="w-40 h-40 rounded-2xl">
+				<ng-lottie [options]="wrongAnswerAnimationOptions" />
+			</div>
+			<p class="text-error text-3xl font-semibold text-pretty text-center">
+				Opps! <br />
+				{{ availableTurns() }} More {{availableTurns() <= 1 ? 'Try' : 'Tries' }}.
+			</p>
+		</div>
+	</div>
+	}
 
 	<!--Health & Hint Section-->
 	<div class="w-full h-fit flex justify-between items-center px-4 py-2">

@@ -14,7 +14,6 @@ export interface Bubble {
 	originalRadius: number // Store the original radius for deselection
 	opacity: number
 	isBursting: boolean
-	isSelected: boolean
 }
 
 export interface SelectedBubble {

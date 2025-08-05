@@ -13,7 +13,7 @@
 		<div class="lottie-container"></div>
 
 		<!-- Bubble text -->
-		<span class="bubble-text" [class.selected-text]="bubble.isSelected">{{ bubble.text }}</span>
+		<span class="bubble-text" [class.selected-text]="selectedBubbleIds().includes(bubble.id)">{{ bubble.text }}</span>
 	</div>
 	}
 </div>
