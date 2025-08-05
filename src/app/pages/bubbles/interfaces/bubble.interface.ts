@@ -16,3 +16,9 @@ export interface Bubble {
 	isBursting: boolean
 	isSelected: boolean
 }
+
+export interface SelectedBubble {
+	id: number
+	cueId: number
+	cueWord: string
+}

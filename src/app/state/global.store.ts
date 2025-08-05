@@ -1,14 +1,13 @@
-import { computed } from '@angular/core'
-import { patchState, signalStore, withComputed, withHooks, withMethods, withState } from '@ngrx/signals'
+import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals'
 
-import { Bubble } from '../pages/bubbles/interfaces/bubble.interface'
+import { SelectedBubble } from '../pages/bubbles/interfaces/bubble.interface'
+import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 
 const initialState: GlobalState = {
 	username: null,
 	showHowToPlay: false,
-	bubbles: [],
-	isAnswerFieldVisible: false,
+	selectedBubbles: [],
 	turns: [
 		{ id: 1, available: true },
 		{ id: 2, available: true },
@@ -23,9 +22,6 @@ const initialState: GlobalState = {
 export const GlobalStore = signalStore(
 	{ providedIn: 'root' },
 	withState(initialState),
-	withComputed(({ bubbles }) => ({
-		isAnswerFieldVisible: computed(() => bubbles().filter((bubble) => bubble.isSelected).length === 3),
-	})),
 	withMethods((store) => ({
 		setUsername: (username: string | null) => {
 			patchState(store, (state) => ({ ...state, username }))
@@ -33,38 +29,20 @@ export const GlobalStore = signalStore(
 		setShowHowToPlay: (value: boolean) => {
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
 		},
-		setBubbles: (bubbles: Bubble[]) => {
-			patchState(store, (state) => ({ ...state, bubbles }))
+		setSelectedBubbles: (selectedBubbles: SelectedBubble[]) => {
+			patchState(store, (state) => ({ ...state, selectedBubbles: selectedBubbles }))
 		},
-		useTurn: () => {
-			const turns = store.turns()
-			const availableTurns = turns.filter((turn) => turn.available)
-
-			if (availableTurns.length > 0) {
-				const updatedTurns = turns.map((turn) => ({
-					...turn,
-					available: turn.id === availableTurns[availableTurns.length - 1].id ? false : turn.available,
-				}))
-				patchState(store, (state) => ({ ...state, turns: updatedTurns }))
-			}
+		addSelectedBubbles: (selectedBubble: SelectedBubble) => {
+			patchState(store, (state) => ({ ...state, selectedBubbles: [...state.selectedBubbles, selectedBubble] }))
 		},
-		useHint: () => {
-			const hints = store.hints()
-			const turns = store.turns()
-			const availableHints = hints.filter((hint) => hint.available)
-			const availableTurns = turns.filter((turn) => turn.available)
-
-			if (availableHints.length > 0 && availableTurns.length > 0) {
-				const updatedHints = hints.map((hint) => ({
-					...hint,
-					available: hint.id === availableHints[availableHints.length - 1].id ? false : hint.available,
-				}))
-				const updatedTurns = turns.map((turn) => ({
-					...turn,
-					available: turn.id === availableTurns[availableTurns.length - 1].id ? false : turn.available,
-				}))
-				patchState(store, (state) => ({ ...state, hints: updatedHints, turns: updatedTurns }))
-			}
+		removeSelectedBubbles: (selectedBubble: SelectedBubble) => {
+			patchState(store, (state) => ({ ...state, selectedBubbles: state.selectedBubbles.filter((bubble) => bubble.id !== selectedBubble.id) }))
+		},
+		setTurns: (turns: TurnAndHint[]) => {
+			patchState(store, (state) => ({ ...state, turns }))
+		},
+		setHints: (hints: TurnAndHint[]) => {
+			patchState(store, (state) => ({ ...state, hints }))
 		},
 	})),
 	withHooks({

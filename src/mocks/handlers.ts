@@ -41,4 +41,8 @@ export const handlers = [
 		const requestBody = await request.clone().json()
 		return HttpResponse.json<boolean>(requestBody.answer === 'c')
 	}),
+	http.post<{ answer: string }>(`${API_URL}/triads`, async ({ request }) => {
+		const requestBody = await request.clone().json()
+		return HttpResponse.json<boolean>(requestBody.triadIds.includes(1))
+	}),
 ]

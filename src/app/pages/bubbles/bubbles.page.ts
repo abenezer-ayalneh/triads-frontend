@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, input, OnDestroy, OnInit } from '@angular/core'
+import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, input, OnDestroy, OnInit, signal } from '@angular/core'
 import lottie, { AnimationItem } from 'lottie-web'
 
 import { GlobalStore } from '../../state/global.store'
@@ -14,7 +14,11 @@ import { Bubble } from './interfaces/bubble.interface'
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
+	readonly store = inject(GlobalStore)
+
 	cueGroups = input.required<CueGroup[]>()
+
+	bubbles = signal<Bubble[]>([])
 
 	private readonly gameWords = computed(() =>
 		this.cueGroups()
@@ -22,8 +26,6 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			.map((cue) => cue.map((cue) => cue.word))
 			.flat(),
 	)
-
-	readonly store = inject(GlobalStore)
 
 	readonly bubblesContainer = inject(ElementRef)
 
@@ -89,7 +91,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	onBubbleClick(chosenBubble: Bubble): void {
 		if (chosenBubble.isBursting) return
 
-		const currentBubbles = this.store.bubbles()
+		const currentBubbles = this.bubbles()
 		const selectedBubbles = currentBubbles.filter((bubble) => bubble.isSelected && !bubble.isBursting)
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
@@ -105,7 +107,8 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						}
 					: bubble,
 			)
-			this.store.setBubbles(updatedBubbles)
+			this.bubbles.set(updatedBubbles)
+			this.store.removeSelectedBubbles(chosenBubble)
 
 			// Restart Lottie animation for deselected bubble
 			if (this.lottieAnimations[chosenBubble.id]) {
@@ -150,7 +153,8 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 						}
 					: bubble,
 			)
-			this.store.setBubbles(updatedBubbles)
+			this.bubbles.set(updatedBubbles)
+			this.store.addSelectedBubbles(chosenBubble)
 
 			// Pause Lottie animation for selected bubble
 			if (this.lottieAnimations[chosenBubble.id]) {
@@ -287,7 +291,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			})
 		})
 
-		this.store.setBubbles(newBubbles)
+		this.bubbles.set(newBubbles)
 	}
 
 	private startAnimation(): void {
@@ -299,7 +303,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	}
 
 	private updateBubbles(): void {
-		const currentBubbles = this.store.bubbles()
+		const currentBubbles = this.bubbles()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 		const updatedBubbles = currentBubbles.map((bubble) => {
 			if (bubble.isBursting) {
@@ -341,7 +345,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		// Apply gentle restoration to diamond structure
 		const bubblesWithRestoration = this.restoreDiamondStructure(bubblesWithCollisions, containerWidth, containerHeight)
 
-		this.store.setBubbles(bubblesWithRestoration)
+		this.bubbles.set(bubblesWithRestoration)
 	}
 
 	private restoreDiamondStructure(bubbles: Bubble[], containerWidth: number, containerHeight: number): Bubble[] {

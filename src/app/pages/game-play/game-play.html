@@ -13,8 +13,11 @@
 	</div>
 
 	<!--Solution Input Section-->
-	@if (store.isAnswerFieldVisible()) {
-	<div class="w-full h-fit flex flex-col justify-center items-center px-4 py-2">
+	<div class="w-full h-fit flex flex-col justify-center items-center px-4 py-2" [class.hidden]="solutionStep() !== 'CHECK_TRIAD'">
+		<button type="button" (click)="checkSolution()" class="w-80 triad-gradient btn btn-lg border-none text-primary-content">Check Solution</button>
+	</div>
+
+	<div class="w-full h-fit flex flex-col justify-center items-center px-4 py-2" [class.hidden]="solutionStep() !== 'ANSWER'">
 		<div class="w-[80%] h-fit flex justify-center items-center gap-2">
 			<input
 				#answerField
@@ -27,7 +30,6 @@
 			<!--        </button>-->
 		</div>
 	</div>
-	}
 
 	<!--Health & Hint Section-->
 	<div class="w-full h-fit flex justify-between items-center px-4 py-2">

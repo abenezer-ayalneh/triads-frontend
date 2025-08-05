@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 
-import { CueGroup } from './interfaces/cue.interface'
+import { CueGroup } from '../interfaces/cue.interface'
 
 @Injectable({
 	providedIn: 'root',
@@ -11,6 +11,10 @@ export class GamePlayApi {
 
 	getCues() {
 		return this.httpClient.get<CueGroup[]>('cues')
+	}
+
+	checkTriad(triadIds: number[]) {
+		return this.httpClient.post<boolean>('triads', { triadIds })
 	}
 
 	checkAnswer(answer: string) {

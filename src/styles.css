@@ -1,5 +1,12 @@
 @import 'tailwindcss';
 
+@layer base {
+	button,
+	[role='button'] {
+		cursor: pointer;
+	}
+}
+
 @plugin "daisyui";
 
 @plugin "daisyui/theme" {

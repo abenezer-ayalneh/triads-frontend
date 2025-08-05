@@ -1,10 +1,10 @@
-import { Bubble } from '../../pages/bubbles/interfaces/bubble.interface'
+import { SelectedBubble } from '../../pages/bubbles/interfaces/bubble.interface'
+import { TurnAndHint } from '../../pages/game-play/interfaces/turn-and-hint.interface'
 
 export interface GlobalState {
 	username: string | null
 	showHowToPlay: boolean
-	bubbles: Bubble[]
-	isAnswerFieldVisible: boolean
-	turns: { id: number; available: boolean }[]
-	hints: { id: number; available: boolean }[]
+	selectedBubbles: SelectedBubble[]
+	turns: TurnAndHint[]
+	hints: TurnAndHint[]
 }
