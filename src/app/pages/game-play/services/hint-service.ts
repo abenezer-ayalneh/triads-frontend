@@ -40,7 +40,7 @@ export class HintService {
 	}
 
 	getHintTriadCues(cueGroups: CueGroup[]) {
-		const unsolvedCueGroups = cueGroups.filter((cueGroup) => !cueGroup.available)
+		const unsolvedCueGroups = cueGroups.filter((cueGroup) => cueGroup.available)
 		if (unsolvedCueGroups.length === 0) {
 			throw new Error('Not enough cue to get a hint')
 		}

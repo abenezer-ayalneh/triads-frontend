@@ -38,10 +38,10 @@ export const GlobalStore = signalStore(
 		setSelectedCues: (selectedCues: Cue[]) => {
 			patchState(store, (state) => ({ ...state, selectedCues: [...selectedCues] }))
 		},
-		addSelectedCues: (selectedCue: Cue) => {
+		addSelectedCue: (selectedCue: Cue) => {
 			patchState(store, (state) => ({ ...state, selectedCues: [...state.selectedCues, selectedCue] }))
 		},
-		removeSelectedCues: (selectedCue: Cue) => {
+		removeSelectedCue: (selectedCue: Cue) => {
 			patchState(store, (state) => ({ ...state, selectedCues: state.selectedCues.filter((cue) => cue.id !== selectedCue.id) }))
 		},
 		setTurns: (turns: TurnAndHint[]) => {

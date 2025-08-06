@@ -5,7 +5,7 @@
  custom components at https://material.angular.dev/guide/theming
 */
 
-/*@use '@angular/material' as mat;
+@use '@angular/material' as mat;
 
 html {
 	@include mat.theme(
@@ -18,7 +18,7 @@ html {
 			density: 0,
 		)
 	);
-}*/
+}
 /* You can add global styles to this file, and also import other style files */
 
 // Fonts

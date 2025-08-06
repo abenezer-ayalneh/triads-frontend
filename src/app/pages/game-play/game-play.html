@@ -8,13 +8,15 @@
 				</span>
 			</div>
 		} @else if (cueFetchingState() === RequestState.READY) {
-			<!--		<app-bubbles-page [cueGroups]="cueGroups()" />-->
-			<div class="w-full h-full grid grid-cols-3 grid-rows-3">
-				@for (cue of visibleCues(); track cue.id) {
-					<div class="w-full h-full flex justify-center items-center bg-neutral/10 backdrop-blur-sm">
-						<app-bubble [cue]="cue" (whenClickedOutput)="bubbleClicked($event)" />
-					</div>
-				}
+			<div #bubblesContainer class="w-full h-full">
+				<!--        <app-bubbles-page [cueGroups]="this.store.cueGroups()"/>-->
+				<div class="w-full h-full grid grid-cols-3 grid-rows-3">
+					@for (cue of visibleCues(); track cue.id) {
+						<div class="w-full h-full flex justify-center items-center">
+							<app-bubble [cue]="cue" (whenClickedOutput)="bubbleClicked($event)" />
+						</div>
+					}
+				</div>
 			</div>
 		}
 	</div>
@@ -78,21 +80,21 @@
 	@switch (store.gamePlayState()) {
 		@case (GamePlayState.CORRECT_ANSWER) {
 			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl">
+				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
 					<div class="w-40 h-40 rounded-2xl">
 						<ng-lottie [options]="correctAnswerAnimationOptions" />
 					</div>
-					<p class="text-base-100 text-3xl font-semibold text-pretty text-center">Correct Answer!</p>
+					<p class="text-base-100 text-2xl font-semibold text-pretty text-center">Correct Answer!</p>
 				</div>
 			</div>
 		}
 		@case (GamePlayState.WRONG_ANSWER) {
 			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl">
+				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
 					<div class="w-40 h-40 rounded-2xl">
 						<ng-lottie [options]="wrongAnswerAnimationOptions" />
 					</div>
-					<p class="text-error text-3xl font-semibold text-pretty text-center">
+					<p class="text-base-100 text-2xl font-semibold text-pretty text-center">
 						Wrong Answer! <br />
 						Try Again.
 					</p>
@@ -101,14 +103,50 @@
 		}
 		@case (GamePlayState.WRONG_TRIAD) {
 			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl">
+				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
 					<div class="w-40 h-40 rounded-2xl">
 						<ng-lottie [options]="wrongAnswerAnimationOptions" />
 					</div>
-					<p class="text-error text-3xl font-semibold text-pretty text-center">
+					<p class="text-base-100 text-2xl font-semibold text-pretty text-center">
 						Oops! <br />
 						{{ availableTurns() }} More {{ availableTurns() <= 1 ? 'Try' : 'Tries' }}.
 					</p>
+				</div>
+			</div>
+		}
+		@case (GamePlayState.WON) {
+			<div class="w-full h-full flex justify-center items-center absolute z-10">
+				<div
+					class="w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-success/50">
+					<div class="w-40 h-40 rounded-2xl">
+						<ng-lottie [options]="correctAnswerAnimationOptions" />
+					</div>
+					<div class="text-center space-y-2">
+						<h2 class="text-success text-4xl font-bold">You Won!</h2>
+						<p class="text-base-100 text-lg">Congratulations! You solved all the triads!</p>
+						<div class="bg-success/20 rounded-lg px-4 py-2 border border-success/30">
+							<p class="text-success font-semibold text-xl">Final Score: {{ gameScore() }}</p>
+						</div>
+					</div>
+					<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
+				</div>
+			</div>
+		}
+		@case (GamePlayState.LOST) {
+			<div class="w-full h-full flex justify-center items-center absolute z-10">
+				<div
+					class="w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-error/50">
+					<div class="w-40 h-40 rounded-2xl">
+						<ng-lottie [options]="wrongAnswerAnimationOptions" />
+					</div>
+					<div class="text-center space-y-2">
+						<h2 class="text-error text-4xl font-bold">Nice Try!</h2>
+						<p class="text-base-100 text-lg">You ran out of turns. Better luck next time!</p>
+						<div class="bg-error/20 rounded-lg px-4 py-2 border border-error/30">
+							<p class="text-error font-semibold text-xl">Final Score: {{ gameScore() }}</p>
+						</div>
+					</div>
+					<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
 				</div>
 			</div>
 		}

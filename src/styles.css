@@ -45,3 +45,7 @@ body {
 	margin: 0;
 	font-family: Roboto, 'Helvetica Neue', sans-serif;
 }
+
+.circle {
+	clip-path: circle(50%); /* Creates a circle filling the element, centered */
+}
