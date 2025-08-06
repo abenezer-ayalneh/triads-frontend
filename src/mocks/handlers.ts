@@ -10,32 +10,42 @@ export const handlers = [
 		return HttpResponse.json<CueGroup[]>([
 			{
 				id: 532,
-				commonWord: 'WINNER',
+				commonWord: 'MATE',
 				available: true,
 				cues: [
-					{ id: 1, word: 'PRIZE' },
-					{ id: 2, word: 'OSCAR' },
-					{ id: 3, word: 'BREAD' },
+					{ id: 1, word: 'STALE' },
+					{ id: 2, word: 'PLAY' },
+					{ id: 3, word: 'IN' },
 				],
 			},
 			{
 				id: 500,
-				commonWord: 'PIANO',
+				commonWord: 'LIST',
 				available: true,
 				cues: [
-					{ id: 4, word: 'UPRIGHT' },
-					{ id: 5, word: 'TUNER' },
-					{ id: 6, word: 'KEYS' },
+					{ id: 4, word: 'HIT' },
+					{ id: 5, word: 'GUEST' },
+					{ id: 6, word: 'TO-DO' },
 				],
 			},
 			{
 				id: 391,
-				commonWord: 'SLAP',
+				commonWord: 'SPELL',
 				available: true,
 				cues: [
-					{ id: 7, word: 'STICK' },
-					{ id: 8, word: 'IN THE FACE' },
-					{ id: 9, word: 'HAPPY' },
+					{ id: 7, word: 'MAGIC' },
+					{ id: 8, word: 'BOUND' },
+					{ id: 9, word: 'DRY' },
+				],
+			},
+			{
+				id: 120,
+				commonWord: 'CHECK',
+				available: true,
+				cues: [
+					{ id: 10, word: 'MATE' },
+					{ id: 11, word: 'LIST' },
+					{ id: 12, word: 'SPELL' },
 				],
 			},
 		])

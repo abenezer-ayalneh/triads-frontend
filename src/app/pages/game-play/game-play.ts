@@ -8,7 +8,6 @@ import { Bubble } from '../../components/bubble/bubble'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { GlobalStore } from '../../state/global.store'
-import { BubblesPage } from '../bubbles/bubbles.page'
 import { GamePlayState } from './enums/game-play.enum'
 import { Cue } from './interfaces/cue.interface'
 import { GamePlayApi } from './services/game-play-api'
@@ -17,7 +16,7 @@ import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, Bubble, BubblesPage],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, Bubble],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -28,23 +27,29 @@ export class GamePlay implements OnInit {
 
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
-	visibleCues = computed<Cue[]>(() =>
-		this.store
+	visibleCues = computed<Cue[]>(() => {
+		const initialTriadCues = this.store
 			.cueGroups()
+			.slice(0, 3)
 			.filter((cueGroup) => cueGroup.available)
 			.map((cueGroup) => cueGroup.cues)
-			.flat(),
-	)
+			.flat()
+
+		const fourthTriadCues = this.store
+			.cueGroups()
+			.slice(2)
+			.filter((cueGroup) => cueGroup.available)
+			.map((cueGroup) => cueGroup.cues)
+			.flat()
+
+		return initialTriadCues.length > 0 ? initialTriadCues : fourthTriadCues
+	})
 
 	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
 
-	hasPlayedGame = computed(() => this.store.turns().some((turn) => !turn.available) || this.store.hints().some((hint) => !hint.available))
-
 	gameWon = computed(() => {
 		const cueGroups = this.store.cueGroups()
-		const allTriadsSolved = cueGroups.length > 0 && cueGroups.every((cueGroup) => !cueGroup.available)
-
-		return allTriadsSolved && this.hasPlayedGame()
+		return cueGroups.length > 0 && cueGroups.every((cueGroup) => !cueGroup.available)
 	})
 
 	gameLost = computed(() => this.ranOutOfTurns() && !this.gameWon())
