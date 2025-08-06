@@ -1,14 +1,15 @@
 import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals'
 
-import { Bubble, SelectedBubble } from '../pages/bubbles/interfaces/bubble.interface'
+import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
+import { Cue, CueGroup } from '../pages/game-play/interfaces/cue.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 
 const initialState: GlobalState = {
 	username: null,
 	showHowToPlay: false,
-	bubbles: [],
-	selectedBubbles: [],
+	cueGroups: [],
+	selectedCues: [],
 	turns: [
 		{ id: 1, available: true },
 		{ id: 2, available: true },
@@ -18,6 +19,7 @@ const initialState: GlobalState = {
 		{ id: 1, available: true },
 		{ id: 2, available: true },
 	],
+	gamePlayState: GamePlayState.IDLE,
 }
 
 export const GlobalStore = signalStore(
@@ -30,23 +32,35 @@ export const GlobalStore = signalStore(
 		setShowHowToPlay: (value: boolean) => {
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
 		},
-		setBubbles: (bubbles: Bubble[]) => {
-			patchState(store, (state) => ({ ...state, bubbles }))
+		setCueGroups: (cueGroups: CueGroup[]) => {
+			patchState(store, (state) => ({ ...state, cueGroups: [...cueGroups] }))
 		},
-		setSelectedBubbles: (selectedBubbles: SelectedBubble[]) => {
-			patchState(store, (state) => ({ ...state, selectedBubbles: selectedBubbles }))
+		setSelectedCues: (selectedCues: Cue[]) => {
+			patchState(store, (state) => ({ ...state, selectedCues: [...selectedCues] }))
 		},
-		addSelectedBubbles: (selectedBubble: SelectedBubble) => {
-			patchState(store, (state) => ({ ...state, selectedBubbles: [...state.selectedBubbles, selectedBubble] }))
+		addSelectedCues: (selectedCue: Cue) => {
+			patchState(store, (state) => ({ ...state, selectedCues: [...state.selectedCues, selectedCue] }))
 		},
-		removeSelectedBubbles: (selectedBubble: SelectedBubble) => {
-			patchState(store, (state) => ({ ...state, selectedBubbles: state.selectedBubbles.filter((bubble) => bubble.id !== selectedBubble.id) }))
+		removeSelectedCues: (selectedCue: Cue) => {
+			patchState(store, (state) => ({ ...state, selectedCues: state.selectedCues.filter((cue) => cue.id !== selectedCue.id) }))
 		},
 		setTurns: (turns: TurnAndHint[]) => {
-			patchState(store, (state) => ({ ...state, turns }))
+			patchState(store, (state) => ({ ...state, turns: [...turns] }))
 		},
 		setHints: (hints: TurnAndHint[]) => {
-			patchState(store, (state) => ({ ...state, hints }))
+			patchState(store, (state) => ({ ...state, hints: [...hints] }))
+		},
+		setGamePlayState(gamePlayState: GamePlayState) {
+			patchState(store, (state) => ({ ...state, gamePlayState }))
+		},
+		removeSolvedCues: (cues: Cue[]) => {
+			const sampleCueIdToRemove = cues.map((cue) => cue.id)[0]
+			const cueGroupToRemove = store.cueGroups().find((cueGroup) => cueGroup.cues.map((cue) => cue.id).includes(sampleCueIdToRemove))
+
+			patchState(store, (state) => ({
+				...state,
+				cueGroups: state.cueGroups.map((cueGroup) => (cueGroup.id === cueGroupToRemove?.id ? { ...cueGroup, available: false } : cueGroup)),
+			}))
 		},
 	})),
 	withHooks({

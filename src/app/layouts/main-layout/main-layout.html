@@ -5,7 +5,7 @@
 
 	<div class="w-fit flex justify-end items-center gap-4">
 		<button class="w-fit h-5 px-2 rounded-full shadow-sm triad-gradient">
-			<p class="text-xs text-primary-content font-semibold">{{ store.username() ?? "-" }}</p>
+			<p class="text-xs text-primary-content font-semibold">{{ store.username() ?? '-' }}</p>
 		</button>
 		<button (click)="showHowToPlay()" class="w-fit h-5 px-2 rounded-full shadow-sm triad-gradient cursor-pointer">
 			<p class="text-xs text-primary-content font-semibold">?</p>
@@ -15,7 +15,7 @@
 
 <div class="w-full h-[calc(100%-32px)]">
 	@if (store.showHowToPlay()) {
-	<app-how-to-play />
+		<app-how-to-play />
 	}
 	<router-outlet />
 </div>

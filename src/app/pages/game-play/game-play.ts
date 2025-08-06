@@ -1,21 +1,22 @@
-import { NgClass } from '@angular/common'
+import { JsonPipe, NgClass } from '@angular/common'
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 import { delay, filter, tap } from 'rxjs'
 
+import { Bubble } from '../../components/bubble/bubble'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { GlobalStore } from '../../state/global.store'
-import { BubblesPage } from '../bubbles/bubbles.page'
-import { CueGroup } from './interfaces/cue.interface'
+import { GamePlayState } from './enums/game-play.enum'
+import { Cue } from './interfaces/cue.interface'
 import { GamePlayApi } from './services/game-play-api'
 import { HintService } from './services/hint-service'
 import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [BubblesPage, LottieComponent, ReactiveFormsModule, NgClass],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, Bubble, JsonPipe],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -24,13 +25,17 @@ export class GamePlay implements OnInit {
 
 	cueFetchingState = signal<RequestState>(RequestState.LOADING)
 
-	cueGroups = signal<CueGroup[]>([])
-
-	solutionStep = signal<'CHECK_TRIAD' | 'WRONG_TRIAD' | 'ANSWER' | null>(null)
-
-	answerState = signal<'CORRECT' | 'WRONG' | null>(null)
-
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
+
+	visibleCues = computed<Cue[]>(() =>
+		this.store
+			.cueGroups()
+			.filter((cueGroup) => cueGroup.available)
+			.map((cueGroup) => cueGroup.cues)
+			.flat(),
+	)
+
+	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
 
 	answerFormControl = new FormControl<string>('', { validators: [Validators.required] })
 
@@ -50,6 +55,8 @@ export class GamePlay implements OnInit {
 
 	protected readonly length = length
 
+	protected readonly GamePlayState = GamePlayState
+
 	private readonly gamePlayApi = inject(GamePlayApi)
 
 	private readonly turnService = inject(TurnService)
@@ -64,20 +71,21 @@ export class GamePlay implements OnInit {
 
 	constructor() {
 		effect(() => {
-			const selectedBubbles = this.store.selectedBubbles()
+			const selectedCues = this.store.selectedCues()
 
-			if (selectedBubbles.length === 3) {
-				this.solutionStep.set('CHECK_TRIAD')
+			if (selectedCues.length === 3) {
+				this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
 			} else {
-				this.solutionStep.set(null)
+				this.store.setGamePlayState(GamePlayState.PLAYING)
 			}
 		})
 	}
 
 	ngOnInit() {
+		this.store.setGamePlayState(GamePlayState.PLAYING)
 		this.gamePlayApi.getCues().subscribe({
 			next: (cueGroups) => {
-				this.cueGroups.set(cueGroups)
+				this.store.setCueGroups(cueGroups)
 				this.cueFetchingState.set(RequestState.READY)
 			},
 		})
@@ -90,33 +98,33 @@ export class GamePlay implements OnInit {
 			this.store.setHints(useHintResponse.hints)
 			this.store.setTurns(useHintResponse.turns)
 
-			this.store.setSelectedBubbles(this.hintService.getHintTriadBubbles(this.store.bubbles()))
+			this.store.setSelectedCues(this.hintService.getHintTriadCues(this.store.cueGroups()))
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
 	}
 
 	checkTriad() {
-		const selectedBubbles = this.store.selectedBubbles()
+		const selectedCues = this.store.selectedCues()
 
-		if (selectedBubbles.length === 3) {
+		if (selectedCues.length === 3) {
 			this.gamePlayApi
-				.checkTriad(selectedBubbles.map((bubble) => bubble.cueId))
+				.checkTriad(selectedCues.map((cue) => cue.id))
 				.pipe(
 					tap((success) => {
 						if (success) {
-							this.solutionStep.set('ANSWER')
+							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 							this.answerFieldRef()?.nativeElement.focus()
 						} else {
-							this.solutionStep.set('WRONG_TRIAD')
+							this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
 							this.useCurrentTurn()
 						}
 					}),
 					filter((success) => !success),
 					delay(3000),
 					tap(() => {
-						this.solutionStep.set(null)
-						this.store.setSelectedBubbles([])
+						this.store.setGamePlayState(GamePlayState.PLAYING)
+						this.store.setSelectedCues([])
 					}),
 				)
 				.subscribe()
@@ -130,25 +138,41 @@ export class GamePlay implements OnInit {
 				.pipe(
 					tap((success) => {
 						if (success) {
-							this.answerState.set('CORRECT')
-							this.store.setSelectedBubbles([])
+							this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
 						} else {
-							this.answerState.set('WRONG')
+							this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
 							this.useCurrentTurn()
 						}
+
+						this.answerFormControl.reset()
 					}),
 					delay(3000),
 				)
 				.subscribe({
 					next: (success) => {
 						if (success) {
-							this.store.setSelectedBubbles([])
+							this.store.removeSolvedCues(this.store.selectedCues())
+							this.store.setSelectedCues([])
+							this.store.setGamePlayState(GamePlayState.PLAYING)
+						} else {
+							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+							this.answerFieldRef()?.nativeElement.focus()
 						}
-
-						this.answerFormControl.reset()
-						this.answerState.set(null)
 					},
 				})
+		}
+	}
+
+	bubbleClicked(cue: Cue) {
+		const selectedCues = this.store.selectedCues()
+		const isCueSelected = selectedCues.some((selectedCues) => selectedCues.id === cue.id)
+
+		if (isCueSelected) {
+			this.store.removeSelectedCues(cue)
+		} else {
+			if (selectedCues.length < 3) {
+				this.store.addSelectedCues(cue)
+			}
 		}
 	}
 

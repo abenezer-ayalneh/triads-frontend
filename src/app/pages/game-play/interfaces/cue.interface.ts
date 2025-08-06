@@ -1,6 +1,7 @@
 export interface CueGroup {
 	id: number
 	commonWord: string
+	available: boolean
 	cues: Cue[]
 }
 

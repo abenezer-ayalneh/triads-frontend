@@ -1,11 +1,13 @@
-import { Bubble, SelectedBubble } from '../../pages/bubbles/interfaces/bubble.interface'
+import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
+import { Cue, CueGroup } from '../../pages/game-play/interfaces/cue.interface'
 import { TurnAndHint } from '../../pages/game-play/interfaces/turn-and-hint.interface'
 
 export interface GlobalState {
 	username: string | null
 	showHowToPlay: boolean
-	bubbles: Bubble[]
-	selectedBubbles: SelectedBubble[]
+	cueGroups: CueGroup[]
+	selectedCues: Cue[]
 	turns: TurnAndHint[]
 	hints: TurnAndHint[]
+	gamePlayState: GamePlayState
 }

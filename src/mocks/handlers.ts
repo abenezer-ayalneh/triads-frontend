@@ -11,6 +11,7 @@ export const handlers = [
 			{
 				id: 532,
 				commonWord: 'WINNER',
+				available: true,
 				cues: [
 					{ id: 1, word: 'PRIZE' },
 					{ id: 2, word: 'OSCAR' },
@@ -20,6 +21,7 @@ export const handlers = [
 			{
 				id: 500,
 				commonWord: 'PIANO',
+				available: true,
 				cues: [
 					{ id: 4, word: 'UPRIGHT' },
 					{ id: 5, word: 'TUNER' },
@@ -29,6 +31,7 @@ export const handlers = [
 			{
 				id: 391,
 				commonWord: 'SLAP',
+				available: true,
 				cues: [
 					{ id: 7, word: 'STICK' },
 					{ id: 8, word: 'IN THE FACE' },

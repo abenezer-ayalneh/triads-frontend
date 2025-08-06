@@ -18,7 +18,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 	cueGroups = input.required<CueGroup[]>()
 
-	selectedBubbleIds = computed(() => this.store.selectedBubbles().map((bubble) => bubble.id))
+	selectedBubbleIds = computed(() => this.store.selectedCues().map((bubble) => bubble.id))
 
 	readonly bubblesContainer = inject(ElementRef)
 
@@ -92,10 +92,10 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		if (chosenBubble.isBursting) return
 
 		const currentBubbles = this.store.bubbles()
-		const selectedBubbles = this.store.selectedBubbles()
+		const selectedCues = this.store.selectedCues()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
-		const isChosenBubblesSelected = selectedBubbles.some((bubble) => bubble.id === chosenBubble.id)
+		const isChosenBubblesSelected = selectedCues.some((bubble) => bubble.id === chosenBubble.id)
 
 		if (isChosenBubblesSelected) {
 			// Deselect the bubble - return to original size
@@ -117,7 +117,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 			}
 		} else {
 			// Check if we can select more bubbles (max 3)
-			if (selectedBubbles.length >= 3) {
+			if (selectedCues.length >= 3) {
 				return // Don't allow selection of 4th bubble
 			}
 
@@ -304,7 +304,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	private updateBubbles(): void {
 		const currentBubbles = this.store.bubbles()
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
-		const selectedBubblesIds = this.store.selectedBubbles().map((bubble) => bubble.id)
+		const selectedBubblesIds = this.store.selectedCues().map((bubble) => bubble.id)
 
 		const updatedBubbles = currentBubbles.map((bubble) => {
 			if (bubble.isBursting) {
@@ -353,7 +353,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		const centerX = containerWidth / 2
 		const centerY = containerHeight / 2
 		const uniformRadius = bubbles[0]?.radius || 60
-		const selectedBubblesIds = this.store.selectedBubbles().map((bubble) => bubble.id)
+		const selectedBubblesIds = this.store.selectedCues().map((bubble) => bubble.id)
 
 		// Diamond structure positions
 		const diamondPositions = [

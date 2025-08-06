@@ -19,5 +19,6 @@ export const appConfig: ApplicationConfig = {
 		provideLottieOptions({
 			player: () => import('lottie-web'),
 		}),
+		// provideCacheableAnimationLoader()
 	],
 }

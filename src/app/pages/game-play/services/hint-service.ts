@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core'
 
-import { Bubble } from '../../bubbles/interfaces/bubble.interface'
+import { CueGroup } from '../interfaces/cue.interface'
 import { TurnAndHint } from '../interfaces/turn-and-hint.interface'
 import { TurnService } from './turn-service'
 
@@ -39,18 +39,14 @@ export class HintService {
 		return { hints, turns }
 	}
 
-	getHintTriadBubbles(bubbles: Bubble[]) {
-		if (bubbles.length < 3) {
-			throw new Error('Not enough bubbles to get a hint')
+	getHintTriadCues(cueGroups: CueGroup[]) {
+		const unsolvedCueGroups = cueGroups.filter((cueGroup) => !cueGroup.available)
+		if (unsolvedCueGroups.length === 0) {
+			throw new Error('Not enough cue to get a hint')
 		}
 
-		const [fistBubble] = bubbles
+		const randomlySelectedGroup = unsolvedCueGroups[Math.floor(Math.random() * unsolvedCueGroups.length)]
 
-		const bubblesWithCommonKeyword = bubbles.filter((bubble) => bubble.commonWordId === fistBubble.commonWordId)
-		if (bubblesWithCommonKeyword.length < 3) {
-			throw new Error('Not enough bubbles to get a hint')
-		}
-
-		return bubblesWithCommonKeyword
+		return randomlySelectedGroup.cues
 	}
 }

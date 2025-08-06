@@ -1,19 +1,23 @@
 <div #bubblesContainer class="w-full h-full relative overflow-hidden">
 	<!-- Background bubbles -->
 	<div class="background-bubbles">
-		@for (i of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]; track i) {
-		<div class="background-bubble" [style.left]="(i * 7) % 100 + '%'" [style.top]="(i * 11) % 100 + '%'" [style.animation-delay]="(i * 0.3) + 's'"></div>
+		@for (i of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]; track i) {
+			<div
+				class="background-bubble"
+				[style.left]="((i * 7) % 100) + '%'"
+				[style.top]="((i * 11) % 100) + '%'"
+				[style.animation-delay]="i * 0.3 + 's'"></div>
 		}
 	</div>
 
 	<!-- Game bubbles -->
 	@for (bubble of store.bubbles(); track bubble.id) {
-	<div class="game-bubble" [ngStyle]="getBubbleStyle(bubble)" (click)="onBubbleClick(bubble)">
-		<!-- Lottie Animation Container -->
-		<div class="lottie-container"></div>
+		<div class="game-bubble" [ngStyle]="getBubbleStyle(bubble)" (click)="onBubbleClick(bubble)">
+			<!-- Lottie Animation Container -->
+			<div class="lottie-container"></div>
 
-		<!-- Bubble text -->
-		<span class="bubble-text" [class.selected-text]="selectedBubbleIds().includes(bubble.id)">{{ bubble.text }}</span>
-	</div>
+			<!-- Bubble text -->
+			<span class="bubble-text" [class.selected-text]="selectedBubbleIds().includes(bubble.id)">{{ bubble.text }}</span>
+		</div>
 	}
 </div>

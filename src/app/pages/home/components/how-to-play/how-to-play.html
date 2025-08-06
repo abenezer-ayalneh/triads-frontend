@@ -7,7 +7,7 @@
 	<div class="w-full max-w-2xl max-h-[80vh] rounded-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
 		<!-- Dialog Header -->
 		<header class="flex items-center justify-between py-2 px-4 bg-gradient-to-r triad-gradient text-white">
-			<h2 id="dialog-title" class="text-xl font-bold leading-tight">How to Play Triads {{store.showHowToPlay()}}</h2>
+			<h2 id="dialog-title" class="text-xl font-bold leading-tight">How to Play Triads {{ store.showHowToPlay() }}</h2>
 			<button
 				class="p-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors cursor-pointer"
 				(click)="onClose()"
@@ -71,10 +71,10 @@
 							</thead>
 							<tbody class="divide-y divide-gray-100">
 								@for (row of scoringData; track row.outcome) {
-								<tr class="hover:bg-gray-50">
-									<td class="px-4 py-3">{{ row.outcome }}</td>
-									<td class="px-4 py-3 text-center font-semibold text-green-600">{{ row.points }}</td>
-								</tr>
+									<tr class="hover:bg-gray-50">
+										<td class="px-4 py-3">{{ row.outcome }}</td>
+										<td class="px-4 py-3 text-center font-semibold text-green-600">{{ row.points }}</td>
+									</tr>
 								}
 							</tbody>
 						</table>
