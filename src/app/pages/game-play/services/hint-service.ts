@@ -42,11 +42,21 @@ export class HintService {
 	getHintTriadCues(cueGroups: CueGroup[], hints: TurnAndHint[]) {
 		const unsolvedCueGroups = cueGroups.filter((cueGroup) => cueGroup.available)
 		if (unsolvedCueGroups.length === 0) {
-			throw new Error('Not enough cue to get a hint')
+			throw new Error('Not enough cues to get a hint')
 		}
 
-		const randomlySelectedGroup = unsolvedCueGroups[Math.floor(Math.random() * unsolvedCueGroups.length)]
+		// Prefer the currently visible triad: either any initial available group,
+		// or if only the fourth group remains available, pick that explicitly.
+		let selectedGroup: CueGroup
+		if (unsolvedCueGroups.length === 1) {
+			selectedGroup = unsolvedCueGroups[0]
+		} else {
+			selectedGroup = unsolvedCueGroups[Math.floor(Math.random() * unsolvedCueGroups.length)]
+		}
 
-		return { cues: randomlySelectedGroup.cues, keywordLength: this.getNumberOfAvailableHints(hints) === 0 ? randomlySelectedGroup.commonWord.length : null }
+		return {
+			cues: selectedGroup.cues,
+			keywordLength: this.getNumberOfAvailableHints(hints) === 0 ? selectedGroup.commonWord.length : null,
+		}
 	}
 }

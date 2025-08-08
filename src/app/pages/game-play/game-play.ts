@@ -36,7 +36,8 @@ export class GamePlay implements OnInit {
 			.map((cueGroup) => cueGroup.cues)
 			.flat()
 
-		const fourthTriadCues = this.store.fourthCueGroup()?.cues ?? []
+		const fourthCueGroup = this.store.fourthCueGroup()
+		const fourthTriadCues = fourthCueGroup && fourthCueGroup.available ? fourthCueGroup.cues : []
 
 		return initialTriadCues.length > 0 ? initialTriadCues : fourthTriadCues
 	})
@@ -158,7 +159,14 @@ export class GamePlay implements OnInit {
 			const hints = this.store.hints()
 
 			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
-			const { cues, keywordLength } = this.hintService.getHintTriadCues(this.store.cueGroups(), hints)
+			const initialCueGroups = this.store.cueGroups()
+			const initialAvailableGroups = initialCueGroups.filter((group) => group.available)
+			let groupsForHint = initialAvailableGroups
+			if (initialAvailableGroups.length === 0) {
+				const fourthGroup = this.store.fourthCueGroup()
+				groupsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
+			}
+			const { cues, keywordLength } = this.hintService.getHintTriadCues(groupsForHint, hints)
 
 			// When the player uses his last hint, show the length of the keyword
 			if (this.hintService.getNumberOfAvailableHints(hints) === 0) {

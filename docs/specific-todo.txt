@@ -1,0 +1,11 @@
+Gameplay Flow
+- [ ] Add Cancel/Undo action in the answer phase to return to selection
+- [ ] Implement final challenge transition flow (convert 3 discovered KEYs into the final triad CUEs seamlessly)
+
+Animations & Audio (Bubbles Theme)
+- [ ] Integrate physics bubbles into the main play screen (replace static 3x3 grid)
+- [ ] Entry animation: bubbles rise from random bottom positions
+- [ ] Ambient motion: gentle shimmy + soft collisions between bubbles
+- [ ] On correct triad: burst the 3 bubbles with a pop sound and remove them from play
+- [ ] After burst: animate solved CUEs/KEY to descend to a collection area
+- [ ] After three triads solved: animate collected KEYwords to ascend and become final challenge CUE bubbles

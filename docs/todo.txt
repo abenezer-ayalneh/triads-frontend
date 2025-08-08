@@ -1,0 +1,51 @@
+Triads Frontend TODOs
+
+Onboarding & Returning Players
+- [ ] Gate the start button behind viewing QuickStart directions on first visit
+- [ ] Show a dedicated "READY TO PLAY?" screen for returning users (skip onboarding)
+
+Gameplay Flow
+- [ ] Show answer input automatically when exactly 3 bubbles are selected (remove intermediate "Check Solution" gate)
+- [ ] Add Cancel/Undo action in the answer phase to return to selection
+- [ ] Implement final challenge transition flow (convert 3 discovered KEYs into the final triad CUEs seamlessly)
+
+Hints, Turns, Strikes
+- [ ] Ensure a hint always consumes a turn (a strike), including when only 1 turn remains
+- [ ] When 3 cues remain, a hint should reveal the key’s FIRST letter (not length)
+- [ ] Keep hint behavior for 9/6 cues to highlight a valid triad
+
+Animations & Audio (Bubbles Theme)
+- [ ] Integrate physics bubbles into the main play screen (replace static 3x3 grid)
+- [ ] Entry animation: bubbles rise from random bottom positions
+- [ ] Ambient motion: gentle shimmy + soft collisions between bubbles
+- [ ] On correct triad: burst the 3 bubbles with a pop sound and remove them from play
+- [ ] After burst: animate solved CUEs/KEY to descend to a collection area
+- [ ] After three triads solved: animate collected KEYwords to ascend and become final challenge CUE bubbles
+
+UI Elements
+- [ ] Turns counter UI to reflect 3 → 2 → 1 with current highlighted (replace hearts or add an alternate visual per spec)
+- [ ] Profile dropdown: show player name, games played, date first played, cumulative score
+- [ ] Directions icon: ensure it opens the rules/directions (already present) and aligns with updated flow
+
+Data & Content Logic
+- [ ] Implement parsing of CUE from CUE+KEY phrases (e.g., PAYPAL -> PAL, PAY GRADE -> GRADE) when loading sets
+- [ ] Select one random 4-line set per game from a dataset (mock and real API)
+- [ ] Use first 3 lines as initial triads; 4th line derives the final challenge from the 3 discovered KEYs
+
+Scoring & Persistence
+- [ ] Align runtime scoring with the documented scoring table (How to Play)
+- [ ] Persist per-user cumulative stats (games played, wins, average score, date first played) and show in profile dropdown
+- [ ] Update header score to reflect current game score and/or cumulative where appropriate
+
+Responsive & Visual Polish
+- [ ] Ensure bubble sizing/layout adapts cleanly for mobile portrait/landscape (reuse physics page responsive logic)
+- [ ] Add sound assets and toggles (at least the pop for bursting)
+
+Mocks & API
+- [ ] Update MSW mocks to serve 4-line set data in CUE+KEY format to exercise parsing
+- [ ] Add endpoints for random set selection and any needed stats persistence (or local storage fallback)
+
+Testing
+- [ ] Add unit tests for hint/turn rules and first-letter hint behavior
+- [ ] Add tests for CUE parsing from CUE+KEY
+- [ ] Add e2e/DOM tests for gating start behind QuickStart and for the answer-input-on-3-selection flow
