@@ -6,6 +6,7 @@ export interface GlobalState {
 	username: string | null
 	showHowToPlay: boolean
 	cueGroups: CueGroup[]
+	fourthCueGroup: CueGroup | null
 	selectedCues: Cue[]
 	turns: TurnAndHint[]
 	hints: TurnAndHint[]

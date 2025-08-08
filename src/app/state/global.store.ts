@@ -9,6 +9,7 @@ const initialState: GlobalState = {
 	username: null,
 	showHowToPlay: false,
 	cueGroups: [],
+	fourthCueGroup: null,
 	selectedCues: [],
 	turns: [
 		{ id: 1, available: true },
@@ -35,6 +36,9 @@ export const GlobalStore = signalStore(
 		setCueGroups: (cueGroups: CueGroup[]) => {
 			patchState(store, (state) => ({ ...state, cueGroups: [...cueGroups] }))
 		},
+		setFourthCueGroup: (cueGroup: CueGroup | null) => {
+			patchState(store, (state) => ({ ...state, fourthCueGroup: cueGroup }))
+		},
 		setSelectedCues: (selectedCues: Cue[]) => {
 			patchState(store, (state) => ({ ...state, selectedCues: [...selectedCues] }))
 		},
@@ -53,14 +57,22 @@ export const GlobalStore = signalStore(
 		setGamePlayState(gamePlayState: GamePlayState) {
 			patchState(store, (state) => ({ ...state, gamePlayState }))
 		},
-		removeSolvedCues: (cues: Cue[]) => {
+		markCuesAsSolved: (cues: Cue[]) => {
 			const sampleCueIdToRemove = cues.map((cue) => cue.id)[0]
 			const cueGroupToRemove = store.cueGroups().find((cueGroup) => cueGroup.cues.map((cue) => cue.id).includes(sampleCueIdToRemove))
 
-			patchState(store, (state) => ({
-				...state,
-				cueGroups: state.cueGroups.map((cueGroup) => (cueGroup.id === cueGroupToRemove?.id ? { ...cueGroup, available: false } : cueGroup)),
-			}))
+			if (cueGroupToRemove) {
+				patchState(store, (state) => ({
+					...state,
+					cueGroups: state.cueGroups.map((cueGroup) => (cueGroup.id === cueGroupToRemove.id ? { ...cueGroup, available: false } : cueGroup)),
+				}))
+			} else {
+				const fourthCueGroup = store.fourthCueGroup()
+
+				if (fourthCueGroup && fourthCueGroup.cues.map((cue) => cue.id).includes(sampleCueIdToRemove)) {
+					patchState(store, (state) => ({ ...state, fourthCueGroup: { ...fourthCueGroup, available: false } }))
+				}
+			}
 		},
 	})),
 	withHooks({

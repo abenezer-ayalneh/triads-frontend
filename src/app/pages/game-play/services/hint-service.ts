@@ -14,7 +14,7 @@ export class HintService {
 		return hints.some((hint) => hint.available)
 	}
 
-	numberOfHintsLeft(hints: TurnAndHint[]) {
+	getNumberOfAvailableHints(hints: TurnAndHint[]) {
 		return hints.filter((hint) => hint.available).length
 	}
 
@@ -39,7 +39,7 @@ export class HintService {
 		return { hints, turns }
 	}
 
-	getHintTriadCues(cueGroups: CueGroup[]) {
+	getHintTriadCues(cueGroups: CueGroup[], hints: TurnAndHint[]) {
 		const unsolvedCueGroups = cueGroups.filter((cueGroup) => cueGroup.available)
 		if (unsolvedCueGroups.length === 0) {
 			throw new Error('Not enough cue to get a hint')
@@ -47,6 +47,6 @@ export class HintService {
 
 		const randomlySelectedGroup = unsolvedCueGroups[Math.floor(Math.random() * unsolvedCueGroups.length)]
 
-		return randomlySelectedGroup.cues
+		return { cues: randomlySelectedGroup.cues, keywordLength: this.getNumberOfAvailableHints(hints) === 0 ? randomlySelectedGroup.commonWord.length : null }
 	}
 }

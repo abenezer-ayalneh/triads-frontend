@@ -1,4 +1,4 @@
-import { NgClass } from '@angular/common'
+import { JsonPipe, NgClass } from '@angular/common'
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
@@ -16,7 +16,7 @@ import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, Bubble],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, Bubble, JsonPipe],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -25,22 +25,18 @@ export class GamePlay implements OnInit {
 
 	cueFetchingState = signal<RequestState>(RequestState.LOADING)
 
+	keywordLengthHint = signal<number | null>(null)
+
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
 	visibleCues = computed<Cue[]>(() => {
 		const initialTriadCues = this.store
 			.cueGroups()
-			.slice(0, 3)
 			.filter((cueGroup) => cueGroup.available)
 			.map((cueGroup) => cueGroup.cues)
 			.flat()
 
-		const fourthTriadCues = this.store
-			.cueGroups()
-			.slice(2)
-			.filter((cueGroup) => cueGroup.available)
-			.map((cueGroup) => cueGroup.cues)
-			.flat()
+		const fourthTriadCues = this.store.fourthCueGroup()?.cues ?? []
 
 		return initialTriadCues.length > 0 ? initialTriadCues : fourthTriadCues
 	})
@@ -49,7 +45,7 @@ export class GamePlay implements OnInit {
 
 	gameWon = computed(() => {
 		const cueGroups = this.store.cueGroups()
-		return cueGroups.length > 0 && cueGroups.every((cueGroup) => !cueGroup.available)
+		return cueGroups.length > 0 && cueGroups.every((cueGroup) => !cueGroup.available) && !this.store.fourthCueGroup()?.available
 	})
 
 	gameLost = computed(() => this.ranOutOfTurns() && !this.gameWon())
@@ -122,10 +118,15 @@ export class GamePlay implements OnInit {
 	}
 
 	ngOnInit() {
+		this.initializeGame()
+	}
+
+	initializeGame() {
 		this.store.setGamePlayState(GamePlayState.PLAYING)
 		this.gamePlayApi.getCues().subscribe({
 			next: (cueGroups) => {
-				this.store.setCueGroups(cueGroups)
+				this.store.setCueGroups(cueGroups.slice(0, 3))
+				this.store.setFourthCueGroup(cueGroups[3] ?? null)
 				this.cueFetchingState.set(RequestState.READY)
 			},
 		})
@@ -148,22 +149,30 @@ export class GamePlay implements OnInit {
 
 		// Reload cues
 		this.cueFetchingState.set(RequestState.LOADING)
-		this.gamePlayApi.getCues().subscribe({
-			next: (cueGroups) => {
-				this.store.setCueGroups(cueGroups)
-				this.cueFetchingState.set(RequestState.READY)
-			},
-		})
+		this.initializeGame()
 	}
 
 	useHint() {
 		this.hintUseConfirmationModalRef().nativeElement.close()
 		try {
-			const useHintResponse = this.hintService.useHint(this.store.hints(), this.store.turns())
+			const hints = this.store.hints()
+
+			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
+			const { cues, keywordLength } = this.hintService.getHintTriadCues(this.store.cueGroups(), hints)
+
+			// When the player uses his last hint, show the length of the keyword
+			if (this.hintService.getNumberOfAvailableHints(hints) === 0) {
+				this.keywordLengthHint.set(keywordLength)
+			}
+			// Show the hint cues as selected on the UI
+			this.store.setSelectedCues(cues)
+
+			// Update the hints and turn values
 			this.store.setHints(useHintResponse.hints)
 			this.store.setTurns(useHintResponse.turns)
 
-			this.store.setSelectedCues(this.hintService.getHintTriadCues(this.store.cueGroups()))
+			// Skip the "Check Solution" step
+			this.checkTriad()
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
@@ -221,13 +230,15 @@ export class GamePlay implements OnInit {
 						// Only change state if not in WON or LOST state
 						if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
 							if (success) {
-								this.store.removeSolvedCues(this.store.selectedCues())
+								this.store.markCuesAsSolved(this.store.selectedCues())
 								this.store.setSelectedCues([])
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 							} else {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.answerFieldRef()?.nativeElement.focus()
 							}
+
+							this.keywordLengthHint.set(null)
 						}
 					},
 				})

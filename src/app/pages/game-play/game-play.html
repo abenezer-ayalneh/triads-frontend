@@ -30,11 +30,18 @@
 		</div>
 
 		<div
-			class="w-full h-fit flex-col justify-center items-center px-4 py-2"
+			class="w-full h-fit flex-col justify-center items-center px-4 py-2 gap-1"
 			[class]="{
 				flex: store.gamePlayState() === GamePlayState.ACCEPT_ANSWER || store.gamePlayState() === GamePlayState.WRONG_ANSWER,
 				hidden: store.gamePlayState() !== GamePlayState.ACCEPT_ANSWER && store.gamePlayState() !== GamePlayState.WRONG_ANSWER,
 			}">
+			@if (keywordLengthHint() !== null) {
+				<div class="bg-info/20 backdrop-blur-2xl rounded-lg px-4 py-1 heartbeat">
+					<p class="text-info-content font-normal text-lg">
+						Hint: <span class="font-bold">{{ keywordLengthHint() }}</span> lettered word
+					</p>
+				</div>
+			}
 			<div class="w-[80%] h-fit flex justify-center items-center gap-2">
 				<input
 					#answerField
