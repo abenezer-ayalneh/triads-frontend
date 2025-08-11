@@ -1,5 +1,18 @@
 import { CommonModule } from '@angular/common'
-import { AfterViewInit, ChangeDetectionStrategy, Component, computed, ElementRef, HostListener, inject, input, OnDestroy, OnInit, signal } from '@angular/core'
+import {
+	AfterViewInit,
+	ChangeDetectionStrategy,
+	Component,
+	computed,
+	effect,
+	ElementRef,
+	HostListener,
+	inject,
+	input,
+	OnDestroy,
+	OnInit,
+	signal,
+} from '@angular/core'
 import lottie, { AnimationItem } from 'lottie-web'
 
 import { GlobalStore } from '../../state/global.store'
@@ -24,6 +37,9 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 	readonly bubblesContainer = inject(ElementRef)
 
+	// Collected KEY words area (bottom stack)
+	collectedKeys = signal<{ id: number; text: string }[]>([])
+
 	private readonly gameWords = computed(() =>
 		this.cueGroups()
 			.map((cueGroup) => cueGroup.cues)
@@ -36,6 +52,8 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	private lottieAnimations: AnimationItem[] = []
 
 	private resizeObserver: ResizeObserver | null = null
+
+	private popAudio: HTMLAudioElement | null = typeof Audio !== 'undefined' ? new Audio('/sounds/pop.mp3') : null
 
 	private readonly bubbleColors = [
 		'#D4A574', // light brown/bronze
@@ -51,9 +69,39 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 	private resizeTimeout: ReturnType<typeof setTimeout> | undefined = undefined
 
+	private collectedGroupIds = new Set<number>()
+
 	ngOnInit(): void {
 		this.initializeBubbles()
 		this.startAnimation()
+
+		// Re-initialize when cue groups change (e.g., switch to final challenge)
+		effect(() => {
+			// Track IDs to detect a change without triggering excessive work
+			const ids = this.cueGroups()
+				.map((g) => [g.id, g.available, g.cues.map((c) => c.id).join('-')].join(':'))
+				.join('|')
+			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+			ids
+			this.initializeBubbles()
+		})
+
+		// When a triad is solved, capture its KEY into collection
+		effect(() => {
+			const state = this.store.gamePlayState()
+			if (state === 'CORRECT_ANSWER') {
+				const selected = this.store.selectedCues()
+				if (selected.length === 3) {
+					const groups = this.store.cueGroups()
+					const sampleId = selected[0].id
+					const group = groups.find((g) => g.cues.map((c) => c.id).includes(sampleId))
+					if (group && !this.collectedGroupIds.has(group.id)) {
+						this.collectedGroupIds.add(group.id)
+						this.collectedKeys.update((arr) => [...arr, { id: group.id, text: group.commonWord }])
+					}
+				}
+			}
+		})
 	}
 
 	ngAfterViewInit(): void {
@@ -95,73 +143,21 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 		const currentBubbles = this.bubbles()
 		const selectedCues = this.store.selectedCues()
-		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
 		const isChosenBubblesSelected = selectedCues.some((bubble) => bubble.id === chosenBubble.id)
 
 		if (isChosenBubblesSelected) {
-			// Deselect the bubble - return to original size
-			const updatedBubbles = currentBubbles.map((bubble) =>
-				bubble.id === chosenBubble.id
-					? {
-							...bubble,
-							color: bubble.originalColor,
-							radius: bubble.originalRadius, // Use the stored original radius
-						}
-					: bubble,
-			)
-			this.bubbles.set(updatedBubbles)
+			// Deselect the bubble
+			this.bubbles.set(currentBubbles)
 			this.store.removeSelectedCue({ id: chosenBubble.cueId, word: chosenBubble.cueWord })
-
-			// Restart Lottie animation for deselected bubble
-			if (this.lottieAnimations[chosenBubble.id]) {
-				this.lottieAnimations[chosenBubble.id].play()
-			}
 		} else {
 			// Check if we can select more bubbles (max 3)
 			if (selectedCues.length >= 3) {
 				return // Don't allow selection of 4th bubble
 			}
-
-			// Select the bubble - scale up by 50% with responsive scaling
-			let maxRadius = Math.min(containerWidth, containerHeight) * 0.15
-			if (containerWidth < 768) {
-				maxRadius = Math.min(containerWidth, containerHeight) * 0.18 // Allow slightly larger on tablets
-			}
-			if (containerWidth < 480) {
-				maxRadius = Math.min(containerWidth, containerHeight) * 0.2 // Allow even larger on mobile
-			}
-
-			// Calculate responsive scaling factor based on screen size
-			let scaleFactor = 1.5 // Default 50% increase
-			if (containerWidth < 768) {
-				scaleFactor = 1.3 // 30% increase on tablets
-			}
-			if (containerWidth < 480) {
-				scaleFactor = 1.75 // 20% increase on mobile
-			}
-
-			// Ensure the selected radius is at least 50% larger than original
-			const minSelectedRadius = chosenBubble.originalRadius * 1.5
-			const calculatedSelectedRadius = chosenBubble.originalRadius * scaleFactor
-			const selectedRadius = Math.max(minSelectedRadius, Math.min(calculatedSelectedRadius, maxRadius))
-
-			const updatedBubbles = currentBubbles.map((bubble) =>
-				bubble.id === chosenBubble.id
-					? {
-							...bubble,
-							color: '#FFFFFF', // White background
-							radius: selectedRadius,
-						}
-					: bubble,
-			)
-			this.bubbles.set(updatedBubbles)
+			// Select the bubble (no scaling or color changes)
+			this.bubbles.set(currentBubbles)
 			this.store.addSelectedCue({ id: chosenBubble.cueId, word: chosenBubble.cueWord })
-
-			// Pause Lottie animation for selected bubble
-			if (this.lottieAnimations[chosenBubble.id]) {
-				this.lottieAnimations[chosenBubble.id].pause()
-			}
 		}
 	}
 
@@ -242,52 +238,80 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		}
 		const uniformRadius = Math.min(maxRadius, containerMaxRadius)
 
+		// Scale bubbles to be 1.5x larger (half of previous 3x) while staying responsive and within container
+		let containerMaxRadiusLarge = Math.min(containerWidth, containerHeight) * 0.18
+		if (containerWidth < 768) {
+			containerMaxRadiusLarge = Math.min(containerWidth, containerHeight) * 0.22
+		}
+		if (containerWidth < 480) {
+			containerMaxRadiusLarge = Math.min(containerWidth, containerHeight) * 0.26
+		}
+		const scaledRadius = Math.min(uniformRadius * 1.5, containerMaxRadiusLarge)
+
 		// Diamond structure positions (9 bubbles in a diamond pattern)
 		const centerX = containerWidth / 2
 		const centerY = containerHeight / 2
 		const diamondPositions = [
 			// Top
-			{ x: centerX, y: centerY - uniformRadius * 2.5 },
+			{ x: centerX, y: centerY - scaledRadius * 2.5 },
 			// Second row (left and right)
-			{ x: centerX - uniformRadius * 2, y: centerY - uniformRadius * 1.5 },
-			{ x: centerX + uniformRadius * 2, y: centerY - uniformRadius * 1.5 },
+			{ x: centerX - scaledRadius * 2, y: centerY - scaledRadius * 1.5 },
+			{ x: centerX + scaledRadius * 2, y: centerY - scaledRadius * 1.5 },
 			// Third row (left, center, right)
-			{ x: centerX - uniformRadius * 2, y: centerY },
+			{ x: centerX - scaledRadius * 2, y: centerY },
 			{ x: centerX, y: centerY },
-			{ x: centerX + uniformRadius * 2, y: centerY },
+			{ x: centerX + scaledRadius * 2, y: centerY },
 			// Fourth row (left and right)
-			{ x: centerX - uniformRadius * 2, y: centerY + uniformRadius * 1.5 },
-			{ x: centerX + uniformRadius * 2, y: centerY + uniformRadius * 1.5 },
+			{ x: centerX - scaledRadius * 2, y: centerY + scaledRadius * 1.5 },
+			{ x: centerX + scaledRadius * 2, y: centerY + scaledRadius * 1.5 },
 			// Bottom
-			{ x: centerX, y: centerY + uniformRadius * 2.5 },
+			{ x: centerX, y: centerY + scaledRadius * 2.5 },
 		]
 
 		// Ensure positions are within container bounds
 		const adjustedPositions = diamondPositions.map((pos) => ({
-			x: Math.max(uniformRadius, Math.min(containerWidth - uniformRadius, pos.x)),
-			y: Math.max(uniformRadius, Math.min(containerHeight - uniformRadius, pos.y)),
+			x: Math.max(scaledRadius, Math.min(containerWidth - scaledRadius, pos.x)),
+			y: Math.max(scaledRadius, Math.min(containerHeight - scaledRadius, pos.y)),
 		}))
 
-		this.cueGroups().forEach((cueGroup, index) => {
+		const initialPhaseGroups = this.cueGroups().filter((g) => g.available)
+		const isFinalPhase = initialPhaseGroups.length === 0
+
+		let positionIndex = 0
+		this.cueGroups().forEach((cueGroup) => {
 			cueGroup.cues.forEach((cue) => {
-				if (index < adjustedPositions.length) {
+				if (positionIndex < adjustedPositions.length) {
+					// Start position: from random bottom in initial phase, from collection area in final phase
+					let startX = Math.random() * containerWidth
+					let startY = containerHeight + scaledRadius
+					if (isFinalPhase && this.collectedKeys().length >= 3) {
+						const slot = Math.min(positionIndex, 2)
+						const spacing = containerWidth / 4
+						startX = spacing * (slot + 1)
+						startY = containerHeight - scaledRadius * 0.5
+					}
+					const targetPos = adjustedPositions[positionIndex]
+					const colorIndex = positionIndex % this.bubbleColors.length
 					newBubbles.push({
 						id: cue.id,
 						cueId: cue.id,
 						cueWord: cue.word,
 						commonWordId: cueGroup.id,
 						text: cue.word,
-						color: this.bubbleColors[index],
-						originalColor: this.bubbleColors[index],
-						x: adjustedPositions[index].x,
-						y: adjustedPositions[index].y,
-						vx: (Math.random() - 0.5) * 0.8, // Reduced speed
-						vy: (Math.random() - 0.5) * 0.8, // Reduced speed
-						radius: uniformRadius,
-						originalRadius: uniformRadius, // Store the original radius
+						color: this.bubbleColors[colorIndex],
+						originalColor: this.bubbleColors[colorIndex],
+						x: startX,
+						y: startY,
+						entryTargetX: targetPos.x,
+						entryTargetY: targetPos.y,
+						vx: (Math.random() - 0.5) * 0.5, // Slower speed to reduce collisions
+						vy: (Math.random() - 0.5) * 0.5, // Slower speed to reduce collisions
+						radius: scaledRadius,
+						originalRadius: scaledRadius, // Store the original radius
 						opacity: 1,
 						isBursting: false,
 					})
+					positionIndex += 1
 				}
 			})
 		})
@@ -308,16 +332,42 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 		const selectedBubblesIds = this.store.selectedCues().map((bubble) => bubble.id)
 
+		const gameState = this.store.gamePlayState()
 		const updatedBubbles = currentBubbles.map((bubble) => {
 			if (bubble.isBursting) {
-				return bubble
+				// Simple fade-out for burst; can be replaced by sprite animation
+				const newOpacity = Math.max(0, bubble.opacity - 0.06)
+				return { ...bubble, opacity: newOpacity }
+			}
+
+			// Trigger burst when answer is correct
+			if (gameState === 'CORRECT_ANSWER' && selectedBubblesIds.includes(bubble.id)) {
+				// Play pop sound once
+				this.popAudio?.play()
+				return { ...bubble, isBursting: true, burstProgress: 0 }
 			}
 
 			if (selectedBubblesIds.includes(bubble.id)) {
 				return bubble // Selected bubbles don't move
 			}
 
-			// Update position
+			// Entry rise: move towards entryTarget if set
+			if (typeof bubble.entryTargetX === 'number' && typeof bubble.entryTargetY === 'number') {
+				const dx = bubble.entryTargetX - bubble.x
+				const dy = bubble.entryTargetY - bubble.y
+				const dist = Math.sqrt(dx * dx + dy * dy)
+				const step = Math.max(1, Math.min(6, dist * 0.06))
+				if (dist > 1) {
+					const nx = bubble.x + (dx / dist) * step
+					const ny = bubble.y + (dy / dist) * step
+					return { ...bubble, x: nx, y: ny }
+				} else {
+					// Reached target, clear entry targets
+					return bubble
+				}
+			}
+
+			// Update position (ambient motion)
 			let newX = bubble.x + bubble.vx
 			let newY = bubble.y + bubble.vy
 
@@ -348,7 +398,9 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		// Apply gentle restoration to diamond structure
 		const bubblesWithRestoration = this.restoreDiamondStructure(bubblesWithCollisions, containerWidth, containerHeight)
 
-		this.bubbles.set(bubblesWithRestoration)
+		// Remove fully faded burst bubbles
+		const remaining = bubblesWithRestoration.filter((b) => b.opacity > 0.01)
+		this.bubbles.set(remaining)
 	}
 
 	private restoreDiamondStructure(bubbles: Bubble[], containerWidth: number, containerHeight: number): Bubble[] {
@@ -430,88 +482,76 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 	private checkCollisions(bubbles: Bubble[]): Bubble[] {
 		const updatedBubbles = [...bubbles]
+		const { width: containerWidth, height: containerHeight } = this.getContainerDimensions()
 
 		for (let i = 0; i < updatedBubbles.length; i++) {
-			const bubble1 = updatedBubbles[i]
+			const bubbleA = updatedBubbles[i]
 
-			// Skip bursting bubbles
-			if (bubble1.isBursting) continue
+			if (bubbleA.isBursting) continue
 
 			for (let j = i + 1; j < updatedBubbles.length; j++) {
-				const bubble2 = updatedBubbles[j]
+				const bubbleB = updatedBubbles[j]
 
-				// Skip bursting bubbles
-				if (bubble2.isBursting) continue
+				if (bubbleB.isBursting) continue
 
-				// Skip if both bubbles are selected (selected bubbles can't collide with each other)
-				if ([bubble1.id, bubble2.id].every((bubbleId) => this.selectedBubbleIds().includes(bubbleId))) {
-					continue
-				}
+				// If both are selected, do not attempt to move them
+				const aSelected = this.selectedBubbleIds().includes(bubbleA.id)
+				const bSelected = this.selectedBubbleIds().includes(bubbleB.id)
+				if (aSelected && bSelected) continue
 
-				// Calculate distance between bubble centers
-				const dx = bubble2.x - bubble1.x
-				const dy = bubble2.y - bubble1.y
-				const distance = Math.sqrt(dx * dx + dy * dy)
-				const minDistance = bubble1.radius + bubble2.radius + 10 // Add extra padding to prevent overlap
+				const dx = bubbleB.x - bubbleA.x
+				const dy = bubbleB.y - bubbleA.y
+				const distance = Math.sqrt(dx * dx + dy * dy) || 0.0001
+				const minDistance = bubbleA.radius + bubbleB.radius + 8 // padding to prevent any visual overlap
 
-				// Check if bubbles are colliding
 				if (distance < minDistance) {
-					// Calculate collision response
-					const angle = Math.atan2(dy, dx)
-					const sin = Math.sin(angle)
-					const cos = Math.cos(angle)
-
-					// Rotate velocities
-					const vx1 = bubble1.vx * cos + bubble1.vy * sin
-					const vy1 = bubble1.vy * cos - bubble1.vx * sin
-					const vx2 = bubble2.vx * cos + bubble2.vy * sin
-					const vy2 = bubble2.vy * cos - bubble2.vx * sin
-
-					// Swap the rotated velocities (elastic collision)
-					const tempVx = vx1
-
-					// Apply stronger damping to prevent excessive bouncing
-					const damping = 0.6
-
-					// Update velocities with damping
-					// If bubble1 is selected, only update bubble2's velocity
-					if (!this.selectedBubbleIds().includes(bubble1.id)) {
-						updatedBubbles[i] = {
-							...bubble1,
-							vx: (vx2 * cos - vy1 * sin) * damping,
-							vy: (vy1 * cos + vx2 * sin) * damping,
-						}
-					}
-
-					// If bubble2 is selected, only update bubble1's velocity
-					if (!this.selectedBubbleIds().includes(bubble2.id)) {
-						updatedBubbles[j] = {
-							...bubble2,
-							vx: (tempVx * cos - vy2 * sin) * damping,
-							vy: (vy2 * cos + tempVx * sin) * damping,
-						}
-					}
-
-					// Separate bubbles to prevent sticking with more aggressive separation
+					// Normalized direction from A to B
+					const nx = dx / distance
+					const ny = dy / distance
 					const overlap = minDistance - distance
-					const separationX = (overlap * dx) / distance
-					const separationY = (overlap * dy) / distance
 
-					// Only move non-selected bubbles
-					if (!this.selectedBubbleIds().includes(bubble1.id)) {
-						updatedBubbles[i] = {
-							...updatedBubbles[i],
-							x: bubble1.x - separationX * 0.6,
-							y: bubble1.y - separationY * 0.6,
-						}
+					// How much to move each bubble
+					let moveAX = 0
+					let moveAY = 0
+					let moveBX = 0
+					let moveBY = 0
+
+					if (aSelected && !bSelected) {
+						// Move only B fully away from A
+						moveBX = nx * overlap
+						moveBY = ny * overlap
+					} else if (!aSelected && bSelected) {
+						// Move only A fully away from B
+						moveAX = -nx * overlap
+						moveAY = -ny * overlap
+					} else {
+						// Neither selected: split the correction evenly
+						moveAX = -(nx * overlap) / 2
+						moveAY = -(ny * overlap) / 2
+						moveBX = (nx * overlap) / 2
+						moveBY = (ny * overlap) / 2
 					}
 
-					if (!this.selectedBubbleIds().includes(bubble2.id)) {
-						updatedBubbles[j] = {
-							...updatedBubbles[j],
-							x: bubble2.x + separationX * 0.6,
-							y: bubble2.y + separationY * 0.6,
-						}
+					// Apply movement
+					if (!aSelected) {
+						const newAX = Math.max(bubbleA.radius, Math.min(containerWidth - bubbleA.radius, bubbleA.x + moveAX))
+						const newAY = Math.max(bubbleA.radius, Math.min(containerHeight - bubbleA.radius, bubbleA.y + moveAY))
+						updatedBubbles[i] = { ...updatedBubbles[i], x: newAX, y: newAY }
+					}
+
+					if (!bSelected) {
+						const newBX = Math.max(bubbleB.radius, Math.min(containerWidth - bubbleB.radius, bubbleB.x + moveBX))
+						const newBY = Math.max(bubbleB.radius, Math.min(containerHeight - bubbleB.radius, bubbleB.y + moveBY))
+						updatedBubbles[j] = { ...updatedBubbles[j], x: newBX, y: newBY }
+					}
+
+					// Lightly damp velocities to reduce jittering
+					const damping = 0.85
+					if (!aSelected) {
+						updatedBubbles[i] = { ...updatedBubbles[i], vx: updatedBubbles[i].vx * damping, vy: updatedBubbles[i].vy * damping }
+					}
+					if (!bSelected) {
+						updatedBubbles[j] = { ...updatedBubbles[j], vx: updatedBubbles[j].vx * damping, vy: updatedBubbles[j].vy * damping }
 					}
 				}
 			}

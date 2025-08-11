@@ -1,22 +1,23 @@
-import { JsonPipe, NgClass } from '@angular/common'
+import { NgClass } from '@angular/common'
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 import { delay, filter, tap } from 'rxjs'
 
-import { Bubble } from '../../components/bubble/bubble'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { GlobalStore } from '../../state/global.store'
+import { BubblesPage } from '../bubbles/bubbles.page'
 import { GamePlayState } from './enums/game-play.enum'
 import { Cue } from './interfaces/cue.interface'
+import { CueGroup } from './interfaces/cue.interface'
 import { GamePlayApi } from './services/game-play-api'
 import { HintService } from './services/hint-service'
 import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, Bubble, JsonPipe],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubblesPage],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -40,6 +41,14 @@ export class GamePlay implements OnInit {
 		const fourthTriadCues = fourthCueGroup && fourthCueGroup.available ? fourthCueGroup.cues : []
 
 		return initialTriadCues.length > 0 ? initialTriadCues : fourthTriadCues
+	})
+
+	// Visible cue groups for physics bubbles component
+	visibleCueGroups = computed<CueGroup[]>(() => {
+		const availableInitial = this.store.cueGroups().filter((group) => group.available)
+		if (availableInitial.length > 0) return availableInitial
+		const fourth = this.store.fourthCueGroup()
+		return fourth && fourth.available ? [fourth] : []
 	})
 
 	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
@@ -213,6 +222,21 @@ export class GamePlay implements OnInit {
 					}),
 				)
 				.subscribe()
+		}
+	}
+
+	cancelAnswer() {
+		// Return to selection phase and keep current selections
+		this.store.setGamePlayState(GamePlayState.PLAYING)
+		this.keywordLengthHint.set(null)
+	}
+
+	clearSelection() {
+		// Clear all selected cues and reset transient UI state
+		this.store.setSelectedCues([])
+		this.keywordLengthHint.set(null)
+		if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
+			this.store.setGamePlayState(GamePlayState.PLAYING)
 		}
 	}
 

@@ -8,15 +8,11 @@
 				</span>
 			</div>
 		} @else if (cueFetchingState() === RequestState.READY) {
-			<div #bubblesContainer class="w-full h-full">
-				<!--        <app-bubbles-page [cueGroups]="this.store.cueGroups()"/>-->
-				<div class="w-full h-full grid grid-cols-3 grid-rows-3">
-					@for (cue of visibleCues(); track cue.id) {
-						<div class="w-full h-full flex justify-center items-center">
-							<app-bubble [cue]="cue" (whenClickedOutput)="bubbleClicked($event)" />
-						</div>
-					}
-				</div>
+			<div #bubblesContainer class="w-full h-full relative">
+				@if (store.selectedCues().length > 0) {
+					<button type="button" class="btn btn-sm absolute top-2 right-2 z-10" (click)="clearSelection()">Clear</button>
+				}
+				<app-bubbles-page [cueGroups]="visibleCueGroups()" />
 			</div>
 		}
 	</div>
@@ -30,7 +26,7 @@
 		</div>
 
 		<div
-			class="w-full h-fit flex-col justify-center items-center px-4 py-2 gap-1"
+			class="w-full h-fit flex-col justify-center items-center px-4 py-2 gap-2"
 			[class]="{
 				flex: store.gamePlayState() === GamePlayState.ACCEPT_ANSWER || store.gamePlayState() === GamePlayState.WRONG_ANSWER,
 				hidden: store.gamePlayState() !== GamePlayState.ACCEPT_ANSWER && store.gamePlayState() !== GamePlayState.WRONG_ANSWER,

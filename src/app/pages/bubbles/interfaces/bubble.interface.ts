@@ -14,6 +14,11 @@ export interface Bubble {
 	originalRadius: number // Store the original radius for deselection
 	opacity: number
 	isBursting: boolean
+	// Entry animation target positions (rise from bottom)
+	entryTargetX?: number
+	entryTargetY?: number
+	// Burst progress for animation timing (0..1)
+	burstProgress?: number
 }
 
 export interface SelectedBubble {

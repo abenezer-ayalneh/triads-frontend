@@ -12,12 +12,23 @@
 
 	<!-- Game bubbles -->
 	@for (bubble of bubbles(); track bubble.id) {
-		<div class="game-bubble circle" [ngStyle]="getBubbleStyle(bubble)" (click)="onBubbleClick(bubble)">
+		<div
+			class="game-bubble circle"
+			[class.selected]="selectedBubbleIds().includes(bubble.id)"
+			[ngStyle]="getBubbleStyle(bubble)"
+			(click)="onBubbleClick(bubble)">
 			<!-- Lottie Animation Container -->
 			<div class="lottie-container"></div>
 
 			<!-- Bubble text -->
-			<span class="bubble-text" [class.selected-text]="selectedBubbleIds().includes(bubble.id)">{{ bubble.text }}</span>
+			<span class="bubble-text">{{ bubble.text }}</span>
 		</div>
 	}
+
+	<!-- Collected KEY stack -->
+	<div class="collected-keys">
+		@for (k of collectedKeys(); track k.id) {
+			<span class="key-chip">{{ k.text }}</span>
+		}
+	</div>
 </div>
