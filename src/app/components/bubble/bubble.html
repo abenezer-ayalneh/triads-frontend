@@ -1,3 +1,16 @@
-<div role="button" (click)="whenClicked()" class="w-28 h-28 aspect-square bg-primary circle flex justify-center items-center" [class.bg-secondary]="selected()">
-	<p class="text-primary-content font-medium text-sm text-center text-pretty" [class.text-secondary-content]="selected()">{{ text() }}</p>
+<!--<div role="button" (click)="whenClicked()" class="w-28 h-28 aspect-square bg-primary circle flex justify-center items-center" [class.bg-secondary]="selected()">-->
+<!--	<p class="text-primary-content font-medium text-sm text-center text-pretty" [class.text-secondary-content]="selected()">{{ text() }}</p>-->
+<!--</div>-->
+
+<div
+	id="bubble-{{ cue().id }}"
+	class="w-32 h-32 aspect-square circle contain-content relative cursor-pointer animated-color"
+	[class.selected]="selected() && !pop()"
+	(click)="whenClicked()">
+	@if (pop()) {
+		<div lottie [options]="bubblePopAnimationOptions" class="w-full h-full aspect-square circle contain-content relative cursor-pointer"></div>
+	} @else {
+		<img src="images/bubble.png" alt="bubble" />
+	}
+	<p id="cue-{{ cue().id }}" class="text-white text-lg font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">{{ cue().word }}</p>
 </div>

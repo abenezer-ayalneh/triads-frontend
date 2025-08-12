@@ -1,6 +1,6 @@
 <div class="w-full h-full flex flex-col relative">
 	<!--Ballons Section-->
-	<div class="w-full grow px-2 py-6 overflow-hidden">
+	<div class="w-full h-[calc(100%-208px)] p-2 overflow-visible">
 		@if (cueFetchingState() === RequestState.LOADING) {
 			<div class="w-full h-full flex justify-center items-center">
 				<span class="w-40 h-40 bg-neutral/20 rounded-2xl backdrop-blur-sm">
@@ -8,12 +8,7 @@
 				</span>
 			</div>
 		} @else if (cueFetchingState() === RequestState.READY) {
-			<div #bubblesContainer class="w-full h-full relative">
-				@if (store.selectedCues().length > 0) {
-					<button type="button" class="btn btn-sm absolute top-2 right-2 z-10" (click)="clearSelection()">Clear</button>
-				}
-				<app-bubbles-page [cueGroups]="visibleCueGroups()" />
-			</div>
+			<app-bubble-container [cues]="visibleCues()" />
 		}
 	</div>
 
@@ -50,10 +45,10 @@
 	</div>
 
 	<!--Health & Hint Section-->
-	<div class="w-full h-fit flex justify-between items-center px-4 py-2">
+	<div class="w-full h-32 flex justify-between items-center px-4">
 		<!--Health Section-->
 		<div
-			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-6 py-2 rounded-lg bg-neutral/30 backdrop-blur-sm">
+			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 rounded-lg bg-neutral/30 backdrop-blur-sm">
 			<p class="text-base-300 text-lg font-semibold">Turns</p>
 			<div class="w-full flex justify-center items-center gap-1">
 				@for (turn of store.turns(); track turn.id) {
@@ -62,9 +57,12 @@
 			</div>
 		</div>
 
+		<!--Words Box-->
+		<div #box lottie [options]="boxAnimationOptions" (animationCreated)="animationCreated($event)" (click)="toggleBoxStatus()" class="h-full"></div>
+
 		<!--Hint Section-->
 		<div
-			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-6 py-2 rounded-lg bg-neutral/30 backdrop-blur-sm">
+			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 rounded-lg bg-neutral/30 backdrop-blur-sm">
 			<p class="text-base-300 text-lg font-semibold">Hints</p>
 			<div class="w-full flex justify-center items-center gap-1">
 				@for (hint of store.hints(); track hint.id) {

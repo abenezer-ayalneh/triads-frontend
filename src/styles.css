@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+.animated-color {
+	@apply transition-colors duration-500 ease-in-out;
+}
+
 @layer base {
 	button,
 	[role='button'] {

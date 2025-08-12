@@ -1,23 +1,25 @@
 import { NgClass } from '@angular/common'
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
-import { AnimationOptions, LottieComponent } from 'ngx-lottie'
+import { gsap } from 'gsap'
+import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
+import { AnimationItem } from 'lottie-web'
+import { AnimationOptions, LottieComponent, LottieDirective } from 'ngx-lottie'
 import { delay, filter, tap } from 'rxjs'
 
+import { BubbleContainer } from '../../components/bubble-container/bubble-container'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { GlobalStore } from '../../state/global.store'
-import { BubblesPage } from '../bubbles/bubbles.page'
 import { GamePlayState } from './enums/game-play.enum'
-import { Cue } from './interfaces/cue.interface'
-import { CueGroup } from './interfaces/cue.interface'
+import { Cue, CueGroup } from './interfaces/cue.interface'
 import { GamePlayApi } from './services/game-play-api'
 import { HintService } from './services/hint-service'
 import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubblesPage],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -28,7 +30,13 @@ export class GamePlay implements OnInit {
 
 	keywordLengthHint = signal<number | null>(null)
 
+	boxStatus = signal<'OPEN' | 'CLOSED'>('CLOSED')
+
+	explodingBubbles = signal<number[]>([])
+
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
+
+	box = viewChild.required<ElementRef>('box')
 
 	visibleCues = computed<Cue[]>(() => {
 		const initialTriadCues = this.store
@@ -76,16 +84,24 @@ export class GamePlay implements OnInit {
 
 	answerFormControl = new FormControl<string>('', { validators: [Validators.required] })
 
+	boxAnimationItem: AnimationItem | null = null
+
+	boxAnimationOptions: AnimationOptions = {
+		path: 'lotties/box-lottie.json',
+		autoplay: false,
+		loop: false,
+	}
+
 	loadingAnimationOptions: AnimationOptions = {
-		path: '/lotties/loading-lottie.json',
+		path: 'lotties/loading-lottie.json',
 	}
 
 	wrongAnswerAnimationOptions: AnimationOptions = {
-		path: '/lotties/wrong-answer-lottie.json',
+		path: 'lotties/wrong-answer-lottie.json',
 	}
 
 	correctAnswerAnimationOptions: AnimationOptions = {
-		path: '/lotties/correct-answer-lottie.json',
+		path: 'lotties/correct-answer-lottie.json',
 	}
 
 	protected readonly RequestState = RequestState
@@ -248,6 +264,7 @@ export class GamePlay implements OnInit {
 					tap((success) => {
 						if (success) {
 							this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
+							this.store.selectedCues().forEach((cue) => this.moveToSolutionBox(cue.id))
 						} else {
 							this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
 							this.useCurrentTurn()
@@ -288,6 +305,51 @@ export class GamePlay implements OnInit {
 				this.store.addSelectedCue(cue)
 			}
 		}
+	}
+
+	animationCreated(animationItem: AnimationItem): void {
+		this.boxAnimationItem = animationItem
+	}
+
+	toggleBoxStatus() {
+		if (this.boxStatus() === 'OPEN') {
+			this.closeSolutionsBox()
+		} else {
+			this.openSolutionsBox()
+		}
+	}
+
+	openSolutionsBox(): void {
+		if (this.boxStatus() === 'CLOSED') {
+			// this.animationItem?.goToAndPlay(24);
+			this.boxAnimationItem?.play()
+			this.boxStatus.set('OPEN')
+		}
+	}
+
+	closeSolutionsBox(): void {
+		if (this.boxStatus() === 'OPEN') {
+			this.boxAnimationItem?.stop()
+			this.boxStatus.set('CLOSED')
+		}
+	}
+
+	moveToSolutionBox(cueId: number) {
+		this.openSolutionsBox()
+
+		this.explodingBubbles.update((currentValue) => [...currentValue, cueId])
+
+		const selector = `#bubble-${cueId}`
+		const pointTag = this.box().nativeElement
+
+		const point = MotionPathPlugin.convertCoordinates(pointTag, document.querySelector(selector) as Element, { x: 0, y: 0 })
+
+		// gsap.to(selector, { x: point.x, y: point.y });
+
+		// or with '{ x: 0, y: 0 }' in the convertCoordinates method:
+		gsap.to(selector, { delay: 0.5, duration: 3, x: '+=' + point.x, y: '+=' + point.y, scale: 0.5, display: 'none' }).then(() => {
+			this.closeSolutionsBox()
+		})
 	}
 
 	private calculateSuccessScore(attempts: number): number {
