@@ -1,0 +1,7 @@
+/* Ensure the component fills its parent so the container has size */
+:host {
+	display: block;
+	position: relative;
+	width: 100%;
+	height: 100%;
+}

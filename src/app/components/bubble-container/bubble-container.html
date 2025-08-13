@@ -1,4 +1,4 @@
-<div class="w-full h-full flex flex-wrap overflow-visible">
+<div #container class="w-full h-full relative overflow-visible" style="pointer-events: none">
 	@for (cue of cues(); track cue.id) {
 		<app-bubble [cue]="cue"></app-bubble>
 	}

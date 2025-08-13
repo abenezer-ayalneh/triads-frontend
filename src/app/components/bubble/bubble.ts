@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input } from '@angular/core'
+import { Component, computed, effect, ElementRef, inject, input } from '@angular/core'
 import { AnimationOptions, LottieDirective } from 'ngx-lottie'
 
 import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
@@ -22,6 +22,9 @@ export class Bubble {
 
 	pop = computed<boolean>(() => this.selected() && this.store.gamePlayState() === GamePlayState.CORRECT_ANSWER)
 
+	// Expose host element so parent can position it
+	element = inject<ElementRef<HTMLElement>>(ElementRef)
+
 	bubblePopAnimationOptions: AnimationOptions = {
 		path: 'lotties/pop-lottie.json',
 		autoplay: true,
@@ -35,8 +38,7 @@ export class Bubble {
 
 		effect(() => {
 			const isPopping = this.pop()
-			console.log({ pop: isPopping })
-			if (this.pop()) {
+			if (isPopping) {
 				console.log('Popping')
 				this.popAudio.play()
 			}

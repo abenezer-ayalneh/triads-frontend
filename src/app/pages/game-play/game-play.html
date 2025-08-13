@@ -1,9 +1,9 @@
 <div class="w-full h-full flex flex-col relative">
 	<!--Ballons Section-->
-	<div class="w-full h-[calc(100%-208px)] p-2 overflow-visible">
+	<div class="w-full h-[calc(100%-208px)] p-2 md:p-4 lg:p-6 overflow-visible">
 		@if (cueFetchingState() === RequestState.LOADING) {
 			<div class="w-full h-full flex justify-center items-center">
-				<span class="w-40 h-40 bg-neutral/20 rounded-2xl backdrop-blur-sm">
+				<span class="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
 					<ng-lottie [options]="loadingAnimationOptions" />
 				</span>
 			</div>
@@ -13,15 +13,17 @@
 	</div>
 
 	<!--Solution Input Section-->
-	<div class="w-full h-20 flex flex-col justify-center items-center">
+	<div class="w-full h-20 md:h-24 lg:h-28 flex flex-col justify-center items-center">
 		<div
-			class="w-full h-fit flex-col justify-center items-center px-4 py-2"
+			class="w-full h-fit flex-col justify-center items-center px-4 md:px-6 lg:px-8 py-2"
 			[class]="{ flex: store.gamePlayState() === GamePlayState.CHECK_SOLUTION, hidden: store.gamePlayState() !== GamePlayState.CHECK_SOLUTION }">
-			<button type="button" (click)="checkTriad()" class="w-80 triad-gradient btn btn-lg border-none text-primary-content">Check Solution</button>
+			<button type="button" (click)="checkTriad()" class="w-80 md:w-96 lg:w-[28rem] triad-gradient btn btn-lg border-none text-primary-content">
+				Check Solution
+			</button>
 		</div>
 
 		<div
-			class="w-full h-fit flex-col justify-center items-center px-4 py-2 gap-2"
+			class="w-full h-fit flex-col justify-center items-center px-4 md:px-6 lg:px-8 py-2 gap-2"
 			[class]="{
 				flex: store.gamePlayState() === GamePlayState.ACCEPT_ANSWER || store.gamePlayState() === GamePlayState.WRONG_ANSWER,
 				hidden: store.gamePlayState() !== GamePlayState.ACCEPT_ANSWER && store.gamePlayState() !== GamePlayState.WRONG_ANSWER,
@@ -33,26 +35,26 @@
 					</p>
 				</div>
 			}
-			<div class="w-[80%] h-fit flex justify-center items-center gap-2">
+			<div class="w-[80%] md:w-[70%] lg:w-[60%] max-w-3xl h-fit flex justify-center items-center gap-2">
 				<input
 					#answerField
 					[formControl]="answerFormControl"
 					placeholder="Answer here..."
 					(keydown.enter)="submitAnswer()"
-					class="w-full h-10 input focus:outline-none text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
+					class="w-full h-10 md:h-12 input focus:outline-none text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
 			</div>
 		</div>
 	</div>
 
 	<!--Health & Hint Section-->
-	<div class="w-full h-32 flex justify-between items-center px-4">
+	<div class="w-full h-32 md:h-36 lg:h-40 flex justify-between items-center px-4 md:px-6 lg:px-8">
 		<!--Health Section-->
 		<div
 			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 rounded-lg bg-neutral/30 backdrop-blur-sm">
-			<p class="text-base-300 text-lg font-semibold">Turns</p>
+			<p class="text-base-300 text-lg md:text-xl font-semibold">Turns</p>
 			<div class="w-full flex justify-center items-center gap-1">
 				@for (turn of store.turns(); track turn.id) {
-					<span class="w-6 h-6 heart" [ngClass]="turn.available ? 'bg-error' : 'bg-base-100/20'"></span>
+					<span class="w-6 h-6 md:w-7 md:h-7 heart" [ngClass]="turn.available ? 'bg-error' : 'bg-base-100/20'"></span>
 				}
 			</div>
 		</div>
@@ -63,11 +65,10 @@
 		<!--Hint Section-->
 		<div
 			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 rounded-lg bg-neutral/30 backdrop-blur-sm">
-			<p class="text-base-300 text-lg font-semibold">Hints</p>
+			<p class="text-base-300 text-lg md:text-xl font-semibold">Hints</p>
 			<div class="w-full flex justify-center items-center gap-1">
 				@for (hint of store.hints(); track hint.id) {
-					<!--TODO: disable the hint buttons if there is no available turn-->
-					<button class="w-6 h-6 bg-base-100/20 circle" (click)="hintUseConfirmationModal.showModal()" [disabled]="!hint.available">
+					<button class="w-6 h-6 md:w-7 md:h-7 bg-base-100/20 circle" (click)="hintUseConfirmationModal.showModal()" [disabled]="!hint.available">
 						@if (hint.available) {
 							<img src="images/lifesaver.svg" alt="hint" />
 						}
