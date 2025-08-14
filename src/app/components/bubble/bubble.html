@@ -1,17 +1,19 @@
 <div
 	id="bubble-{{ cue().id }}"
-	class="w-36 h-36 md:w-60 md:h-60 lg:w-80 lg:h-80 aspect-square circle contain-content relative cursor-pointer animated-color backdrop-blur-xs"
+	class="w-32 h-32 md:w-52 md:h-52 xl:w-68 xl:h-68 p-0 m-0 aspect-square circle contain-content relative cursor-pointer animated-color"
 	style="pointer-events: auto"
-	[class.selected]="selected() && !pop()"
+	[class.bubble]="!pop()"
+	[class.backdrop-blur-xs]="!pop()"
 	(click)="whenClicked()">
 	@if (pop()) {
 		<div lottie [options]="bubblePopAnimationOptions" class="w-full h-full aspect-square circle contain-content relative cursor-pointer"></div>
-	} @else {
-		<img src="images/bubble.png" alt="bubble" />
+	}
+	@if (selected() && !pop()) {
+		<div class="w-full h-full aspect-square circle selected"></div>
 	}
 	<p
 		id="cue-{{ cue().id }}"
-		class="text-base-100 text-lg md:text-xl lg:text-2xl text-center font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+		class="text-primary-content text-xl md:text-3xl xl:text-4xl text-center font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
 		{{ cue().word }}
 	</p>
 </div>

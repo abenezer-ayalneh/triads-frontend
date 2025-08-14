@@ -1,14 +1,16 @@
-<header class="w-full h-8 flex justify-between items-center px-2">
-	<div class="w-fit h-5 flex justify-center items-center px-2 rounded-full shadow-sm triad-gradient">
-		<p class="text-xs text-primary-content font-semibold">Score 0</p>
+<header class="w-full h-8 xl:h-10 flex justify-between items-center px-2">
+	<div class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient">
+		<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">Score 0</p>
 	</div>
 
 	<div class="w-fit flex justify-end items-center gap-4">
-		<button class="w-fit h-5 px-2 rounded-full shadow-sm triad-gradient">
-			<p class="text-xs text-primary-content font-semibold">{{ store.username() ?? '-' }}</p>
+		<button class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient">
+			<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.username() ?? '-' }}</p>
 		</button>
-		<button (click)="showHowToPlay()" class="w-fit h-5 px-2 rounded-full shadow-sm triad-gradient cursor-pointer">
-			<p class="text-xs text-primary-content font-semibold">?</p>
+		<button
+			(click)="showHowToPlay()"
+			class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
+			<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">?</p>
 		</button>
 	</div>
 </header>

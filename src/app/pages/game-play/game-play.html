@@ -1,4 +1,4 @@
-<div class="w-full h-full flex flex-col relative">
+<div class="w-full h-full flex flex-col relative overflow-hidden">
 	<!--Ballons Section-->
 	<div class="w-full h-[calc(100%-208px)] p-2 md:p-4 lg:p-6 overflow-visible">
 		@if (cueFetchingState() === RequestState.LOADING) {
@@ -41,7 +41,18 @@
 					[formControl]="answerFormControl"
 					placeholder="Answer here..."
 					(keydown.enter)="submitAnswer()"
-					class="w-full h-10 md:h-12 input focus:outline-none text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
+					class="flex-1 h-10 md:h-12 input focus:outline-none text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
+				<button
+					type="button"
+					(click)="submitAnswer()"
+					[disabled]="!answerFormControl.valid"
+					aria-label="Submit answer"
+					class="h-10 md:h-12 px-4 md:px-6 rounded-full triad-gradient text-primary-content font-semibold shadow-lg hover:shadow-xl active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+					<svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M19 12H5" />
+					</svg>
+					<span class="hidden sm:inline">Submit</span>
+				</button>
 			</div>
 		</div>
 	</div>
@@ -68,7 +79,7 @@
 			<p class="text-base-300 text-lg md:text-xl font-semibold">Hints</p>
 			<div class="w-full flex justify-center items-center gap-1">
 				@for (hint of store.hints(); track hint.id) {
-					<button class="w-6 h-6 md:w-7 md:h-7 bg-base-100/20 circle" (click)="hintUseConfirmationModal.showModal()" [disabled]="!hint.available">
+					<button class="w-6 h-6 md:w-7 md:h-7 bg-base-100/20 circle" (click)="onHintClick()" [disabled]="!hint.available" aria-label="Use a hint">
 						@if (hint.available) {
 							<img src="images/lifesaver.svg" alt="hint" />
 						}
@@ -77,6 +88,24 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Hint Choice Modal -->
+	<dialog #hintChoiceModal class="modal modal-bottom sm:modal-middle">
+		<div class="modal-box">
+			<h3 class="text-lg font-bold">Choose your hint</h3>
+			<p class="py-2 text-sm">Pick one of the options below to help solve the Triad.</p>
+			<div class="w-full h-fit flex flex-col gap-2 mt-2">
+				<button type="button" class="btn btn-info text-base-100" (click)="useHintWithOption('letters')">Number of letters</button>
+				<button type="button" class="btn btn-primary text-base-100" (click)="useHintWithOption('firstLetter')">1st letter of word</button>
+			</div>
+
+			<div class="modal-action">
+				<form method="dialog">
+					<button class="btn">Cancel</button>
+				</form>
+			</div>
+		</div>
+	</dialog>
 
 	<!--Popup Section-->
 	@switch (store.gamePlayState()) {
@@ -154,20 +183,3 @@
 		}
 	}
 </div>
-
-<!--Hint Use Confirmation Dialog-->
-<dialog #hintUseConfirmationModal class="modal modal-bottom sm:modal-middle">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Are you sure?</h3>
-		<p class="py-4">Are you sure you want to use a hint? It will cost you one turn.</p>
-		<div class="modal-action">
-			<form method="dialog">
-				<!-- if there is a button in form, it will close the modal -->
-				<div class="w-full h-fit flex justify-between items-center gap-4">
-					<button class="btn">No</button>
-					<button type="button" class="btn" (click)="useHint()">Yes</button>
-				</div>
-			</form>
-		</div>
-	</div>
-</dialog>

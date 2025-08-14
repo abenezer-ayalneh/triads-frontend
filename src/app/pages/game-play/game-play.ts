@@ -120,16 +120,24 @@ export class GamePlay implements OnInit {
 
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
 
-	private readonly hintUseConfirmationModalRef = viewChild.required<ElementRef<HTMLDialogElement>>('hintUseConfirmationModal')
+	// Removed confirmation modal; using hints triggers immediately
+	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
+
+	private pendingHintOption: 'letters' | 'firstLetter' | null = null
 
 	constructor() {
 		effect(() => {
 			const selectedCues = this.store.selectedCues()
+			const currentState = this.store.gamePlayState()
 
-			if (selectedCues.length === 3) {
-				this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
-			} else {
-				this.store.setGamePlayState(GamePlayState.PLAYING)
+			// Only auto-transition while actively PLAYING so we don't override
+			// ACCEPT_ANSWER or other states triggered by hints/results.
+			if (currentState === GamePlayState.PLAYING) {
+				if (selectedCues.length === 3) {
+					this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
+				} else {
+					this.store.setGamePlayState(GamePlayState.PLAYING)
+				}
 			}
 		})
 
@@ -179,7 +187,6 @@ export class GamePlay implements OnInit {
 	}
 
 	useHint() {
-		this.hintUseConfirmationModalRef().nativeElement.close()
 		try {
 			const hints = this.store.hints()
 
@@ -206,6 +213,61 @@ export class GamePlay implements OnInit {
 
 			// Skip the "Check Solution" step
 			this.checkTriad()
+		} catch (error) {
+			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
+		}
+	}
+
+	onHintClick() {
+		const availableHints = this.store.hints().filter((h) => h.available).length
+		const visibleCues = this.visibleCues()
+		const shouldShowChoice = availableHints === 1 || visibleCues.length === 3
+		if (shouldShowChoice) {
+			this.hintChoiceModalRef()?.nativeElement.showModal()
+		} else {
+			this.useHint()
+		}
+	}
+
+	useHintWithOption(option: 'letters' | 'firstLetter') {
+		this.pendingHintOption = option
+		try {
+			const hints = this.store.hints()
+			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
+
+			const initialCueGroups = this.store.cueGroups()
+			const initialAvailableGroups = initialCueGroups.filter((group) => group.available)
+			let groupsForHint = initialAvailableGroups
+			if (initialAvailableGroups.length === 0) {
+				const fourthGroup = this.store.fourthCueGroup()
+				groupsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
+			}
+			const { cues } = this.hintService.getHintTriadCues(groupsForHint, hints)
+
+			// Show the hint cues as selected on the UI
+			this.store.setSelectedCues(cues)
+
+			// Apply option-specific behavior
+			const selectedGroup = initialCueGroups.find((g) => g.cues.every((c) => cues.some((sc) => sc.id === c.id)))
+			if (selectedGroup) {
+				if (option === 'letters') {
+					this.keywordLengthHint.set(selectedGroup.commonWord.length)
+					this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+					this.answerFieldRef()?.nativeElement.focus()
+				} else if (option === 'firstLetter') {
+					this.keywordLengthHint.set(null)
+					const firstChar = selectedGroup.commonWord.charAt(0)
+					this.answerFormControl.setValue(firstChar.toUpperCase())
+					this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+					this.answerFieldRef()?.nativeElement.focus()
+				}
+			}
+
+			// Update the hints and turn values
+			this.store.setHints(useHintResponse.hints)
+			this.store.setTurns(useHintResponse.turns)
+
+			this.hintChoiceModalRef()?.nativeElement.close()
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
@@ -347,7 +409,7 @@ export class GamePlay implements OnInit {
 		// gsap.to(selector, { x: point.x, y: point.y });
 
 		// or with '{ x: 0, y: 0 }' in the convertCoordinates method:
-		gsap.to(selector, { delay: 0.5, duration: 3, x: '+=' + point.x, y: '+=' + point.y, scale: 0.5, display: 'none' }).then(() => {
+		gsap.to(selector, { delay: 0.5, duration: 3, x: '+=' + point.x, y: '+=' + point.y, scale: 0.5, opacity: 0.2, display: 'none' }).then(() => {
 			this.closeSolutionsBox()
 		})
 	}

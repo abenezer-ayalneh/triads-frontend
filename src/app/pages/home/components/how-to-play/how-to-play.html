@@ -1,19 +1,20 @@
 <div
-	class="w-full h-full fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs"
+	class="w-full h-full fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 lg:p-8 bg-black/50 backdrop-blur-xs"
 	(click)="onBackdropClick($event)"
 	aria-modal="true"
 	aria-labelledby="dialog-title"
 	aria-describedby="dialog-description">
-	<div class="w-full max-w-full max-h-[80%] rounded-lg shadow-2xl flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
+	<div
+		class="w-full md:w-[90%] lg:w-[80%] max-w-full md:max-w-3xl lg:max-w-5xl max-h-[85%] md:max-h-[90%] rounded-xl lg:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
 		<!-- Dialog Header -->
-		<header class="flex items-center justify-between py-2 px-4 bg-gradient-to-r triad-gradient text-white">
-			<h2 id="dialog-title" class="text-xl font-bold leading-tight">How to Play Triads {{ store.showHowToPlay() }}</h2>
+		<header class="flex items-center justify-between px-4 md:px-6 lg:px-8 py-2 md:py-3 lg:py-4 bg-gradient-to-r triad-gradient text-white">
+			<h2 id="dialog-title" class="text-lg md:text-2xl lg:text-3xl font-bold leading-tight">How to Play Triads</h2>
 			<button
-				class="p-2 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors cursor-pointer"
+				class="p-2 md:p-3 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors cursor-pointer"
 				(click)="onClose()"
 				aria-label="Close dialog"
 				type="button">
-				<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+				<svg class="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 					<line x1="18" y1="6" x2="6" y2="18"></line>
 					<line x1="6" y1="6" x2="18" y2="18"></line>
 				</svg>
@@ -21,59 +22,50 @@
 		</header>
 
 		<!-- Dialog Body -->
-		<div id="dialog-description" class="flex-1 flex flex-col gap-4 p-6 leading-relaxed overflow-y-auto bg-base-100">
+		<div id="dialog-description" class="flex-1 leading-relaxed overflow-y-auto bg-base-100 grid gap-4 md:grid-cols-2 md:gap-6 lg:gap-8 p-4 md:p-6 lg:p-8">
 			<!-- Triads Play Section -->
 			<section class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Triads Play</h3>
-				<div class="space-y-3 text-sm">
+				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Triads Play</h3>
+				<div class="space-y-3 text-sm md:text-base">
 					<p>
-						You're given 9 words or phrases called "cues." Find 3 that share a common key, to form a 3-part Triad. A Triad's key is a single
-						stand-alone word uniquely shared by the 3 cues. Solve all three Triads and win the game – proof of your lateral thinking skills!
+						You’re given 9 bubbles that contain words or phrases called “cues.” Find 3 that share a common key word, to form a 3-word Triad. A key
+						is a stand-alone word uniquely shared by the 3 cues.
 					</p>
-					<div class="bg-neutral-300 p-4 rounded-lg">
-						<p class="mb-2 text-center">Here's an example. These cues would appear as part of a set of nine.</p>
-						<p class="font-bold text-center mb-2">SECOND&nbsp;&nbsp;&nbsp;POKER&nbsp;&nbsp;&nbsp;SHAKE</p>
-						<p class="text-center">
-							Linked with the key <span class="font-bold">HAND</span>, we get <span class="font-bold">SECOND-HAND</span>,
+					<div class="bg-neutral-300 p-4 md:p-5 lg:p-6 rounded-lg">
+						<p class="mb-2 text-center">
+							Here's an example. The key word is <span class="font-bold">HAND</span> completing <span class="font-bold">SECOND-HAND</span>,
 							<span class="font-bold">POKER HAND</span>, and <span class="font-bold">HANDSHAKE</span>.
 						</p>
 					</div>
 					<p>
-						Cues can be compound or hyphenated words, sometimes even famous names, places, and everyday phrases. Keys (solutions) are always one
-						word only. Some are easy, some not. Take your time.
+						Once you've solved all 3 Triads, or "cleared the board," the 3 key words become your final Triad to solve. That's your goal: figure out
+						all four of the Triads, and win the game.
+						<br />
+						<br />
+						Cues can be compound or hyphenated words or phrases, and sometimes even famous names, places, or everyday phrases. Keys (solutions) are
+						always one word. Some are easy, some not. Take your time.
 					</p>
-				</div>
-			</section>
-
-			<!-- Hints and Misses Section -->
-			<section class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Hints and Misses</h3>
-				<div class="space-y-3 text-sm">
-					<p>You have three guesses and two hints (optional). Miss a guess, use a turn. Take a hint, use a turn.</p>
-					<p><span class="text-red-600 font-bold">△</span> = Turns remaining</p>
-					<p><span class="text-blue-600">🛟</span> = Get a hint</p>
-					<p>With 9 or 6 cues shown, a hint highlights a Triad. When 3 cues remain a hint shows the key's first letter.</p>
 				</div>
 			</section>
 
 			<!-- Scoring Section -->
 			<section class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Scoring</h3>
-				<div class="space-y-3 text-sm">
-					<p>Every Triad game is scored, tallied, and averaged for you, using this point system.</p>
+				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Scoring</h3>
+				<div class="space-y-3 text-sm md:text-base">
+					<p>Every game is scored, tallied, and averaged for you, using this scoring system.</p>
 					<div class="overflow-x-auto border border-gray-200 rounded-lg">
-						<table class="w-full text-sm">
+						<table class="w-full text-sm md:text-base">
 							<thead class="bg-gradient-to-r triad-gradient text-white">
 								<tr>
-									<th class="px-4 py-3 text-left font-semibold">Outcome</th>
-									<th class="px-4 py-3 text-center font-semibold">Points</th>
+									<th class="px-4 py-3 md:px-5 lg:px-6 text-left font-semibold">Outcome</th>
+									<th class="px-4 py-3 md:px-5 lg:px-6 text-center font-semibold">Points</th>
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-gray-100">
 								@for (row of scoringData; track row.outcome) {
 									<tr class="hover:bg-gray-50">
-										<td class="px-4 py-3">{{ row.outcome }}</td>
-										<td class="px-4 py-3 text-center font-semibold text-green-600">{{ row.points }}</td>
+										<td class="px-4 py-3 md:px-5 lg:px-6">{{ row.outcome }}</td>
+										<td class="px-4 py-3 md:px-5 lg:px-6 text-center font-semibold text-green-600 md:text-lg">{{ row.points }}</td>
 									</tr>
 								}
 							</tbody>
@@ -82,24 +74,40 @@
 				</div>
 			</section>
 
+			<!-- Hints and Misses Section -->
+			<section class="space-y-4">
+				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Hints and Misses</h3>
+				<div class="space-y-3 text-sm md:text-base">
+					<p>
+						You have three guesses and two hints, any combination. Miss a guess, lose a turn. Take a hint, lose a turn. When 9 or 6 cues are
+						showing, a hint highlights a Triad for you and shows how many letters are in the key. When only 3 cues remain, a hint also shows the
+						key’s first letter.
+					</p>
+					<!--TODO: replace the character used for the turn button here-->
+					<p><span class="text-red-600 font-bold">△</span> = Turns remaining</p>
+					<p><span class="text-blue-600">🛟</span> = Get a hint</p>
+				</div>
+			</section>
+
 			<!-- Your Account Section -->
 			<section class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Your Account</h3>
-				<div class="space-y-3 text-sm">
+				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Your Account</h3>
+				<div class="space-y-3 text-sm md:text-base">
 					<p>
-						Triads has no enrollment, so you never need to login or reveal anything about yourself. You're given a silly name on your first visit
-						(you can change it below), and that 'cookie' tracks your wins and losses. You can see your cookie if you click your name; use it on a
-						second device to continue to play as "you."
+						Triads has no enrollment, so you never need to login or reveal anything about yourself. You’re given a silly name on your first visit
+						(you can change it), and that ‘cookie’ tracks your wins and losses. You can see your overall, ongoing success rate by clicking your
+						name.
 					</p>
 				</div>
 			</section>
 
 			<!-- Submissions Section -->
 			<section class="space-y-4">
-				<h3 class="text-lg font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Submissions</h3>
-				<div class="space-y-3 text-sm">
+				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Submissions</h3>
+				<div class="space-y-3 text-sm md:text-base">
 					<p>
-						Be a part of Triads! We welcome your contributions to add to our database, so get creative. Send to:
+						Be a part of Triads! We welcome your contributions to add to our database, so get creative. Send to: Be a part of Triads! We welcome
+						your contributions to add to our database, so get creative. Send to:
 						<a
 							href="mailto:ideas&#64;gametrix.com"
 							class="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded transition-colors">
@@ -107,8 +115,8 @@
 						</a>
 					</p>
 					<p>
-						We also appreciate your suggestions for improving the game. This includes which Triads you found too easy, too difficult, or too wacko.
-						We're listening. Let's make Triads fun for everyone!
+						We also appreciate your suggestions for improving the game. This includes your thoughts about Triads you found too easy, too difficult,
+						or too wacko. We’re listening. Let’s make Triads fun for everyone!
 					</p>
 				</div>
 			</section>

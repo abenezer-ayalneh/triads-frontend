@@ -1,6 +1,13 @@
 .selected {
-	background: var(--color-primary);
-	background: radial-gradient(circle, color-mix(in oklab, var(--color-accent) 60%, transparent) 0%, rgba(255, 255, 255, 0) 70%);
-	scale: 1.1;
-	transition: all 0.2s ease-in-out;
+	background: var(--color-accent);
+	background: radial-gradient(circle, var(--color-accent), rgba(255, 255, 255, 0) 70%);
+	color: var(--color-accent-content);
+}
+
+.bubble {
+	background-image: url('/images/bubble.png');
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center center;
+	backdrop-filter: blur(15px);
 }
