@@ -1,12 +1,15 @@
-import { patchState, signalStore, withHooks, withMethods, withState } from '@ngrx/signals'
+import { inject } from '@angular/core'
+import { patchState, signalStore, withHooks, withMethods, withProps, withState } from '@ngrx/signals'
 
 import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
 import { Cue, CueGroup } from '../pages/game-play/interfaces/cue.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
+import { User } from '../shared/interfaces/user.interface'
+import { UserService } from '../shared/services/user.service'
 
 const initialState: GlobalState = {
-	username: null,
+	user: null,
 	showHowToPlay: false,
 	cueGroups: [],
 	fourthCueGroup: null,
@@ -25,10 +28,19 @@ const initialState: GlobalState = {
 
 export const GlobalStore = signalStore(
 	{ providedIn: 'root' },
+	withProps(() => ({
+		userService: inject(UserService),
+	})),
 	withState(initialState),
 	withMethods((store) => ({
-		setUsername: (username: string | null) => {
-			patchState(store, (state) => ({ ...state, username }))
+		setUser: (user: User | null) => {
+			patchState(store, (state) => ({ ...state, user }))
+		},
+		setUserScore: (score: number) => {
+			const user = store.user()
+			if (user) {
+				patchState(store, (state) => ({ ...state, user: { ...user, score } }))
+			}
 		},
 		setShowHowToPlay: (value: boolean) => {
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
@@ -77,7 +89,7 @@ export const GlobalStore = signalStore(
 	})),
 	withHooks({
 		onInit(store) {
-			store.setUsername(localStorage.getItem('username'))
+			store.setUser(store.userService.getUser())
 		},
 	}),
 )

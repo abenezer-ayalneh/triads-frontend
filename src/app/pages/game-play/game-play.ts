@@ -9,17 +9,18 @@ import { delay, filter, tap } from 'rxjs'
 
 import { BubbleContainer } from '../../components/bubble-container/bubble-container'
 import { RequestState } from '../../shared/enums/request-state.enum'
+import { HighlightKeyPipe } from '../../shared/pipes/highlight-key.pipe'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { GlobalStore } from '../../state/global.store'
 import { GamePlayState } from './enums/game-play.enum'
-import { Cue, CueGroup } from './interfaces/cue.interface'
+import { Cue } from './interfaces/cue.interface'
 import { GamePlayApi } from './services/game-play-api'
 import { HintService } from './services/hint-service'
 import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -33,6 +34,22 @@ export class GamePlay implements OnInit {
 	boxStatus = signal<'OPEN' | 'CLOSED'>('CLOSED')
 
 	explodingBubbles = signal<number[]>([])
+
+	// Popup: show solved cue words when the word box is clicked
+	showSolvedPopup = signal<boolean>(false)
+
+	solvedCues = computed<(Cue & { keyword: string })[]>(() => {
+		const groups = this.store.cueGroups()
+		const solvedFromInitial = groups
+			.filter((group) => !group.available)
+			.flatMap((group) =>
+				group.cues.map((cue) => ({ id: cue.id, word: cue.word, fullWord: cue.fullWord, keyword: groups.find((g) => g.id === group.id)!.commonWord })),
+			)
+		const fourth = this.store.fourthCueGroup()
+		const solvedFromFourth =
+			fourth && !fourth.available ? fourth.cues.map((cue) => ({ id: cue.id, word: cue.word, fullWord: cue.fullWord, keyword: fourth.commonWord })) : []
+		return [...solvedFromInitial, ...solvedFromFourth]
+	})
 
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
@@ -49,14 +66,6 @@ export class GamePlay implements OnInit {
 		const fourthTriadCues = fourthCueGroup && fourthCueGroup.available ? fourthCueGroup.cues : []
 
 		return initialTriadCues.length > 0 ? initialTriadCues : fourthTriadCues
-	})
-
-	// Visible cue groups for physics bubbles component
-	visibleCueGroups = computed<CueGroup[]>(() => {
-		const availableInitial = this.store.cueGroups().filter((group) => group.available)
-		if (availableInitial.length > 0) return availableInitial
-		const fourth = this.store.fourthCueGroup()
-		return fourth && fourth.available ? [fourth] : []
 	})
 
 	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
@@ -122,8 +131,6 @@ export class GamePlay implements OnInit {
 
 	// Removed confirmation modal; using hints triggers immediately
 	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
-
-	private pendingHintOption: 'letters' | 'firstLetter' | null = null
 
 	constructor() {
 		effect(() => {
@@ -230,7 +237,6 @@ export class GamePlay implements OnInit {
 	}
 
 	useHintWithOption(option: 'letters' | 'firstLetter') {
-		this.pendingHintOption = option
 		try {
 			const hints = this.store.hints()
 			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
@@ -303,21 +309,6 @@ export class GamePlay implements OnInit {
 		}
 	}
 
-	cancelAnswer() {
-		// Return to selection phase and keep current selections
-		this.store.setGamePlayState(GamePlayState.PLAYING)
-		this.keywordLengthHint.set(null)
-	}
-
-	clearSelection() {
-		// Clear all selected cues and reset transient UI state
-		this.store.setSelectedCues([])
-		this.keywordLengthHint.set(null)
-		if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
-			this.store.setGamePlayState(GamePlayState.PLAYING)
-		}
-	}
-
 	submitAnswer() {
 		if (this.answerFormControl.valid && this.answerFormControl.value) {
 			this.gamePlayApi
@@ -356,19 +347,6 @@ export class GamePlay implements OnInit {
 		}
 	}
 
-	bubbleClicked(cue: Cue) {
-		const selectedCues = this.store.selectedCues()
-		const isCueSelected = selectedCues.some((selectedCues) => selectedCues.id === cue.id)
-
-		if (isCueSelected) {
-			this.store.removeSelectedCue(cue)
-		} else {
-			if (selectedCues.length < 3) {
-				this.store.addSelectedCue(cue)
-			}
-		}
-	}
-
 	animationCreated(animationItem: AnimationItem): void {
 		this.boxAnimationItem = animationItem
 	}
@@ -394,6 +372,24 @@ export class GamePlay implements OnInit {
 			this.boxAnimationItem?.stop()
 			this.boxStatus.set('CLOSED')
 		}
+	}
+
+	onBoxClick() {
+		if (this.boxStatus() === 'OPEN') {
+			this.showSolvedPopup.set(false)
+			this.closeSolutionsBox()
+		} else {
+			this.openSolutionsBox()
+			this.boxAnimationItem?.addEventListener('complete', () => {
+				this.showSolvedPopup.set(true)
+				this.boxAnimationItem?.removeEventListener('complete')
+			})
+		}
+	}
+
+	closeSolvedPopup() {
+		this.toggleBoxStatus()
+		this.showSolvedPopup.set(false)
 	}
 
 	moveToSolutionBox(cueId: number) {

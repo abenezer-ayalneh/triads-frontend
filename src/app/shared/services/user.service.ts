@@ -1,29 +1,32 @@
 import { Injectable } from '@angular/core'
 
-import { ADJECTIVES, NOUNS } from './data/username-generator.data'
+import { ADJECTIVES, NOUNS } from '../../pages/home/components/user-info-dialog/data/username-generator.data'
+import { User } from '../interfaces/user.interface'
 
 @Injectable({
 	providedIn: 'root',
 })
-export class UserInfoDialogService {
+export class UserService {
 	/**
 	 * Get the user's stored information.
 	 *
 	 * @returns {string | null} - Returns the username if it is found, or it returns null.
 	 */
-	getUsername(): string | null {
-		return localStorage.getItem('username')
+	getUser(): User | null {
+		const parsedUser = JSON.parse(localStorage.getItem('user') ?? '{}') as User
+
+		if (parsedUser && parsedUser.username && parsedUser.score !== null && parsedUser.score !== undefined) {
+			return parsedUser
+		}
+		return null
 	}
 
 	/**
-	 * Get the user's stored information.
+	 * Generates a random username by combining a capitalized adjective, a capitalized noun, and
+	 * a two-digit number.
 	 *
-	 * @returns {void} - Returns the username if it is found, or it returns null.
+	 * @return {string} A randomly generated username, formatted as "AdjectiveNoun##".
 	 */
-	setUsername(username: string): void {
-		localStorage.setItem('username', username)
-	}
-
 	generateUsername(): string {
 		const adjective = ADJECTIVES[Math.floor(Math.random() * ADJECTIVES.length)]
 		const noun = NOUNS[Math.floor(Math.random() * NOUNS.length)]

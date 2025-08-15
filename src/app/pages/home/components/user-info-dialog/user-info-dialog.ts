@@ -3,8 +3,8 @@ import { FormsModule } from '@angular/forms'
 import { MatTooltip } from '@angular/material/tooltip'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
+import { UserService } from '../../../../shared/services/user.service'
 import { GlobalStore } from '../../../../state/global.store'
-import { UserInfoDialogService } from './user-info-dialog.service'
 
 @Component({
 	selector: 'app-user-info-dialog',
@@ -31,7 +31,7 @@ export class UserInfoDialog implements OnInit {
 
 	private readonly elementRef = inject(ElementRef)
 
-	private readonly userInfoDialogService = inject(UserInfoDialogService)
+	private readonly userInfoDialogService = inject(UserService)
 
 	ngOnInit() {
 		document.body.appendChild(this.elementRef.nativeElement)
@@ -42,8 +42,7 @@ export class UserInfoDialog implements OnInit {
 	onSubmit() {
 		const username = this.usernameModel()
 		if (username) {
-			this.userInfoDialogService.setUsername(username)
-			this.store.setUsername(username)
+			this.store.setUser({ username, score: 0 })
 		}
 	}
 

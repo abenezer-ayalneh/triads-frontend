@@ -8,4 +8,5 @@ export interface CueGroup {
 export interface Cue {
 	id: number
 	word: string
+	fullWord: string
 }

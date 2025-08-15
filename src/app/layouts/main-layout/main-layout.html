@@ -1,11 +1,11 @@
 <header class="w-full h-8 xl:h-10 flex justify-between items-center px-2">
 	<div class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient">
-		<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">Score 0</p>
+		<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">Score {{ store.user()?.score }}</p>
 	</div>
 
 	<div class="w-fit flex justify-end items-center gap-4">
 		<button class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient">
-			<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.username() ?? '-' }}</p>
+			<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
 		</button>
 		<button
 			(click)="showHowToPlay()"
