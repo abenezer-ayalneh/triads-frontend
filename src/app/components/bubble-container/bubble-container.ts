@@ -1,7 +1,8 @@
-import { AfterViewInit, Component, ElementRef, input, OnDestroy, viewChild, viewChildren } from '@angular/core'
+import { AfterViewInit, Component, effect, ElementRef, inject, input, OnDestroy, viewChild, viewChildren } from '@angular/core'
 import Matter from 'matter-js'
 
 import { Cue } from '../../pages/game-play/interfaces/cue.interface'
+import { GlobalStore } from '../../state/global.store'
 import { Bubble } from '../bubble/bubble'
 import { BubbleMatter } from './interfaces/bubble-matter.interface'
 
@@ -12,9 +13,13 @@ import { BubbleMatter } from './interfaces/bubble-matter.interface'
 	styleUrl: './bubble-container.scss',
 })
 export class BubbleContainer implements AfterViewInit, OnDestroy {
+	readonly store = inject(GlobalStore)
+
 	cues = input.required<Cue[]>()
 
-	bubbleComponents = viewChildren(Bubble)
+	bubbleComponents = viewChildren<Bubble>('initialTriadBubble')
+
+	fourthTriadBubbleComponents = viewChildren<Bubble>('fourthTriadBubble')
 
 	container = viewChild.required<ElementRef<HTMLDivElement>>('container')
 
@@ -32,13 +37,21 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		this.engine = Matter.Engine.create({
 			gravity: { x: 0, y: 0, scale: 0 },
 		})
+
+		effect(() => {
+			const fourthTriadReached = this.store.triadsStep() === 'FOURTH'
+
+			if (fourthTriadReached && this.fourthTriadBubbleComponents().length === 3) {
+				this.createBodies(this.fourthTriadBubbleComponents())
+			}
+		})
 	}
 
 	ngAfterViewInit() {
-		this.createBodies()
+		this.createBodies(this.bubbleComponents())
 	}
 
-	createBodies() {
+	createBodies(bubbleComponents: readonly Bubble[]) {
 		const Composite = Matter.Composite,
 			Body = Matter.Body,
 			Bodies = Matter.Bodies
@@ -46,7 +59,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		const container = this.container().nativeElement
 		const width = container.clientWidth || container.offsetWidth || 0
 		const height = container.clientHeight || container.offsetHeight || 0
-		const bubbleComponents = this.bubbleComponents()
 
 		// Create bodies for each bubble element
 		this.entities = bubbleComponents.map((bubbleComponent) => {
@@ -87,8 +99,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			this.engine.world,
 			this.entities.map(({ body }) => body),
 		)
-
-		// No MouseConstraint to avoid intercepting DOM click events on bubbles
 
 		// Add boundaries aligned to container size
 		this.createOrUpdateBoundaries()

@@ -1,5 +1,11 @@
-<div #container class="w-full h-full relative overflow-visible" style="pointer-events: none">
+<div #container class="w-full h-full relative overflow-visible z-10" style="pointer-events: none">
 	@for (cue of cues(); track cue.id) {
-		<app-bubble [cue]="cue"></app-bubble>
+		<app-bubble #initialTriadBubble [cue]="cue"></app-bubble>
+	}
+
+	@if (store.triadsStep() === 'FOURTH') {
+		@for (cue of store.fourthCueGroup()?.cues; track cue.id) {
+			<app-bubble #fourthTriadBubble [cue]="cue"></app-bubble>
+		}
 	}
 </div>

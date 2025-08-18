@@ -19,6 +19,10 @@ export class UserInfoDialog implements OnInit {
 
 	usernameModel = model<string | null>(null)
 
+	private readonly elementRef = inject(ElementRef)
+
+	private readonly userService = inject(UserService)
+
 	generatedUsername: string | null = null
 
 	infoButtonLottieAnimationOptions: AnimationOptions = {
@@ -29,10 +33,6 @@ export class UserInfoDialog implements OnInit {
 		path: '/lotties/play-button-lottie.json',
 	}
 
-	private readonly elementRef = inject(ElementRef)
-
-	private readonly userInfoDialogService = inject(UserService)
-
 	ngOnInit() {
 		document.body.appendChild(this.elementRef.nativeElement)
 		this.generateUsername()
@@ -42,6 +42,7 @@ export class UserInfoDialog implements OnInit {
 	onSubmit() {
 		const username = this.usernameModel()
 		if (username) {
+			this.userService.setUser({ username, score: 0 })
 			this.store.setUser({ username, score: 0 })
 		}
 	}
@@ -51,7 +52,7 @@ export class UserInfoDialog implements OnInit {
 	}
 
 	private generateUsername() {
-		const generatedUsername = this.userInfoDialogService.generateUsername()
+		const generatedUsername = this.userService.generateUsername()
 		this.generatedUsername = generatedUsername
 		this.usernameModel.set(generatedUsername)
 	}

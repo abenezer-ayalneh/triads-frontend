@@ -12,4 +12,5 @@ export interface GlobalState {
 	turns: TurnAndHint[]
 	hints: TurnAndHint[]
 	gamePlayState: GamePlayState
+	triadsStep: 'INITIAL' | 'FOURTH'
 }

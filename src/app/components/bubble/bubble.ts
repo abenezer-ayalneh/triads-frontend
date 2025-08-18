@@ -12,9 +12,9 @@ import { GlobalStore } from '../../state/global.store'
 	styleUrl: './bubble.scss',
 })
 export class Bubble {
-	cue = input.required<Cue>()
-
 	readonly store = inject(GlobalStore)
+
+	cue = input.required<Cue>()
 
 	text = computed(() => this.cue().word)
 
@@ -39,7 +39,6 @@ export class Bubble {
 		effect(() => {
 			const isPopping = this.pop()
 			if (isPopping) {
-				console.log('Popping')
 				this.popAudio.play()
 			}
 		})

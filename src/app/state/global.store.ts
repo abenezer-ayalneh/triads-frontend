@@ -24,6 +24,7 @@ const initialState: GlobalState = {
 		{ id: 2, available: true },
 	],
 	gamePlayState: GamePlayState.IDLE,
+	triadsStep: 'INITIAL',
 }
 
 export const GlobalStore = signalStore(
@@ -85,6 +86,9 @@ export const GlobalStore = signalStore(
 					patchState(store, (state) => ({ ...state, fourthCueGroup: { ...fourthCueGroup, available: false } }))
 				}
 			}
+		},
+		updateTriadStep: (triadsStep: 'INITIAL' | 'FOURTH') => {
+			patchState(store, (state) => ({ ...state, triadsStep }))
 		},
 	})),
 	withHooks({

@@ -1,7 +1,7 @@
 <div
 	id="bubble-{{ cue().id }}"
 	class="w-32 h-32 md:w-52 md:h-52 xl:w-68 xl:h-68 p-0 m-0 aspect-square circle contain-content relative cursor-pointer animated-color"
-	style="pointer-events: auto"
+	style="pointer-events: fill"
 	[class.bubble]="!pop()"
 	[class.backdrop-blur-xs]="!pop()"
 	(click)="whenClicked()">

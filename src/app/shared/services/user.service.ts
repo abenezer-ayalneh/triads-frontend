@@ -7,6 +7,10 @@ import { User } from '../interfaces/user.interface'
 	providedIn: 'root',
 })
 export class UserService {
+	setUser(user: User) {
+		localStorage.setItem('user', JSON.stringify(user))
+	}
+
 	/**
 	 * Get the user's stored information.
 	 *
