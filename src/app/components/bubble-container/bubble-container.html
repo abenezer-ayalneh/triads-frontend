@@ -1,4 +1,5 @@
 <div #container class="w-full h-full relative overflow-visible z-10" style="pointer-events: none">
+	{{ store.gamePlayState() }}
 	@for (cue of cues(); track cue.id) {
 		<app-bubble #initialTriadBubble [cue]="cue"></app-bubble>
 	}

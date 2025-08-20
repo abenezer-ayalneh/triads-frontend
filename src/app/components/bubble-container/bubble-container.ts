@@ -1,4 +1,5 @@
 import { AfterViewInit, Component, effect, ElementRef, inject, input, OnDestroy, viewChild, viewChildren } from '@angular/core'
+import { gsap } from 'gsap'
 import Matter from 'matter-js'
 
 import { Cue } from '../../pages/game-play/interfaces/cue.interface'
@@ -42,7 +43,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			const fourthTriadReached = this.store.triadsStep() === 'FOURTH'
 
 			if (fourthTriadReached && this.fourthTriadBubbleComponents().length === 3) {
-				this.createBodies(this.fourthTriadBubbleComponents())
+				this.animateFourthTriad()
 			}
 		})
 	}
@@ -154,6 +155,23 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		update()
 	}
 
+	private moveToBubblesContainer(cueId: number) {
+		const bubbleSelector = `#bubble-${cueId}`
+		const solutionBox = document.getElementById('solutionBox')
+
+		if (solutionBox) {
+			const boxRect = solutionBox.getBoundingClientRect()
+			const bubbleElem = document.querySelector(bubbleSelector) as HTMLElement
+			if (!bubbleElem) return
+
+			const bubbleRect = bubbleElem.getBoundingClientRect()
+			const startX = boxRect.left + boxRect.width / 2 - bubbleRect.width / 2 - bubbleRect.left + bubbleElem.offsetLeft
+			const startY = boxRect.top + boxRect.height / 2 - bubbleRect.height / 2 - bubbleRect.top + bubbleElem.offsetTop
+
+			gsap.fromTo(bubbleElem, { x: startX, y: startY, scale: 0.2, display: 'block' }, { duration: 3, x: 0, y: 0, scale: 1, display: 'block' })
+		}
+	}
+
 	private createOrUpdateBoundaries() {
 		let ceiling: Matter.Body | null = null
 		let ground: Matter.Body | null = null
@@ -224,5 +242,12 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			this.createOrUpdateBoundaries()
 		})
 		this.resizeObserver.observe(container)
+	}
+
+	private animateFourthTriad() {
+		this.fourthTriadBubbleComponents().forEach((bubble) => {
+			this.moveToBubblesContainer(bubble.cue().id)
+		})
+		this.createBodies(this.fourthTriadBubbleComponents())
 	}
 }

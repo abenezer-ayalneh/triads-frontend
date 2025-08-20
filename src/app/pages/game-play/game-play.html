@@ -1,5 +1,4 @@
 <div class="w-full h-full flex flex-col relative overflow-hidden">
-	{{ store.triadsStep() | json }}
 	<!--Ballons Section-->
 	<div class="w-full h-[calc(100%-208px)] p-2 md:p-4 lg:p-6 overflow-visible">
 		@if (cueFetchingState() === RequestState.LOADING) {
@@ -71,9 +70,10 @@
 			</div>
 		</div>
 
-		<!--Words Box-->
+		<!--Solution Box-->
 		<div
-			#box
+			#solutionBox
+			id="solutionBox"
 			lottie
 			[options]="boxAnimationOptions"
 			(animationCreated)="animationCreated($event)"

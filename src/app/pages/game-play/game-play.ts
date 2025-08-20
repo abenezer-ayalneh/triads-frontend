@@ -53,7 +53,7 @@ export class GamePlay implements OnInit {
 
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
-	solutionBox = viewChild.required<ElementRef>('box')
+	solutionBox = viewChild.required<ElementRef>('solutionBox')
 
 	visibleCues = computed<Cue[]>(() => {
 		return this.store
@@ -162,6 +162,7 @@ export class GamePlay implements OnInit {
 				this.store.setCueGroups(cueGroups.slice(0, 3))
 				this.store.setFourthCueGroup(cueGroups[3] ?? null)
 				this.cueFetchingState.set(RequestState.READY)
+				this.store.setGamePlayState(GamePlayState.PLAYING)
 			},
 		})
 	}
@@ -183,6 +184,7 @@ export class GamePlay implements OnInit {
 
 		// Reload cues
 		this.cueFetchingState.set(RequestState.LOADING)
+		this.store.updateTriadStep('INITIAL')
 		this.initializeGame()
 	}
 
@@ -331,12 +333,6 @@ export class GamePlay implements OnInit {
 
 								const triadsStep = this.store.cueGroups().some((cueGroup) => cueGroup.available) ? 'INITIAL' : 'FOURTH'
 								this.store.updateTriadStep(triadsStep)
-								if (triadsStep === 'FOURTH') {
-									this.boxAnimationItem?.addEventListener('complete', () => {
-										this.showTheFourthTriad()
-										this.boxAnimationItem?.removeEventListener('complete')
-									})
-								}
 							} else {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.answerFieldRef()?.nativeElement.focus()
@@ -393,7 +389,6 @@ export class GamePlay implements OnInit {
 		this.showSolvedPopup.set(false)
 	}
 
-	// TODO: update the scoring with the new document.
 	private calculateSuccessScore(attempts: number): number {
 		if (attempts === 0) return 15 // Perfect score
 		if (attempts === 1) return 12 // 1 miss or hint
@@ -423,19 +418,19 @@ export class GamePlay implements OnInit {
 		}
 	}
 
-	private showTheFourthTriad() {
-		const fourthTriadCues = this.store.fourthCueGroup()?.cues ?? []
-
-		if (fourthTriadCues.length === 0) return
-
-		this.openSolutionsBox()
-
-		this.boxAnimationItem?.addEventListener('complete', () => {
-			fourthTriadCues.forEach((cue) => this.moveToBubblesContainer(cue.id))
-
-			this.boxAnimationItem?.removeEventListener('complete')
-		})
-	}
+	// private showTheFourthTriad() {
+	// 	const fourthTriadCues = this.store.fourthCueGroup()?.cues ?? []
+	//
+	// 	if (fourthTriadCues.length === 0) return
+	//
+	// 	this.openSolutionsBox()
+	//
+	// 	this.boxAnimationItem?.addEventListener('complete', () => {
+	// 		fourthTriadCues.forEach((cue) => this.moveToBubblesContainer(cue.id))
+	//
+	// 		this.boxAnimationItem?.removeEventListener('complete')
+	// 	})
+	// }
 
 	private moveToSolutionBox(cueId: number) {
 		this.openSolutionsBox()
