@@ -1,11 +1,10 @@
 <div #container class="w-full h-full relative overflow-visible z-10" style="pointer-events: none">
-	{{ store.gamePlayState() }}
-	@for (cue of cues(); track cue.id) {
+	@for (cue of cues(); track $index) {
 		<app-bubble #initialTriadBubble [cue]="cue"></app-bubble>
 	}
 
 	@if (store.triadsStep() === 'FOURTH') {
-		@for (cue of store.fourthCueGroup()?.cues; track cue.id) {
+		@for (cue of store.finalTriad()?.cues; track cue) {
 			<app-bubble #fourthTriadBubble [cue]="cue"></app-bubble>
 		}
 	}

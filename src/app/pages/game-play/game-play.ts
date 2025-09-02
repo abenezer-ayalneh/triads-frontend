@@ -1,11 +1,11 @@
-import { JsonPipe, NgClass } from '@angular/common'
+import { NgClass } from '@angular/common'
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { gsap } from 'gsap'
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
 import { AnimationItem } from 'lottie-web'
 import { AnimationOptions, LottieComponent, LottieDirective } from 'ngx-lottie'
-import { delay, filter, tap } from 'rxjs'
+import { delay, filter, firstValueFrom, tap } from 'rxjs'
 
 import { BubbleContainer } from '../../components/bubble-container/bubble-container'
 import { RequestState } from '../../shared/enums/request-state.enum'
@@ -13,14 +13,14 @@ import { HighlightKeyPipe } from '../../shared/pipes/highlight-key.pipe'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { GlobalStore } from '../../state/global.store'
 import { GamePlayState } from './enums/game-play.enum'
-import { Cue } from './interfaces/cue.interface'
+import { SolvedTriad } from './interfaces/triad.interface'
 import { GamePlayApi } from './services/game-play-api'
 import { HintService } from './services/hint-service'
 import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe, JsonPipe],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -33,48 +33,40 @@ export class GamePlay implements OnInit {
 
 	boxStatus = signal<'OPEN' | 'CLOSED'>('CLOSED')
 
-	explodingBubbles = signal<number[]>([])
+	explodingBubbles = signal<string[]>([])
 
 	// Popup: show solved cue words when the word box is clicked
 	showSolvedPopup = signal<boolean>(false)
 
-	solvedCues = computed<(Cue & { keyword: string })[]>(() => {
-		const groups = this.store.cueGroups()
-		const solvedFromInitial = groups
-			.filter((group) => !group.available)
-			.flatMap((group) =>
-				group.cues.map((cue) => ({ id: cue.id, word: cue.word, fullWord: cue.fullWord, keyword: groups.find((g) => g.id === group.id)!.commonWord })),
-			)
-		const fourth = this.store.fourthCueGroup()
-		const solvedFromFourth =
-			fourth && !fourth.available ? fourth.cues.map((cue) => ({ id: cue.id, word: cue.word, fullWord: cue.fullWord, keyword: fourth.commonWord })) : []
-		return [...solvedFromInitial, ...solvedFromFourth]
-	})
+	solvedTriads = signal<SolvedTriad[]>([])
 
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
 	solutionBox = viewChild.required<ElementRef>('solutionBox')
 
-	visibleCues = computed<Cue[]>(() => {
-		return this.store
-			.cueGroups()
-			.filter((cueGroup) => cueGroup.available)
-			.map((cueGroup) => cueGroup.cues)
-			.flat()
+	// Cues that should be shown as a bubble
+	visibleCues = computed<string[]>(() => {
+		return (
+			this.store
+				.triadsGroup()
+				?.triads.filter((triad) => triad.available)
+				.map((triad) => triad.cues)
+				.flat() ?? []
+		)
 	})
 
 	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
 
 	gameWon = computed(() => {
-		const cueGroups = this.store.cueGroups()
-		return cueGroups.length > 0 && cueGroups.every((cueGroup) => !cueGroup.available) && !this.store.fourthCueGroup()?.available
+		const triadsGroup = this.store.triadsGroup()
+		return triadsGroup && triadsGroup.triads.every((triad) => !triad.available) && !this.store.finalTriad()?.available
 	})
 
 	gameLost = computed(() => this.ranOutOfTurns() && !this.gameWon())
 
 	gameScore = computed(() => {
-		const solvedTriads = this.store.cueGroups().filter((cueGroup) => !cueGroup.available).length
-		const totalTriads = this.store.cueGroups().length
+		const solvedTriads = this.store.triadsGroup()?.triads.filter((triad) => !triad.available).length ?? 0
+		const totalTriads = this.store.triadsGroup()?.triads.length ?? 0
 		const totalAttempts = this.store.turns().filter((turn) => !turn.available).length + this.store.hints().filter((hint) => !hint.available).length
 
 		// Perfect success scenarios
@@ -133,7 +125,7 @@ export class GamePlay implements OnInit {
 
 			// Only auto-transition while actively PLAYING so we don't override
 			// ACCEPT_ANSWER or other states triggered by hints/results.
-			if (currentState === GamePlayState.PLAYING) {
+			if (currentState === GamePlayState.PLAYING || currentState === GamePlayState.CHECK_SOLUTION) {
 				if (selectedCues.length === 3) {
 					this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
 				} else {
@@ -157,10 +149,10 @@ export class GamePlay implements OnInit {
 	}
 
 	initializeGame() {
-		this.gamePlayApi.getCues().subscribe({
-			next: (cueGroups) => {
-				this.store.setCueGroups(cueGroups.slice(0, 3))
-				this.store.setFourthCueGroup(cueGroups[3] ?? null)
+		this.gamePlayApi.getTriads().subscribe({
+			next: (triadsGroup) => {
+				this.store.setTriadsGroup({ id: triadsGroup.id, triads: triadsGroup.triads.map((triad) => ({ ...triad, available: true })) })
+
 				this.cueFetchingState.set(RequestState.READY)
 				this.store.setGamePlayState(GamePlayState.PLAYING)
 			},
@@ -193,35 +185,36 @@ export class GamePlay implements OnInit {
 			const hints = this.store.hints()
 
 			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
-			const initialCueGroups = this.store.cueGroups()
-			const initialAvailableGroups = initialCueGroups.filter((group) => group.available)
-			let groupsForHint = initialAvailableGroups
-			if (initialAvailableGroups.length === 0) {
-				const fourthGroup = this.store.fourthCueGroup()
-				groupsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
+			const initialAvailableTriads = this.store.triadsGroup()?.triads.filter((triad) => triad.available)
+			let triadsForHint = initialAvailableTriads
+			if (!initialAvailableTriads || initialAvailableTriads.length === 0) {
+				const fourthGroup = this.store.finalTriad()
+				triadsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
 			}
-			const { cues, keywordLength } = this.hintService.getHintTriadCues(groupsForHint, hints)
 
-			// When the player uses his last hint, show the length of the keyword
-			if (this.hintService.getNumberOfAvailableHints(hints) === 0) {
-				this.keywordLengthHint.set(keywordLength)
+			if (triadsForHint) {
+				const { cues, keywordLength } = this.hintService.getHintTriadCues(triadsForHint, hints)
+				// When the player uses his last hint, show the length of the keyword
+				if (this.hintService.getNumberOfAvailableHints(hints) === 0) {
+					this.keywordLengthHint.set(keywordLength)
+				}
+				// Show the hint cues as selected on the UI
+				this.store.setSelectedCues(cues)
+
+				// Update the hints and turn values
+				this.store.setHints(useHintResponse.hints)
+				this.store.setTurns(useHintResponse.turns)
+
+				// Skip the "Check Solution" step
+				this.checkTriad()
 			}
-			// Show the hint cues as selected on the UI
-			this.store.setSelectedCues(cues)
-
-			// Update the hints and turn values
-			this.store.setHints(useHintResponse.hints)
-			this.store.setTurns(useHintResponse.turns)
-
-			// Skip the "Check Solution" step
-			this.checkTriad()
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
 	}
 
 	onHintClick() {
-		const availableHints = this.store.hints().filter((h) => h.available).length
+		const availableHints = this.store.hints().filter((hint) => hint.available).length
 		const visibleCues = this.visibleCues()
 		const shouldShowChoice = availableHints === 1 || visibleCues.length === 3
 		if (shouldShowChoice) {
@@ -236,39 +229,43 @@ export class GamePlay implements OnInit {
 			const hints = this.store.hints()
 			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
 
-			const initialCueGroups = this.store.cueGroups()
-			const initialAvailableGroups = initialCueGroups.filter((group) => group.available)
-			let groupsForHint = initialAvailableGroups
-			if (initialAvailableGroups.length === 0) {
-				const fourthGroup = this.store.fourthCueGroup()
-				groupsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
+			let triadsForHint = this.store.triadsGroup()?.triads.filter((triad) => triad.available)
+			if (!triadsForHint || triadsForHint.length === 0) {
+				const fourthGroup = this.store.finalTriad()
+				triadsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
 			}
-			const { cues } = this.hintService.getHintTriadCues(groupsForHint, hints)
 
-			// Show the hint cues as selected on the UI
-			this.store.setSelectedCues(cues)
+			if (triadsForHint) {
+				const { cues } = this.hintService.getHintTriadCues(triadsForHint, hints)
 
-			// Apply option-specific behavior
-			const selectedGroup = initialCueGroups.find((g) => g.cues.every((c) => cues.some((sc) => sc.id === c.id)))
-			if (selectedGroup) {
-				if (option === 'letters') {
-					this.keywordLengthHint.set(selectedGroup.commonWord.length)
-					this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-					this.answerFieldRef()?.nativeElement.focus()
-				} else if (option === 'firstLetter') {
-					this.keywordLengthHint.set(null)
-					const firstChar = selectedGroup.commonWord.charAt(0)
-					this.answerFormControl.setValue(firstChar.toUpperCase())
-					this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-					this.answerFieldRef()?.nativeElement.focus()
+				// Show the hint cues as selected on the UI
+				this.store.setSelectedCues(cues)
+
+				// Apply option-specific behavior
+				const selectedTriad = this.getTriadFromCuesForHint(cues)
+				if (selectedTriad) {
+					if (option === 'letters') {
+						firstValueFrom(this.hintService.getKeywordLengthHint(selectedTriad.cues)).then((keywordLength) => {
+							this.keywordLengthHint.set(keywordLength)
+							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+							this.answerFieldRef()?.nativeElement.focus()
+						})
+					} else if (option === 'firstLetter') {
+						firstValueFrom(this.hintService.getFirstLetterHint(selectedTriad.cues)).then((firstLetter) => {
+							this.keywordLengthHint.set(null)
+							this.answerFormControl.setValue(firstLetter.toUpperCase())
+							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+							this.answerFieldRef()?.nativeElement.focus()
+						})
+					}
 				}
+
+				// Update the hints and turn values
+				this.store.setHints(useHintResponse.hints)
+				this.store.setTurns(useHintResponse.turns)
+
+				this.hintChoiceModalRef()?.nativeElement.close()
 			}
-
-			// Update the hints and turn values
-			this.store.setHints(useHintResponse.hints)
-			this.store.setTurns(useHintResponse.turns)
-
-			this.hintChoiceModalRef()?.nativeElement.close()
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
@@ -279,7 +276,7 @@ export class GamePlay implements OnInit {
 
 		if (selectedCues.length === 3) {
 			this.gamePlayApi
-				.checkTriad(selectedCues.map((cue) => cue.id))
+				.checkTriad(selectedCues)
 				.pipe(
 					tap((success) => {
 						if (success) {
@@ -305,14 +302,15 @@ export class GamePlay implements OnInit {
 	}
 
 	submitAnswer() {
-		if (this.answerFormControl.valid && this.answerFormControl.value) {
+		const selectedCues = this.store.selectedCues()
+		if (this.answerFormControl.valid && this.answerFormControl.value && selectedCues) {
 			this.gamePlayApi
-				.checkAnswer(this.answerFormControl.value)
+				.checkAnswer(selectedCues, this.answerFormControl.value)
 				.pipe(
 					tap((success) => {
 						if (success) {
 							this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
-							this.store.selectedCues().forEach((cue) => this.moveToSolutionBox(cue.id))
+							this.store.selectedCues().forEach((cue) => this.moveToSolutionBox(cue))
 						} else {
 							this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
 							this.useCurrentTurn()
@@ -323,16 +321,19 @@ export class GamePlay implements OnInit {
 					delay(3000),
 				)
 				.subscribe({
-					next: (success) => {
+					next: (response) => {
 						// Only change state if not in WON or LOST state
 						if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
-							if (success) {
-								this.store.markCuesAsSolved(this.store.selectedCues())
+							if (response && typeof response != 'boolean') {
+								this.store.markTriadAsSolved(response.id)
 								this.store.setSelectedCues([])
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 
-								const triadsStep = this.store.cueGroups().some((cueGroup) => cueGroup.available) ? 'INITIAL' : 'FOURTH'
-								this.store.updateTriadStep(triadsStep)
+								const triadsGroup = this.store.triadsGroup()
+								if (triadsGroup) {
+									const triadsStep = this.store.triadsGroup()?.triads.some((triad) => triad.available) ? 'INITIAL' : 'FOURTH'
+									this.store.updateTriadStep(triadsStep)
+								}
 							} else {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.answerFieldRef()?.nativeElement.focus()
@@ -419,7 +420,7 @@ export class GamePlay implements OnInit {
 	}
 
 	// private showTheFourthTriad() {
-	// 	const fourthTriadCues = this.store.fourthCueGroup()?.cues ?? []
+	// 	const fourthTriadCues = this.store.finalTriad()?.cues ?? []
 	//
 	// 	if (fourthTriadCues.length === 0) return
 	//
@@ -432,12 +433,12 @@ export class GamePlay implements OnInit {
 	// 	})
 	// }
 
-	private moveToSolutionBox(cueId: number) {
+	private moveToSolutionBox(cue: string) {
 		this.openSolutionsBox()
 
-		this.explodingBubbles.update((currentValue) => [...currentValue, cueId])
+		this.explodingBubbles.update((currentValue) => [...currentValue, cue])
 
-		const bubbleSelector = `#bubble-${cueId}`
+		const bubbleSelector = `#bubble-${cue}`
 		const solutionBox = this.solutionBox().nativeElement
 
 		const point = MotionPathPlugin.convertCoordinates(solutionBox, document.querySelector(bubbleSelector) as Element, { x: 0, y: 0 })
@@ -459,5 +460,15 @@ export class GamePlay implements OnInit {
 		gsap.fromTo(bubbleSelector, { x: point.x, y: point.y, display: 'block' }, { x: 0, y: 0, display: 'block' }).then(() => {
 			this.closeSolutionsBox()
 		})
+	}
+
+	private getTriadFromCuesForHint(cues: string[]) {
+		let triadsForHint = this.store.triadsGroup()?.triads.filter((triad) => triad.available)
+		if (!triadsForHint || triadsForHint.length === 0) {
+			const fourthGroup = this.store.finalTriad()
+			triadsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
+		}
+
+		return triadsForHint?.find((triad) => triad.cues.every((cue) => cues.some((sc) => sc === cue)))
 	}
 }

@@ -100,14 +100,16 @@
 			<div
 				class="w-fit max-w-[90%] md:max-w-[70%] h-fit flex flex-col justify-center items-center gap-3 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
 				<p class="text-base-100 text-2xl font-semibold">Solved Words</p>
-				@if (solvedCues().length === 0) {
+				@if (solvedTriads().length === 0) {
 					<p class="text-base-200 text-center">No solved words yet. Solve a Triad to see it here.</p>
 				} @else {
 					<div class="grid grid-cols-3 gap-2">
-						@for (cue of solvedCues(); track cue.id) {
-							<span
-								class="px-2 py-1 rounded-full border border-success text-primary-content font-medium"
-								[innerHTML]="cue.fullWord | highlightKey: cue.keyword : 'text-success'"></span>
+						@for (triad of solvedTriads(); track triad.id) {
+							@for (fullPhrase of triad.fullPhrases; track $index) {
+								<span
+									class="px-2 py-1 rounded-full border border-success text-primary-content font-medium"
+									[innerHTML]="fullPhrase | highlightKey: triad.keyword : 'text-success'"></span>
+							}
 						}
 					</div>
 				}

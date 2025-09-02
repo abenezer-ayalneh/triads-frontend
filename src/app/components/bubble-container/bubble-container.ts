@@ -2,7 +2,6 @@ import { AfterViewInit, Component, effect, ElementRef, inject, input, OnDestroy,
 import { gsap } from 'gsap'
 import Matter from 'matter-js'
 
-import { Cue } from '../../pages/game-play/interfaces/cue.interface'
 import { GlobalStore } from '../../state/global.store'
 import { Bubble } from '../bubble/bubble'
 import { BubbleMatter } from './interfaces/bubble-matter.interface'
@@ -16,7 +15,7 @@ import { BubbleMatter } from './interfaces/bubble-matter.interface'
 export class BubbleContainer implements AfterViewInit, OnDestroy {
 	readonly store = inject(GlobalStore)
 
-	cues = input.required<Cue[]>()
+	cues = input.required<string[]>()
 
 	bubbleComponents = viewChildren<Bubble>('initialTriadBubble')
 
@@ -155,8 +154,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		update()
 	}
 
-	private moveToBubblesContainer(cueId: number) {
-		const bubbleSelector = `#bubble-${cueId}`
+	private moveToBubblesContainer(cue: string) {
+		const bubbleSelector = `#bubble-${cue}`
 		const solutionBox = document.getElementById('solutionBox')
 
 		if (solutionBox) {
@@ -246,7 +245,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private animateFourthTriad() {
 		this.fourthTriadBubbleComponents().forEach((bubble) => {
-			this.moveToBubblesContainer(bubble.cue().id)
+			this.moveToBubblesContainer(bubble.cue())
 		})
 		this.createBodies(this.fourthTriadBubbleComponents())
 	}

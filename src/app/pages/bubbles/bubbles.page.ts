@@ -16,7 +16,7 @@ import {
 import lottie, { AnimationItem } from 'lottie-web'
 
 import { GlobalStore } from '../../state/global.store'
-import { CueGroup } from '../game-play/interfaces/cue.interface'
+import { TriadsGroup } from '../game-play/interfaces/triad.interface'
 import { Bubble } from './interfaces/bubble.interface'
 
 @Component({
@@ -29,7 +29,7 @@ import { Bubble } from './interfaces/bubble.interface'
 export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 	readonly store = inject(GlobalStore)
 
-	cueGroups = input.required<CueGroup[]>()
+	cueGroups = input.required<TriadsGroup[]>()
 
 	bubbles = signal<Bubble[]>([])
 
@@ -42,7 +42,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 	private readonly gameWords = computed(() =>
 		this.cueGroups()
-			.map((cueGroup) => cueGroup.cues)
+			.map((cueGroup) => cueGroup.triads)
 			.map((cue) => cue.map((cue) => cue.word))
 			.flat(),
 	)
@@ -79,7 +79,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 		effect(() => {
 			// Track IDs to detect a change without triggering excessive work
 			const ids = this.cueGroups()
-				.map((g) => [g.id, g.available, g.cues.map((c) => c.id).join('-')].join(':'))
+				.map((g) => [g.id, g.available, g.triads.map((c) => c.id).join('-')].join(':'))
 				.join('|')
 			// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 			ids
@@ -279,7 +279,7 @@ export class BubblesPage implements OnInit, OnDestroy, AfterViewInit {
 
 		let positionIndex = 0
 		this.cueGroups().forEach((cueGroup) => {
-			cueGroup.cues.forEach((cue) => {
+			cueGroup.triads.forEach((cue) => {
 				if (positionIndex < adjustedPositions.length) {
 					// Start position: from random bottom in initial phase, from collection area in final phase
 					let startX = Math.random() * containerWidth

@@ -1,61 +1,49 @@
 import { http, HttpResponse } from 'msw'
 
-import { CueGroup } from '../app/pages/game-play/interfaces/cue.interface'
+import { TriadGroupResponse } from '../app/pages/game-play/interfaces/triad.interface'
 import { environment } from '../environments/environment'
 
 const API_URL = environment.apiUrl
 
 export const handlers = [
-	http.get(`${API_URL}/cues`, () => {
-		return HttpResponse.json<CueGroup[]>([
-			{
-				id: 532,
-				commonWord: 'MATE',
-				available: true,
-				cues: [
-					{ id: 1, word: 'STALE' },
-					{ id: 2, word: 'PLAY' },
-					{ id: 3, word: 'IN' },
-				],
-			},
-			{
-				id: 500,
-				commonWord: 'LIST',
-				available: true,
-				cues: [
-					{ id: 4, word: 'HIT' },
-					{ id: 5, word: 'GUEST' },
-					{ id: 6, word: 'TO-DO' },
-				],
-			},
-			{
-				id: 391,
-				commonWord: 'SPELL',
-				available: true,
-				cues: [
-					{ id: 7, word: 'MAGIC' },
-					{ id: 8, word: 'BOUND' },
-					{ id: 9, word: 'DRY' },
-				],
-			},
-			{
-				id: 120,
-				commonWord: 'CHECK',
-				available: true,
-				cues: [
-					{ id: 10, word: 'MATE' },
-					{ id: 11, word: 'LIST' },
-					{ id: 12, word: 'SPELL' },
-				],
-			},
-		])
+	http.get(`${API_URL}/triads/groups`, () => {
+		return HttpResponse.json<TriadGroupResponse>({
+			id: 1,
+			triads: [
+				{
+					id: 1,
+					cues: ['SLUSH', 'TRUST', 'HEDGE'],
+				},
+				{
+					id: 2,
+					cues: ['FIRST', 'KITCHEN', 'PREP'],
+				},
+				{
+					id: 3,
+					cues: ['CLOSE', 'SHIP', 'IMAGINARY'],
+				},
+			],
+		})
 	}),
-	http.post<{ answer: string }>(`${API_URL}/answer`, async ({ request }) => {
-		const requestBody = await request.clone().json()
-		return HttpResponse.json<boolean>(requestBody.answer === 'c')
+	http.get<{ cues: string[] }>(`${API_URL}/triads/check-triad`, () => {
+		return new HttpResponse(true)
+		// const requestBody = await request.clone().json()
+		// return HttpResponse.json<boolean>(requestBody.triadIds.includes(1))
 	}),
-	http.post<{ answer: string }>(`${API_URL}/triads`, async ({ request }) => {
+	http.get<{ cues: string[]; answer: string }>(`${API_URL}/triads/check-answer`, async ({ request }) => {
 		const requestBody = await request.clone().json()
-		return HttpResponse.json<boolean>(requestBody.triadIds.includes(1))
+		return HttpResponse.json(
+			requestBody.answer === 'c'
+				? {
+						id: 1,
+						keyword: 'FUND',
+						cues: ['SLUSH', 'TRUST', 'HEDGE'],
+						fullPhrases: ['SLUSH FUND', 'TRUST FUND', 'HEDGE FUND'],
+					}
+				: false,
+		)
+	}),
+	http.get<{ cues: string[]; answer: string }>(`${API_URL}/triads/keyword-length-hint`, () => {
+		return new HttpResponse(4)
 	}),
 ]

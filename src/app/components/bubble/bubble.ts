@@ -2,7 +2,6 @@ import { Component, computed, effect, ElementRef, inject, input } from '@angular
 import { AnimationOptions, LottieDirective } from 'ngx-lottie'
 
 import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
-import { Cue } from '../../pages/game-play/interfaces/cue.interface'
 import { GlobalStore } from '../../state/global.store'
 
 @Component({
@@ -14,11 +13,11 @@ import { GlobalStore } from '../../state/global.store'
 export class Bubble {
 	readonly store = inject(GlobalStore)
 
-	cue = input.required<Cue>()
+	cue = input.required<string>()
 
-	text = computed(() => this.cue().word)
+	text = computed(() => this.cue())
 
-	selected = computed<boolean>(() => this.store.selectedCues().some((cue) => cue.id === this.cue().id))
+	selected = computed<boolean>(() => this.store.selectedCues().some((cue) => cue === this.cue()))
 
 	pop = computed<boolean>(() => this.selected() && this.store.gamePlayState() === GamePlayState.CORRECT_ANSWER)
 

@@ -2,7 +2,7 @@ import { inject } from '@angular/core'
 import { patchState, signalStore, withHooks, withMethods, withProps, withState } from '@ngrx/signals'
 
 import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
-import { Cue, CueGroup } from '../pages/game-play/interfaces/cue.interface'
+import { Triad, TriadsGroup } from '../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
@@ -11,8 +11,8 @@ import { UserService } from '../shared/services/user.service'
 const initialState: GlobalState = {
 	user: null,
 	showHowToPlay: false,
-	cueGroups: [],
-	fourthCueGroup: null,
+	triadsGroup: null,
+	finalTriad: null,
 	selectedCues: [],
 	turns: [
 		{ id: 1, available: true },
@@ -46,20 +46,20 @@ export const GlobalStore = signalStore(
 		setShowHowToPlay: (value: boolean) => {
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
 		},
-		setCueGroups: (cueGroups: CueGroup[]) => {
-			patchState(store, (state) => ({ ...state, cueGroups: [...cueGroups] }))
+		setTriadsGroup: (triadsGroup: TriadsGroup | null) => {
+			patchState(store, (state) => ({ ...state, triadsGroup }))
 		},
-		setFourthCueGroup: (cueGroup: CueGroup | null) => {
-			patchState(store, (state) => ({ ...state, fourthCueGroup: cueGroup }))
+		setFinalTriad: (triad: Triad | null) => {
+			patchState(store, (state) => ({ ...state, finalTriad: triad }))
 		},
-		setSelectedCues: (selectedCues: Cue[]) => {
+		setSelectedCues: (selectedCues: string[]) => {
 			patchState(store, (state) => ({ ...state, selectedCues: [...selectedCues] }))
 		},
-		addSelectedCue: (selectedCue: Cue) => {
+		addSelectedCue: (selectedCue: string) => {
 			patchState(store, (state) => ({ ...state, selectedCues: [...state.selectedCues, selectedCue] }))
 		},
-		removeSelectedCue: (selectedCue: Cue) => {
-			patchState(store, (state) => ({ ...state, selectedCues: state.selectedCues.filter((cue) => cue.id !== selectedCue.id) }))
+		removeSelectedCue: (selectedCue: string) => {
+			patchState(store, (state) => ({ ...state, selectedCues: state.selectedCues.filter((cue) => cue !== selectedCue) }))
 		},
 		setTurns: (turns: TurnAndHint[]) => {
 			patchState(store, (state) => ({ ...state, turns: [...turns] }))
@@ -70,20 +70,28 @@ export const GlobalStore = signalStore(
 		setGamePlayState(gamePlayState: GamePlayState) {
 			patchState(store, (state) => ({ ...state, gamePlayState }))
 		},
-		markCuesAsSolved: (cues: Cue[]) => {
-			const sampleCueIdToRemove = cues.map((cue) => cue.id)[0]
-			const cueGroupToRemove = store.cueGroups().find((cueGroup) => cueGroup.cues.map((cue) => cue.id).includes(sampleCueIdToRemove))
+		markTriadAsSolved: (triadId: number) => {
+			const triadGroup = store.triadsGroup()
+			const solvedTriad = triadGroup?.triads.find((triad) => triad.id === triadId)
 
-			if (cueGroupToRemove) {
+			if (solvedTriad && triadGroup) {
 				patchState(store, (state) => ({
 					...state,
-					cueGroups: state.cueGroups.map((cueGroup) => (cueGroup.id === cueGroupToRemove.id ? { ...cueGroup, available: false } : cueGroup)),
+					triadsGroup: {
+						...triadGroup,
+						triads: triadGroup.triads.map((triad) => {
+							if (triad.id === triadId) {
+								return { ...triad, available: false }
+							}
+							return triad
+						}),
+					},
 				}))
 			} else {
-				const fourthCueGroup = store.fourthCueGroup()
+				const finalTriad = store.finalTriad()
 
-				if (fourthCueGroup && fourthCueGroup.cues.map((cue) => cue.id).includes(sampleCueIdToRemove)) {
-					patchState(store, (state) => ({ ...state, fourthCueGroup: { ...fourthCueGroup, available: false } }))
+				if (finalTriad && finalTriad.id === triadId) {
+					patchState(store, (state) => ({ ...state, finalTriad: { ...finalTriad, available: false } }))
 				}
 			}
 		},

@@ -1,5 +1,5 @@
 <div
-	id="bubble-{{ cue().id }}"
+	id="bubble-{{ cue() }}"
 	class="w-32 h-32 md:w-52 md:h-52 xl:w-68 xl:h-68 p-0 m-0 aspect-square circle contain-content relative cursor-pointer animated-color"
 	style="pointer-events: fill"
 	[class.bubble]="!pop()"
@@ -12,8 +12,8 @@
 		<div class="w-full h-full aspect-square circle selected"></div>
 	}
 	<p
-		id="cue-{{ cue().id }}"
+		id="cue-{{ cue() }}"
 		class="text-primary-content text-xl md:text-3xl xl:text-4xl text-center font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-		{{ cue().word }}
+		{{ cue() }}
 	</p>
 </div>

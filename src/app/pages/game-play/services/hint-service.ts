@@ -1,6 +1,8 @@
+import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
+import { firstValueFrom } from 'rxjs'
 
-import { CueGroup } from '../interfaces/cue.interface'
+import { Triad } from '../interfaces/triad.interface'
 import { TurnAndHint } from '../interfaces/turn-and-hint.interface'
 import { TurnService } from './turn-service'
 
@@ -9,6 +11,8 @@ import { TurnService } from './turn-service'
 })
 export class HintService {
 	private readonly turnService = inject(TurnService)
+
+	private readonly httpClient = inject(HttpClient)
 
 	hasRemainingHints(hints: TurnAndHint[]) {
 		return hints.some((hint) => hint.available)
@@ -39,24 +43,39 @@ export class HintService {
 		return { hints, turns }
 	}
 
-	getHintTriadCues(cueGroups: CueGroup[], hints: TurnAndHint[]) {
-		const unsolvedCueGroups = cueGroups.filter((cueGroup) => cueGroup.available)
-		if (unsolvedCueGroups.length === 0) {
+	getHintTriadCues(triads: Triad[], hints: TurnAndHint[]): { cues: string[]; keywordLength: number | null } {
+		const unsolvedTriad = triads.filter((triad) => triad.available)
+		if (unsolvedTriad.length === 0) {
 			throw new Error('Not enough cues to get a hint')
 		}
 
 		// Prefer the currently visible triad: either any initial available group,
 		// or if only the fourth group remains available, pick that explicitly.
-		let selectedGroup: CueGroup
-		if (unsolvedCueGroups.length === 1) {
-			selectedGroup = unsolvedCueGroups[0]
+		let selectedTriad: Triad
+		if (unsolvedTriad.length === 1) {
+			selectedTriad = unsolvedTriad[0]
 		} else {
-			selectedGroup = unsolvedCueGroups[Math.floor(Math.random() * unsolvedCueGroups.length)]
+			selectedTriad = unsolvedTriad[Math.floor(Math.random() * unsolvedTriad.length)]
+		}
+
+		let keywordLength = null
+		if (this.getNumberOfAvailableHints(hints) === 0) {
+			firstValueFrom(this.getKeywordLengthHint(selectedTriad.cues)).then((length) => {
+				keywordLength = length
+			})
 		}
 
 		return {
-			cues: selectedGroup.cues,
-			keywordLength: this.getNumberOfAvailableHints(hints) === 0 ? selectedGroup.commonWord.length : null,
+			cues: selectedTriad.cues,
+			keywordLength,
 		}
+	}
+
+	getKeywordLengthHint(cues: string[]) {
+		return this.httpClient.get<number>('triads/keyword-length-hint', { params: { cues } })
+	}
+
+	getFirstLetterHint(cues: string[]) {
+		return this.httpClient.get<string>('triads/first-letter-hint', { params: { cues } })
 	}
 }
