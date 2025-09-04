@@ -29,7 +29,7 @@ export class GamePlay implements OnInit {
 
 	cueFetchingState = signal<RequestState>(RequestState.LOADING)
 
-	keywordLengthHint = signal<number | null>(null)
+	keywordLengthHint = signal<string | null>(null)
 
 	boxStatus = signal<'OPEN' | 'CLOSED'>('CLOSED')
 
@@ -44,29 +44,17 @@ export class GamePlay implements OnInit {
 
 	solutionBox = viewChild.required<ElementRef>('solutionBox')
 
-	// Cues that should be shown as a bubble
-	visibleCues = computed<string[]>(() => {
-		return (
-			this.store
-				.triadsGroup()
-				?.triads.filter((triad) => triad.available)
-				.map((triad) => triad.cues)
-				.flat() ?? []
-		)
-	})
-
 	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
 
 	gameWon = computed(() => {
-		const triadsGroup = this.store.triadsGroup()
-		return triadsGroup && triadsGroup.triads.every((triad) => !triad.available) && !this.store.finalTriad()?.available
+		return this.store.cues().length === 0 && !this.store.finalTriad()?.available
 	})
 
 	gameLost = computed(() => this.ranOutOfTurns() && !this.gameWon())
 
 	gameScore = computed(() => {
-		const solvedTriads = this.store.triadsGroup()?.triads.filter((triad) => !triad.available).length ?? 0
-		const totalTriads = this.store.triadsGroup()?.triads.length ?? 0
+		const solvedTriads = (9 - this.store.cues().length) / 3
+		const totalTriads = this.store.cues().length / 3
 		const totalAttempts = this.store.turns().filter((turn) => !turn.available).length + this.store.hints().filter((hint) => !hint.available).length
 
 		// Perfect success scenarios
@@ -149,10 +137,10 @@ export class GamePlay implements OnInit {
 	}
 
 	initializeGame() {
-		this.gamePlayApi.getTriads().subscribe({
-			next: (triadsGroup) => {
-				this.store.setTriadsGroup({ id: triadsGroup.id, triads: triadsGroup.triads.map((triad) => ({ ...triad, available: true })) })
-
+		this.gamePlayApi.getCues().subscribe({
+			next: (cues) => {
+				// this.store.setTriadsGroup({ id: cues.id, triads: cues.triads.map((triad) => ({ ...triad, available: true })) })
+				this.store.setCues(cues)
 				this.cueFetchingState.set(RequestState.READY)
 				this.store.setGamePlayState(GamePlayState.PLAYING)
 			},
@@ -180,34 +168,30 @@ export class GamePlay implements OnInit {
 		this.initializeGame()
 	}
 
-	useHint() {
+	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
 		try {
-			const hints = this.store.hints()
+			firstValueFrom(this.hintService.getHint(hintExtra))
+				.then((triadsForHint) => {
+					const hints = this.store.hints()
+					const useHintResponse = this.hintService.useHint(hints, this.store.turns())
 
-			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
-			const initialAvailableTriads = this.store.triadsGroup()?.triads.filter((triad) => triad.available)
-			let triadsForHint = initialAvailableTriads
-			if (!initialAvailableTriads || initialAvailableTriads.length === 0) {
-				const fourthGroup = this.store.finalTriad()
-				triadsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
-			}
+					if (triadsForHint && triadsForHint.hint) {
+						// When the player uses his last hint, show the length of the keyword
+						if (this.hintService.getNumberOfAvailableHints(hints) === 0 && triadsForHint.with === 'KEYWORD_LENGTH') {
+							this.keywordLengthHint.set(triadsForHint.withValue ?? null)
+						}
+						// Show the hint cues as selected on the UI
+						this.store.setSelectedCues(triadsForHint.hint)
 
-			if (triadsForHint) {
-				const { cues, keywordLength } = this.hintService.getHintTriadCues(triadsForHint, hints)
-				// When the player uses his last hint, show the length of the keyword
-				if (this.hintService.getNumberOfAvailableHints(hints) === 0) {
-					this.keywordLengthHint.set(keywordLength)
-				}
-				// Show the hint cues as selected on the UI
-				this.store.setSelectedCues(cues)
+						// Update the hints and turn values
+						this.store.setHints(useHintResponse.hints)
+						this.store.setTurns(useHintResponse.turns)
 
-				// Update the hints and turn values
-				this.store.setHints(useHintResponse.hints)
-				this.store.setTurns(useHintResponse.turns)
-
-				// Skip the "Check Solution" step
-				this.checkTriad()
-			}
+						// Skip the "Check Solution" step
+						this.checkTriad()
+					}
+				})
+				.catch()
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
@@ -215,59 +199,12 @@ export class GamePlay implements OnInit {
 
 	onHintClick() {
 		const availableHints = this.store.hints().filter((hint) => hint.available).length
-		const visibleCues = this.visibleCues()
+		const visibleCues = this.store.cues()
 		const shouldShowChoice = availableHints === 1 || visibleCues.length === 3
 		if (shouldShowChoice) {
 			this.hintChoiceModalRef()?.nativeElement.showModal()
 		} else {
 			this.useHint()
-		}
-	}
-
-	useHintWithOption(option: 'letters' | 'firstLetter') {
-		try {
-			const hints = this.store.hints()
-			const useHintResponse = this.hintService.useHint(hints, this.store.turns())
-
-			let triadsForHint = this.store.triadsGroup()?.triads.filter((triad) => triad.available)
-			if (!triadsForHint || triadsForHint.length === 0) {
-				const fourthGroup = this.store.finalTriad()
-				triadsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
-			}
-
-			if (triadsForHint) {
-				const { cues } = this.hintService.getHintTriadCues(triadsForHint, hints)
-
-				// Show the hint cues as selected on the UI
-				this.store.setSelectedCues(cues)
-
-				// Apply option-specific behavior
-				const selectedTriad = this.getTriadFromCuesForHint(cues)
-				if (selectedTriad) {
-					if (option === 'letters') {
-						firstValueFrom(this.hintService.getKeywordLengthHint(selectedTriad.cues)).then((keywordLength) => {
-							this.keywordLengthHint.set(keywordLength)
-							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-							this.answerFieldRef()?.nativeElement.focus()
-						})
-					} else if (option === 'firstLetter') {
-						firstValueFrom(this.hintService.getFirstLetterHint(selectedTriad.cues)).then((firstLetter) => {
-							this.keywordLengthHint.set(null)
-							this.answerFormControl.setValue(firstLetter.toUpperCase())
-							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-							this.answerFieldRef()?.nativeElement.focus()
-						})
-					}
-				}
-
-				// Update the hints and turn values
-				this.store.setHints(useHintResponse.hints)
-				this.store.setTurns(useHintResponse.turns)
-
-				this.hintChoiceModalRef()?.nativeElement.close()
-			}
-		} catch (error) {
-			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}
 	}
 
@@ -308,6 +245,7 @@ export class GamePlay implements OnInit {
 				.checkAnswer(selectedCues, this.answerFormControl.value)
 				.pipe(
 					tap((success) => {
+						console.log({ success })
 						if (success) {
 							this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
 							this.store.selectedCues().forEach((cue) => this.moveToSolutionBox(cue))
@@ -325,15 +263,10 @@ export class GamePlay implements OnInit {
 						// Only change state if not in WON or LOST state
 						if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
 							if (response && typeof response != 'boolean') {
-								this.store.markTriadAsSolved(response.id)
 								this.store.setSelectedCues([])
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 
-								const triadsGroup = this.store.triadsGroup()
-								if (triadsGroup) {
-									const triadsStep = this.store.triadsGroup()?.triads.some((triad) => triad.available) ? 'INITIAL' : 'FOURTH'
-									this.store.updateTriadStep(triadsStep)
-								}
+								this.store.updateTriadStep(this.store.cues().length === 0 ? 'INITIAL' : 'FOURTH')
 							} else {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.answerFieldRef()?.nativeElement.focus()
@@ -460,15 +393,5 @@ export class GamePlay implements OnInit {
 		gsap.fromTo(bubbleSelector, { x: point.x, y: point.y, display: 'block' }, { x: 0, y: 0, display: 'block' }).then(() => {
 			this.closeSolutionsBox()
 		})
-	}
-
-	private getTriadFromCuesForHint(cues: string[]) {
-		let triadsForHint = this.store.triadsGroup()?.triads.filter((triad) => triad.available)
-		if (!triadsForHint || triadsForHint.length === 0) {
-			const fourthGroup = this.store.finalTriad()
-			triadsForHint = fourthGroup && fourthGroup.available ? [fourthGroup] : []
-		}
-
-		return triadsForHint?.find((triad) => triad.cues.every((cue) => cues.some((sc) => sc === cue)))
 	}
 }

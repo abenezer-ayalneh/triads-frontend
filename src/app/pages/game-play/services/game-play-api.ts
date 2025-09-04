@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 
-import { SolvedTriad, TriadGroupResponse } from '../interfaces/triad.interface'
+import { SolvedTriad } from '../interfaces/triad.interface'
 
 @Injectable({
 	providedIn: 'root',
@@ -9,8 +9,8 @@ import { SolvedTriad, TriadGroupResponse } from '../interfaces/triad.interface'
 export class GamePlayApi {
 	private readonly httpClient = inject(HttpClient)
 
-	getTriads() {
-		return this.httpClient.get<TriadGroupResponse>('triads/groups')
+	getCues() {
+		return this.httpClient.get<string[]>('triads/cues')
 	}
 
 	checkTriad(cues: string[]) {

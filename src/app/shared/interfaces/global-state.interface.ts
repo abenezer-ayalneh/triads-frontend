@@ -1,12 +1,12 @@
 import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
-import { Triad, TriadsGroup } from '../../pages/game-play/interfaces/triad.interface'
+import { Triad } from '../../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../../pages/game-play/interfaces/turn-and-hint.interface'
 import { User } from './user.interface'
 
 export interface GlobalState {
 	user: User | null
 	showHowToPlay: boolean
-	triadsGroup: TriadsGroup | null
+	cues: string[]
 	finalTriad: Triad | null
 	selectedCues: string[]
 	turns: TurnAndHint[]

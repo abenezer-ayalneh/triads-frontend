@@ -8,7 +8,7 @@
 				</span>
 			</div>
 		} @else if (cueFetchingState() === RequestState.READY) {
-			<app-bubble-container [cues]="visibleCues()" />
+			<app-bubble-container [cues]="store.cues()" />
 		}
 	</div>
 
@@ -57,15 +57,17 @@
 		</div>
 	</div>
 
-	<!--Health & Hint Section-->
+	<!--Turn & Hint Section-->
 	<div class="w-full h-32 md:h-36 lg:h-40 flex justify-between items-center px-4 md:px-6 lg:px-8">
-		<!--Health Section-->
+		<!--Turn Section-->
 		<div
-			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 rounded-lg bg-neutral/30 backdrop-blur-sm">
-			<p class="text-base-300 text-lg md:text-xl font-semibold">Turns</p>
+			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
+			<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Turns</p>
 			<div class="w-full flex justify-center items-center gap-1">
 				@for (turn of store.turns(); track turn.id) {
-					<span class="w-6 h-6 md:w-7 md:h-7 heart" [ngClass]="turn.available ? 'bg-error' : 'bg-base-100/20'"></span>
+					<span class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16" [ngClass]="turn.available ? 'opacity-100' : 'opacity-0'">
+						<img [src]="turn.icon" alt="turn" class="w-full h-full" />
+					</span>
 				}
 			</div>
 		</div>
@@ -82,11 +84,11 @@
 
 		<!--Hint Section-->
 		<div
-			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 rounded-lg bg-neutral/30 backdrop-blur-sm">
-			<p class="text-base-300 text-lg md:text-xl font-semibold">Hints</p>
-			<div class="w-full flex justify-center items-center gap-1">
+			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
+			<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Hints</p>
+			<div class="w-full flex justify-center items-center gap-2">
 				@for (hint of store.hints(); track hint.id) {
-					<button class="w-6 h-6 md:w-7 md:h-7 bg-base-100/20 circle" (click)="onHintClick()" [disabled]="!hint.available" aria-label="Use a hint">
+					<button class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16 circle" (click)="onHintClick()" [disabled]="!hint.available" aria-label="Use a hint">
 						@if (hint.available) {
 							<img src="images/lifesaver.svg" alt="hint" />
 						}
@@ -124,8 +126,8 @@
 			<h3 class="text-lg font-bold">Choose your hint</h3>
 			<p class="py-2 text-sm">Pick one of the options below to help solve the Triad.</p>
 			<div class="w-full h-fit flex flex-col gap-2 mt-2">
-				<button type="button" class="btn btn-info text-base-100" (click)="useHintWithOption('letters')">Number of letters</button>
-				<button type="button" class="btn btn-primary text-base-100" (click)="useHintWithOption('firstLetter')">1st letter of word</button>
+				<button type="button" class="btn btn-info text-base-100" (click)="useHint('KEYWORD_LENGTH')">Number of letters</button>
+				<button type="button" class="btn btn-primary text-base-100" (click)="useHint('FIRST_LETTER')">1st letter of word</button>
 			</div>
 
 			<div class="modal-action">

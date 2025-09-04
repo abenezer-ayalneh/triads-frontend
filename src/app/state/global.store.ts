@@ -2,7 +2,7 @@ import { inject } from '@angular/core'
 import { patchState, signalStore, withHooks, withMethods, withProps, withState } from '@ngrx/signals'
 
 import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
-import { Triad, TriadsGroup } from '../pages/game-play/interfaces/triad.interface'
+import { Triad } from '../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
@@ -11,13 +11,13 @@ import { UserService } from '../shared/services/user.service'
 const initialState: GlobalState = {
 	user: null,
 	showHowToPlay: false,
-	triadsGroup: null,
+	cues: [],
 	finalTriad: null,
 	selectedCues: [],
 	turns: [
-		{ id: 1, available: true },
-		{ id: 2, available: true },
-		{ id: 3, available: true },
+		{ id: 1, available: true, icon: 'images/turn-one.png' },
+		{ id: 2, available: true, icon: 'images/turn-two.png' },
+		{ id: 3, available: true, icon: 'images/turn-three.png' },
 	],
 	hints: [
 		{ id: 1, available: true },
@@ -46,8 +46,8 @@ export const GlobalStore = signalStore(
 		setShowHowToPlay: (value: boolean) => {
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
 		},
-		setTriadsGroup: (triadsGroup: TriadsGroup | null) => {
-			patchState(store, (state) => ({ ...state, triadsGroup }))
+		setCues: (cues: string[]) => {
+			patchState(store, (state) => ({ ...state, cues: [...cues] }))
 		},
 		setFinalTriad: (triad: Triad | null) => {
 			patchState(store, (state) => ({ ...state, finalTriad: triad }))
@@ -69,31 +69,6 @@ export const GlobalStore = signalStore(
 		},
 		setGamePlayState(gamePlayState: GamePlayState) {
 			patchState(store, (state) => ({ ...state, gamePlayState }))
-		},
-		markTriadAsSolved: (triadId: number) => {
-			const triadGroup = store.triadsGroup()
-			const solvedTriad = triadGroup?.triads.find((triad) => triad.id === triadId)
-
-			if (solvedTriad && triadGroup) {
-				patchState(store, (state) => ({
-					...state,
-					triadsGroup: {
-						...triadGroup,
-						triads: triadGroup.triads.map((triad) => {
-							if (triad.id === triadId) {
-								return { ...triad, available: false }
-							}
-							return triad
-						}),
-					},
-				}))
-			} else {
-				const finalTriad = store.finalTriad()
-
-				if (finalTriad && finalTriad.id === triadId) {
-					patchState(store, (state) => ({ ...state, finalTriad: { ...finalTriad, available: false } }))
-				}
-			}
 		},
 		updateTriadStep: (triadsStep: 'INITIAL' | 'FOURTH') => {
 			patchState(store, (state) => ({ ...state, triadsStep }))
