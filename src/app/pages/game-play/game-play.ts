@@ -245,7 +245,6 @@ export class GamePlay implements OnInit {
 				.checkAnswer(selectedCues, this.answerFormControl.value)
 				.pipe(
 					tap((success) => {
-						console.log({ success })
 						if (success) {
 							this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
 							this.store.selectedCues().forEach((cue) => this.moveToSolutionBox(cue))
