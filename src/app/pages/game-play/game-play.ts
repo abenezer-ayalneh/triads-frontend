@@ -66,6 +66,8 @@ export class GamePlay implements OnInit {
 		return this.calculatePartialSuccessScore(solvedTriads)
 	})
 
+	hintUsed = false
+
 	answerFormControl = new FormControl<string>('', { validators: [Validators.required] })
 
 	boxAnimationItem: AnimationItem | null = null
@@ -154,6 +156,7 @@ export class GamePlay implements OnInit {
 	}
 
 	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
+		this.hintUsed = true
 		try {
 			firstValueFrom(this.hintService.getHint(hintExtra))
 				.then((triadsForHint) => {
@@ -206,7 +209,7 @@ export class GamePlay implements OnInit {
 							this.answerFieldRef()?.nativeElement.focus()
 						} else {
 							this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
-							this.useCurrentTurn()
+							this.useTurn()
 						}
 					}),
 					filter((success) => !success),
@@ -235,7 +238,9 @@ export class GamePlay implements OnInit {
 							this.store.selectedCues().forEach((cue) => this.moveToSolutionBox(cue))
 						} else {
 							this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
-							this.useCurrentTurn()
+							if (!this.hintUsed) {
+								this.useTurn()
+							}
 						}
 
 						this.answerFormControl.reset()
@@ -258,6 +263,8 @@ export class GamePlay implements OnInit {
 
 							this.keywordLengthHint.set(null)
 						}
+
+						this.hintUsed = false
 					},
 				})
 		}
@@ -327,7 +334,7 @@ export class GamePlay implements OnInit {
 		}
 	}
 
-	private useCurrentTurn() {
+	private useTurn() {
 		try {
 			const turnsAfterUsage = this.turnService.useTurn(this.store.turns())
 			this.store.setTurns(turnsAfterUsage)
