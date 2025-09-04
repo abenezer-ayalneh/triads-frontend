@@ -41,15 +41,7 @@ export class HintService {
 		return { hints, turns }
 	}
 
-	getKeywordLengthHint(cues: string[]) {
-		return this.httpClient.get<number>('triads/keyword-length-hint', { params: { cues } })
-	}
-
-	getFirstLetterHint(cues: string[]) {
-		return this.httpClient.get<string>('triads/first-letter-hint', { params: { cues } })
-	}
-
-	getHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
-		return this.httpClient.get<{ hint: string[] | null; with?: string; withValue?: string }>('triads/hint', { params: { with: hintExtra ?? '' } })
+	getHint(cues: string[], hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
+		return this.httpClient.get<{ hint: string[] | null; with?: string; withValue?: string }>('triads/hint', { params: { cues, with: hintExtra ?? '' } })
 	}
 }

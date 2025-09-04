@@ -28,9 +28,21 @@ export const handlers = [
 
 		return new HttpResponse(false)
 	}),
-	http.get<{ cues: string[]; answer: string }>(`${API_URL}/triads/hint`, () => {
-		return HttpResponse.json({
-			hint: ['SLUSH', 'TRUST', 'HEDGE'],
+	http.get<{ with?: 'KEYWORD_LENGTH' | 'FIRST_LETTER' }>(`${API_URL}/triads/hint`, ({ request }) => {
+		const url = new URL(request.url)
+		const hintExtra = url.searchParams.get('with') ?? undefined
+		let withValue = undefined
+
+		if (hintExtra === 'KEYWORD_LENGTH') {
+			withValue = '4'
+		} else if (hintExtra === 'FIRST_LETTER') {
+			withValue = 'F'
+		}
+
+		return HttpResponse.json<{ hint: string[] | null; with?: string; withValue?: string }>({
+			hint: ['CLOSE', 'SHIP', 'IMAGINARY'],
+			with: hintExtra,
+			withValue,
 		})
 	}),
 ]

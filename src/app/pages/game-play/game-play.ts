@@ -157,31 +157,40 @@ export class GamePlay implements OnInit {
 
 	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
 		this.hintUsed = true
-		try {
-			firstValueFrom(this.hintService.getHint(hintExtra))
-				.then((triadsForHint) => {
-					const hints = this.store.hints()
-					const useHintResponse = this.hintService.useHint(hints, this.store.turns())
+		const cues = this.store.cues()
+		if (cues) {
+			try {
+				firstValueFrom(this.hintService.getHint(cues, hintExtra))
+					.then((triadsForHint) => {
+						const hints = this.store.hints()
+						const useHintResponse = this.hintService.useHint(hints, this.store.turns())
 
-					if (triadsForHint && triadsForHint.hint) {
-						// When the player uses his last hint, show the length of the keyword
-						if (this.hintService.getNumberOfAvailableHints(hints) === 0 && triadsForHint.with === 'KEYWORD_LENGTH') {
-							this.keywordLengthHint.set(triadsForHint.withValue ?? null)
+						if (triadsForHint && triadsForHint.hint) {
+							// When the player uses a hint with an extra value, show a special hint
+							if (triadsForHint.with === 'KEYWORD_LENGTH') {
+								this.keywordLengthHint.set(triadsForHint.withValue ?? null)
+							} else if (triadsForHint.with === 'FIRST_LETTER' && triadsForHint.withValue) {
+								this.answerFormControl.setValue(triadsForHint.withValue)
+							}
+
+							// Close the extra hint modal
+							this.hintChoiceModalRef()?.nativeElement.close()
+
+							// Show the hint cues as selected on the UI
+							this.store.setSelectedCues(triadsForHint.hint)
+
+							// Update the hints and turn values
+							this.store.setHints(useHintResponse.hints)
+							this.store.setTurns(useHintResponse.turns)
+
+							// Skip the "Check Solution" step
+							this.checkTriad()
 						}
-						// Show the hint cues as selected on the UI
-						this.store.setSelectedCues(triadsForHint.hint)
-
-						// Update the hints and turn values
-						this.store.setHints(useHintResponse.hints)
-						this.store.setTurns(useHintResponse.turns)
-
-						// Skip the "Check Solution" step
-						this.checkTriad()
-					}
-				})
-				.catch()
-		} catch (error) {
-			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
+					})
+					.catch()
+			} catch (error) {
+				this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
+			}
 		}
 	}
 
