@@ -6,7 +6,7 @@ import { User } from './user.interface'
 export interface GlobalState {
 	user: User | null
 	showHowToPlay: boolean
-	cues: string[]
+	cues: string[] | null
 	finalTriad: Triad | null
 	selectedCues: string[]
 	turns: TurnAndHint[]

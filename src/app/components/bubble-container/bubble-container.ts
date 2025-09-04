@@ -15,7 +15,7 @@ import { BubbleMatter } from './interfaces/bubble-matter.interface'
 export class BubbleContainer implements AfterViewInit, OnDestroy {
 	readonly store = inject(GlobalStore)
 
-	cues = input.required<string[]>()
+	cues = input.required<string[] | null>()
 
 	bubbleComponents = viewChildren<Bubble>('initialTriadBubble')
 

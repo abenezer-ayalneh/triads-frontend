@@ -11,7 +11,7 @@ import { UserService } from '../shared/services/user.service'
 const initialState: GlobalState = {
 	user: null,
 	showHowToPlay: false,
-	cues: [],
+	cues: null,
 	finalTriad: null,
 	selectedCues: [],
 	turns: [

@@ -47,14 +47,14 @@ export class GamePlay implements OnInit {
 	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
 
 	gameWon = computed(() => {
-		return this.store.cues().length === 0 && !this.store.finalTriad()?.available
+		return this.store.cues() !== null && this.store.cues()?.length === 0 && !this.store.finalTriad()?.available
 	})
 
 	gameLost = computed(() => this.ranOutOfTurns() && !this.gameWon())
 
 	gameScore = computed(() => {
-		const solvedTriads = (9 - this.store.cues().length) / 3
-		const totalTriads = this.store.cues().length / 3
+		const solvedTriads = (9 - (this.store.cues()?.length ?? 0)) / 3
+		const totalTriads = (this.store.cues()?.length ?? 0) / 3
 		const totalAttempts = this.store.turns().filter((turn) => !turn.available).length + this.store.hints().filter((hint) => !hint.available).length
 
 		// Perfect success scenarios
@@ -200,7 +200,7 @@ export class GamePlay implements OnInit {
 	onHintClick() {
 		const availableHints = this.store.hints().filter((hint) => hint.available).length
 		const visibleCues = this.store.cues()
-		const shouldShowChoice = availableHints === 1 || visibleCues.length === 3
+		const shouldShowChoice = availableHints === 1 || visibleCues?.length === 3
 		if (shouldShowChoice) {
 			this.hintChoiceModalRef()?.nativeElement.showModal()
 		} else {
@@ -266,7 +266,7 @@ export class GamePlay implements OnInit {
 								this.store.setSelectedCues([])
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 
-								this.store.updateTriadStep(this.store.cues().length === 0 ? 'INITIAL' : 'FOURTH')
+								this.store.updateTriadStep(this.store.cues()?.length === 0 ? 'INITIAL' : 'FOURTH')
 							} else {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.answerFieldRef()?.nativeElement.focus()
