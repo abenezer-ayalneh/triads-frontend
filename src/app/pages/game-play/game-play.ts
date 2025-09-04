@@ -107,21 +107,6 @@ export class GamePlay implements OnInit {
 	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
 
 	constructor() {
-		effect(() => {
-			const selectedCues = this.store.selectedCues()
-			const currentState = this.store.gamePlayState()
-
-			// Only auto-transition while actively PLAYING so we don't override
-			// ACCEPT_ANSWER or other states triggered by hints/results.
-			if (currentState === GamePlayState.PLAYING || currentState === GamePlayState.CHECK_SOLUTION) {
-				if (selectedCues.length === 3) {
-					this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
-				} else {
-					this.store.setGamePlayState(GamePlayState.PLAYING)
-				}
-			}
-		})
-
 		// Check for game end conditions
 		effect(() => {
 			if (this.gameWon()) {

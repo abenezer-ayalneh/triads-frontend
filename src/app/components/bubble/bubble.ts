@@ -44,10 +44,15 @@ export class Bubble {
 	}
 
 	whenClicked() {
+		const selectedCuesLength = this.store.selectedCues().length
 		if (this.selected()) {
 			this.store.removeSelectedCue(this.cue())
-		} else if (this.store.selectedCues().length < 3) {
+			this.store.setGamePlayState(GamePlayState.PLAYING)
+		} else if (selectedCuesLength < 3) {
 			this.store.addSelectedCue(this.cue())
+			if (selectedCuesLength === 2) {
+				this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
+			}
 		}
 	}
 }
