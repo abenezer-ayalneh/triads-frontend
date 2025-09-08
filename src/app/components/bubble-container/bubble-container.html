@@ -1,5 +1,5 @@
 <div #container class="w-full h-full relative overflow-visible z-10" style="pointer-events: none">
-	@for (cue of cues(); track $index) {
+	@for (cue of cues(); track cue) {
 		<app-bubble #initialTriadBubble [cue]="cue"></app-bubble>
 	}
 

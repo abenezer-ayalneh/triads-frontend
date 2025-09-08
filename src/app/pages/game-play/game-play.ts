@@ -143,24 +143,7 @@ export class GamePlay implements OnInit {
 	}
 
 	restartGame() {
-		// Reset game state
-		this.store.setGamePlayState(GamePlayState.PLAYING)
-		this.store.setSelectedCues([])
-		this.store.setTurns([
-			{ id: 1, available: true },
-			{ id: 2, available: true },
-			{ id: 3, available: true },
-		])
-		this.store.setHints([
-			{ id: 1, available: true },
-			{ id: 2, available: true },
-		])
-		this.answerFormControl.reset()
-
-		// Reload cues
-		this.cueFetchingState.set(RequestState.LOADING)
-		this.store.updateTriadStep('INITIAL')
-		this.initializeGame()
+		window.location.reload()
 	}
 
 	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {

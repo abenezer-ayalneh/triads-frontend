@@ -12,14 +12,6 @@ export class HintService {
 
 	private readonly httpClient = inject(HttpClient)
 
-	hasRemainingHints(hints: TurnAndHint[]) {
-		return hints.some((hint) => hint.available)
-	}
-
-	getNumberOfAvailableHints(hints: TurnAndHint[]) {
-		return hints.filter((hint) => hint.available).length
-	}
-
 	useHint(hints: TurnAndHint[], turns: TurnAndHint[]) {
 		let currentHintIndex = -1
 		hints.forEach((hint, index) => {
@@ -42,6 +34,12 @@ export class HintService {
 	}
 
 	getHint(cues: string[], hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
-		return this.httpClient.get<{ hint: string[] | null; with?: string; withValue?: string }>('triads/hint', { params: { cues, with: hintExtra ?? '' } })
+		const params: { cues: string[]; with?: 'KEYWORD_LENGTH' | 'FIRST_LETTER' } = { cues }
+
+		if (hintExtra !== undefined) {
+			params.with = hintExtra
+		}
+
+		return this.httpClient.get<{ hint: string[] | null; with?: string; withValue?: string }>('triads/hint', { params })
 	}
 }
