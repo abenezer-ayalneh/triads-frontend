@@ -1,4 +1,4 @@
-import { NgClass } from '@angular/common'
+import { JsonPipe, NgClass } from '@angular/common'
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { gsap } from 'gsap'
@@ -20,7 +20,7 @@ import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe, JsonPipe],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -40,14 +40,20 @@ export class GamePlay implements OnInit {
 
 	solvedTriads = signal<SolvedTriad[]>([])
 
-	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
+	isFetchingFinalTriadCues = signal<boolean>(false)
 
-	solutionBox = viewChild.required<ElementRef>('solutionBox')
+	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
 	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
 
 	gameWon = computed(() => {
-		return this.store.cues() !== null && this.store.cues()?.length === 0 && !this.store.finalTriad()?.available
+		return (
+			this.store.cues() !== null &&
+			this.store.cues()?.length === 0 &&
+			this.store.finalTriadCues() !== null &&
+			Array.isArray(this.store.finalTriadCues()) &&
+			this.store.finalTriadCues()?.length === 0
+		)
 	})
 
 	gameLost = computed(() => this.ranOutOfTurns() && !this.gameWon())
@@ -65,6 +71,8 @@ export class GamePlay implements OnInit {
 		// Partial success scenarios
 		return this.calculatePartialSuccessScore(solvedTriads)
 	})
+
+	solutionBox = viewChild.required<ElementRef>('solutionBox')
 
 	hintUsed = false
 
@@ -237,14 +245,15 @@ export class GamePlay implements OnInit {
 
 	submitAnswer() {
 		const selectedCues = this.store.selectedCues()
-		if (this.answerFormControl.valid && this.answerFormControl.value && selectedCues) {
+		if (this.answerFormControl.valid && this.answerFormControl.value && selectedCues && selectedCues.length === 3) {
 			this.gamePlayApi
 				.checkAnswer(selectedCues, this.answerFormControl.value)
 				.pipe(
 					tap((success) => {
-						if (success) {
+						if (success && typeof success !== 'boolean') {
 							this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
 							this.store.selectedCues().forEach((cue) => this.moveToSolutionBox(cue))
+							this.solvedTriads.update((currentValue) => [...currentValue, success])
 						} else {
 							this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
 							if (!this.hintUsed) {
@@ -258,13 +267,32 @@ export class GamePlay implements OnInit {
 				)
 				.subscribe({
 					next: (response) => {
-						// Only change state if not in WON or LOST state
+						// Only change state if not in the WON or LOST state
 						if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
 							if (response && typeof response != 'boolean') {
 								this.store.setSelectedCues([])
+								this.store.removeSolvedCues(response.cues)
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 
-								this.store.updateTriadStep(this.store.cues()?.length === 0 ? 'INITIAL' : 'FOURTH')
+								if (this.store.triadsStep() === 'INITIAL' && this.store.cues()?.length === 0) {
+									this.store.updateTriadStep('FINAL')
+
+									this.isFetchingFinalTriadCues.set(true)
+									this.getFinalTriadCuesCues()
+										.then((finalTriadCuesCues) => {
+											this.store.setFinalTriadCues(finalTriadCuesCues)
+										})
+										.catch((error) => {
+											console.error('Error fetching fourth triad:', error)
+										})
+										.finally(() => {
+											this.isFetchingFinalTriadCues.set(false)
+										})
+								} else if (this.store.triadsStep() === 'FINAL') {
+									this.store.setGamePlayState(GamePlayState.WON)
+								} else {
+									this.store.updateTriadStep('INITIAL')
+								}
 							} else {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.answerFieldRef()?.nativeElement.focus()
@@ -323,6 +351,11 @@ export class GamePlay implements OnInit {
 		this.showSolvedPopup.set(false)
 	}
 
+	private async getFinalTriadCuesCues() {
+		const solvedTriads = this.solvedTriads()
+		return await firstValueFrom(this.gamePlayApi.fetchFinalTriadCues(solvedTriads.map((triad) => triad.id)))
+	}
+
 	private calculateSuccessScore(attempts: number): number {
 		if (attempts === 0) return 15 // Perfect score
 		if (attempts === 1) return 12 // 1 miss or hint
@@ -343,6 +376,20 @@ export class GamePlay implements OnInit {
 		}
 	}
 
+	// private showTheFinalTriadCues() {
+	// 	const finalTriadCuesCues = this.store.finalTriadCues()?.cues ?? []
+	//
+	// 	if (finalTriadCuesCues.length === 0) return
+	//
+	// 	this.openSolutionsBox()
+	//
+	// 	this.boxAnimationItem?.addEventListener('complete', () => {
+	// 		finalTriadCuesCues.forEach((cue) => this.moveToBubblesContainer(cue.id))
+	//
+	// 		this.boxAnimationItem?.removeEventListener('complete')
+	// 	})
+	// }
+
 	private useTurn() {
 		try {
 			const turnsAfterUsage = this.turnService.useTurn(this.store.turns())
@@ -352,21 +399,7 @@ export class GamePlay implements OnInit {
 		}
 	}
 
-	// private showTheFourthTriad() {
-	// 	const fourthTriadCues = this.store.finalTriad()?.cues ?? []
-	//
-	// 	if (fourthTriadCues.length === 0) return
-	//
-	// 	this.openSolutionsBox()
-	//
-	// 	this.boxAnimationItem?.addEventListener('complete', () => {
-	// 		fourthTriadCues.forEach((cue) => this.moveToBubblesContainer(cue.id))
-	//
-	// 		this.boxAnimationItem?.removeEventListener('complete')
-	// 	})
-	// }
-
-	private moveToSolutionBox(cue: string) {
+	private async moveToSolutionBox(cue: string) {
 		this.openSolutionsBox()
 
 		this.explodingBubbles.update((currentValue) => [...currentValue, cue])
@@ -379,9 +412,8 @@ export class GamePlay implements OnInit {
 		// gsap.to(bubbleSelector, { x: point.x, y: point.y });
 
 		// or with '{ x: 0, y: 0 }' in the convertCoordinates method:
-		gsap.to(bubbleSelector, { delay: 0.5, duration: 3, x: '+=' + point.x, y: '+=' + point.y, scale: 0.5, opacity: 0.2, display: 'none' }).then(() => {
-			this.closeSolutionsBox()
-		})
+		await gsap.to(bubbleSelector, { delay: 0.5, duration: 3, x: '+=' + point.x, y: '+=' + point.y, scale: 0.5, opacity: 0.2, display: 'none' })
+		this.closeSolutionsBox()
 	}
 
 	private moveToBubblesContainer(cueId: number) {

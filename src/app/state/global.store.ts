@@ -2,7 +2,6 @@ import { inject } from '@angular/core'
 import { patchState, signalStore, withHooks, withMethods, withProps, withState } from '@ngrx/signals'
 
 import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
-import { Triad } from '../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
@@ -12,7 +11,7 @@ const initialState: GlobalState = {
 	user: null,
 	showHowToPlay: false,
 	cues: null,
-	finalTriad: null,
+	finalTriadCues: null,
 	selectedCues: [],
 	turns: [
 		{ id: 1, available: true, icon: 'images/turn-one.png' },
@@ -49,8 +48,11 @@ export const GlobalStore = signalStore(
 		setCues: (cues: string[]) => {
 			patchState(store, (state) => ({ ...state, cues: [...cues] }))
 		},
-		setFinalTriad: (triad: Triad | null) => {
-			patchState(store, (state) => ({ ...state, finalTriad: triad }))
+		removeSolvedCues: (cues: string[]) => {
+			patchState(store, (state) => ({ ...state, cues: state.cues?.filter((cue) => !cues.includes(cue)) }))
+		},
+		setFinalTriadCues: (triad: string[] | null) => {
+			patchState(store, (state) => ({ ...state, finalTriadCues: triad }))
 		},
 		setSelectedCues: (selectedCues: string[]) => {
 			patchState(store, (state) => ({ ...state, selectedCues: [...selectedCues] }))
@@ -70,7 +72,7 @@ export const GlobalStore = signalStore(
 		setGamePlayState(gamePlayState: GamePlayState) {
 			patchState(store, (state) => ({ ...state, gamePlayState }))
 		},
-		updateTriadStep: (triadsStep: 'INITIAL' | 'FOURTH') => {
+		updateTriadStep: (triadsStep: 'INITIAL' | 'FINAL') => {
 			patchState(store, (state) => ({ ...state, triadsStep }))
 		},
 	})),

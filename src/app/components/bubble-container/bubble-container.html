@@ -3,9 +3,9 @@
 		<app-bubble #initialTriadBubble [cue]="cue"></app-bubble>
 	}
 
-	@if (store.triadsStep() === 'FOURTH') {
-		@for (cue of store.finalTriad()?.cues; track cue) {
-			<app-bubble #fourthTriadBubble [cue]="cue"></app-bubble>
+	@if (store.triadsStep() === 'FINAL') {
+		@for (cue of store.finalTriadCues(); track cue) {
+			<app-bubble #finalTriadCuesBubble [cue]="cue"></app-bubble>
 		}
 	}
 </div>

@@ -19,7 +19,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	bubbleComponents = viewChildren<Bubble>('initialTriadBubble')
 
-	fourthTriadBubbleComponents = viewChildren<Bubble>('fourthTriadBubble')
+	finalTriadCuesBubbleComponents = viewChildren<Bubble>('finalTriadCuesBubble')
 
 	container = viewChild.required<ElementRef<HTMLDivElement>>('container')
 
@@ -39,10 +39,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		})
 
 		effect(() => {
-			const fourthTriadReached = this.store.triadsStep() === 'FOURTH'
+			const finalTriadCuesReached = this.store.triadsStep() === 'FINAL'
 
-			if (fourthTriadReached && this.fourthTriadBubbleComponents().length === 3) {
-				this.animateFourthTriad()
+			if (finalTriadCuesReached && this.finalTriadCuesBubbleComponents().length === 3) {
+				this.animateFinalTriadCues()
 			}
 		})
 	}
@@ -243,10 +243,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		this.resizeObserver.observe(container)
 	}
 
-	private animateFourthTriad() {
-		this.fourthTriadBubbleComponents().forEach((bubble) => {
+	private animateFinalTriadCues() {
+		this.finalTriadCuesBubbleComponents().forEach((bubble) => {
 			this.moveToBubblesContainer(bubble.cue())
 		})
-		this.createBodies(this.fourthTriadBubbleComponents())
+		this.createBodies(this.finalTriadCuesBubbleComponents())
 	}
 }
