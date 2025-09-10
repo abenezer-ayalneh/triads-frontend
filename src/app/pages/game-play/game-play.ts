@@ -1,4 +1,4 @@
-import { JsonPipe, NgClass } from '@angular/common'
+import { NgClass } from '@angular/common'
 import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { gsap } from 'gsap'
@@ -20,7 +20,7 @@ import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe, JsonPipe],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
