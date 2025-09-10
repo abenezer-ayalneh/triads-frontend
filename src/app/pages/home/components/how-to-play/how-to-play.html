@@ -28,22 +28,23 @@
 				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Triads Play</h3>
 				<div class="space-y-3 text-sm md:text-base">
 					<p>
-						You’re given 9 bubbles that contain words or phrases called “cues.” Find 3 that share a common key word, to form a 3-word Triad. A key
-						is a stand-alone word uniquely shared by the 3 cues.
+						You’re given 9 bubbles that contain words or phrases called <b>Cues</b>. Find 3 Cues that share a common <b>Key</b> word, to form a
+						3-word Triad. A Key is a single, common, stand-alone word.
 					</p>
 					<div class="bg-neutral-300 p-4 md:p-5 lg:p-6 rounded-lg">
 						<p class="mb-2 text-center">
-							Here's an example. The key word is <span class="font-bold">HAND</span> completing <span class="font-bold">SECOND-HAND</span>,
-							<span class="font-bold">POKER HAND</span>, and <span class="font-bold">HANDSHAKE</span>.
+							Here's an example, using Cues <span class="font-bold italic uppercase">POKER</span>,
+							<span class="font-bold italic uppercase">SECOND</span>, and <span class="font-bold italic uppercase">SHAKE</span>. The Key is
+							<span class="font-bold italic uppercase">HAND</span>, producing the Triad POKER HAND, SECONDHAND, and HANDSHAKE.
 						</p>
 					</div>
 					<p>
-						Once you've solved all 3 Triads, or "cleared the board," the 3 key words become your final Triad to solve. That's your goal: figure out
-						all four of the Triads, and win the game.
+						Once you've solved all 3 Triads, or "cleared the board," the 3 Key words become your final challenge. That's your goal: figure out all 4
+						of the Triads and win the game.
 						<br />
 						<br />
-						Cues can be compound or hyphenated words or phrases, and sometimes even famous names, places, or everyday phrases. Keys (solutions) are
-						always one word. Some are easy, some not. Take your time.
+						Cues can be compound or hyphenated words or phrases, and sometimes even famous names, places, or everyday phrases. Some Triads are easy,
+						some not. Take your time.
 					</p>
 				</div>
 			</section>
@@ -79,13 +80,57 @@
 				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Hints and Misses</h3>
 				<div class="space-y-3 text-sm md:text-base">
 					<p>
-						You have three guesses and two hints, any combination. Miss a guess, lose a turn. Take a hint, lose a turn. When 9 or 6 cues are
-						showing, a hint highlights a Triad for you and shows how many letters are in the key. When only 3 cues remain, a hint also shows the
-						key’s first letter.
+						You have three guesses and two hints, any combination. Miss a guess, lose a turn. Take a hint, lose a turn. When 9 or 6 Cues remain, a
+						hint highlights a Triad to help you. When only 3 Cues remain, a hint gives you options: show number of letters in the Key, or show its
+						first letter.
 					</p>
-					<!--TODO: replace the character used for the turn button here-->
-					<p><span class="text-red-600 font-bold">△</span> = Turns remaining</p>
-					<p><span class="text-blue-600">🛟</span> = Get a hint</p>
+					<div class="w-full max-w-md mx-auto space-y-3">
+						<div class="flex items-center">
+							<div class="flex justify-center items-center w-8 md:w-10 lg:w-12 mr-2">
+								<img src="images/turn-three.png" alt="turn" class="w-6 md:w-8 lg:w-10 h-6 md:h-8 lg:h-10" />
+							</div>
+							<div class="flex-1 flex items-center">
+								<div class="border-b border-dotted border-gray-400 flex-grow h-0"></div>
+							</div>
+							<div class="ml-2 text-sm md:text-base lg:text-lg">3 turns remain</div>
+						</div>
+
+						<div class="flex items-center">
+							<div class="flex justify-center items-center w-8 md:w-10 lg:w-12 mr-2">
+								<img src="images/turn-two.png" alt="turn" class="w-6 md:w-8 lg:w-10 h-6 md:h-8 lg:h-10" />
+							</div>
+							<div class="flex-1 flex items-center">
+								<div class="border-b border-dotted border-gray-400 flex-grow h-0"></div>
+							</div>
+							<div class="ml-2 text-sm md:text-base lg:text-lg">2 turns remain</div>
+						</div>
+
+						<div class="flex items-center">
+							<div class="flex justify-center items-center w-8 md:w-10 lg:w-12 mr-2">
+								<img src="images/turn-one.png" alt="turn" class="w-6 md:w-8 lg:w-10 h-6 md:h-8 lg:h-10" />
+							</div>
+							<div class="flex-1 flex items-center">
+								<div class="border-b border-dotted border-gray-400 flex-grow h-0"></div>
+							</div>
+							<div class="ml-2 text-sm md:text-base lg:text-lg">1 turn remains</div>
+						</div>
+
+						<div class="flex items-center">
+							<div class="flex justify-center items-center w-8 md:w-10 lg:w-12 mr-2 text-base md:text-lg lg:text-xl">🛟&nbsp;🛟</div>
+							<div class="flex-1 flex items-center">
+								<div class="border-b border-dotted border-gray-400 flex-grow h-0"></div>
+							</div>
+							<div class="ml-2 text-sm md:text-base lg:text-lg">2 hints remain</div>
+						</div>
+
+						<div class="flex items-center">
+							<div class="flex justify-center items-center w-8 md:w-10 lg:w-12 mr-2 text-base md:text-lg lg:text-xl">🛟</div>
+							<div class="flex-1 flex items-center">
+								<div class="border-b border-dotted border-gray-400 flex-grow h-0"></div>
+							</div>
+							<div class="ml-2 text-sm md:text-base lg:text-lg">1 hint remains</div>
+						</div>
+					</div>
 				</div>
 			</section>
 
@@ -105,18 +150,15 @@
 			<section class="space-y-4">
 				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Submissions</h3>
 				<div class="space-y-3 text-sm md:text-base">
+					<p>Be a part of Triads! We welcome your contributions, so get creative.</p>
 					<p>
-						Be a part of Triads! We welcome your contributions to add to our database, so get creative. Send to: Be a part of Triads! We welcome
-						your contributions to add to our database, so get creative. Send to:
+						We also appreciate your suggestions for improving the game. This includes your thoughts about, including the Triads you found too easy,
+						too difficult, or too wacko. We’re listening. Let’s make Triads fun for everyone! Send to:
 						<a
 							href="mailto:ideas&#64;gametrix.com"
 							class="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded transition-colors">
 							ideas&#64;gametrix.com
 						</a>
-					</p>
-					<p>
-						We also appreciate your suggestions for improving the game. This includes your thoughts about Triads you found too easy, too difficult,
-						or too wacko. We’re listening. Let’s make Triads fun for everyone!
 					</p>
 				</div>
 			</section>
