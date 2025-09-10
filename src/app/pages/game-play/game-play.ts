@@ -11,6 +11,7 @@ import { BubbleContainer } from '../../components/bubble-container/bubble-contai
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { HighlightKeyPipe } from '../../shared/pipes/highlight-key.pipe'
 import { SnackbarService } from '../../shared/services/snackbar.service'
+import { UserService } from '../../shared/services/user.service'
 import { GlobalStore } from '../../state/global.store'
 import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad } from './interfaces/triad.interface'
@@ -112,6 +113,8 @@ export class GamePlay implements OnInit {
 
 	private readonly snackbarService = inject(SnackbarService)
 
+	private readonly userService = inject(UserService)
+
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
 
 	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
@@ -120,7 +123,7 @@ export class GamePlay implements OnInit {
 		// Check for game end conditions
 		effect(() => {
 			if (this.gameWon()) {
-				this.store.setGamePlayState(GamePlayState.WON)
+				this.handleGameWon()
 			} else if (this.gameLost()) {
 				this.store.setGamePlayState(GamePlayState.LOST)
 			}
@@ -272,7 +275,7 @@ export class GamePlay implements OnInit {
 											this.isFetchingFinalTriadCues.set(false)
 										})
 								} else if (this.store.triadsStep() === 'FINAL') {
-									this.store.setGamePlayState(GamePlayState.WON)
+									this.handleGameWon()
 								} else {
 									this.store.updateTriadStep('INITIAL')
 								}
@@ -408,5 +411,16 @@ export class GamePlay implements OnInit {
 		gsap.fromTo(bubbleSelector, { x: point.x, y: point.y, display: 'block' }, { x: 0, y: 0, display: 'block' }).then(() => {
 			this.closeSolutionsBox()
 		})
+	}
+
+	private handleGameWon() {
+		const user = this.store.user()
+
+		if (user) {
+			const newScore = user.score + this.gameScore()
+			this.store.setGamePlayState(GamePlayState.WON)
+			this.store.setUserScore(newScore)
+			this.userService.setUser({ ...user, score: newScore })
+		}
 	}
 }
