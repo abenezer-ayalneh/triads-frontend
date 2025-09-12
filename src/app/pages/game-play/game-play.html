@@ -28,31 +28,29 @@
 				flex: store.gamePlayState() === GamePlayState.ACCEPT_ANSWER || store.gamePlayState() === GamePlayState.WRONG_ANSWER,
 				hidden: store.gamePlayState() !== GamePlayState.ACCEPT_ANSWER && store.gamePlayState() !== GamePlayState.WRONG_ANSWER,
 			}">
-			@if (keywordLengthHint() !== null) {
-				<div class="bg-info/20 backdrop-blur-2xl rounded-lg px-4 py-1 heartbeat">
-					<p class="text-info-content font-normal text-lg">
-						Hint: <span class="font-bold">{{ keywordLengthHint() }}</span> lettered word
-					</p>
-				</div>
-			}
 			<div class="w-[80%] md:w-[70%] lg:w-[60%] max-w-3xl h-fit flex justify-center items-center gap-2">
-				<input
-					#answerField
-					[formControl]="answerFormControl"
-					placeholder="Answer here..."
-					(keydown.enter)="submitAnswer()"
-					class="flex-1 h-10 md:h-12 input focus:outline-none text-base md:text-lg lg:text-xl xl:text-2xl text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
-				<button
-					type="button"
-					(click)="submitAnswer()"
-					[disabled]="!answerFormControl.valid"
-					aria-label="Submit answer"
-					class="h-10 md:h-12 px-4 md:px-6 rounded-full triad-gradient text-primary-content font-semibold shadow-lg hover:shadow-xl active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-					<svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M19 12H5" />
-					</svg>
-					<span class="hidden sm:inline">Submit</span>
-				</button>
+				@let letKeywordLengthHint = keywordLengthHint();
+				@if (letKeywordLengthHint !== null) {
+					<app-input-set [quantity]="letKeywordLengthHint" (whenSubmitClicked)="submitAnswer($event)" />
+				} @else {
+					<input
+						#answerField
+						[formControl]="answerFormControl"
+						placeholder="Answer here..."
+						(keydown.enter)="submitAnswer(answerFormControl.value)"
+						class="flex-1 h-10 md:h-12 input focus:outline-none text-base md:text-lg lg:text-xl xl:text-2xl text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
+					<button
+						type="button"
+						(click)="submitAnswer(answerFormControl.value)"
+						[disabled]="!answerFormControl.valid"
+						aria-label="Submit answer"
+						class="h-10 md:h-12 px-4 md:px-6 rounded-full triad-gradient text-primary-content font-semibold shadow-lg hover:shadow-xl active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+						<svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M19 12H5" />
+						</svg>
+						<span class="hidden sm:inline">Submit</span>
+					</button>
+				}
 			</div>
 		</div>
 	</div>

@@ -1,0 +1,24 @@
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing'
+import { IonicModule } from '@ionic/angular'
+
+import { InputSet } from './input-set'
+
+describe('InputSet', () => {
+	let component: InputSet
+	let fixture: ComponentFixture<InputSet>
+
+	beforeEach(waitForAsync(() => {
+		TestBed.configureTestingModule({
+			declarations: [InputSet],
+			imports: [IonicModule.forRoot()],
+		}).compileComponents()
+
+		fixture = TestBed.createComponent(InputSet)
+		component = fixture.componentInstance
+		fixture.detectChanges()
+	}))
+
+	it('should create', () => {
+		expect(component).toBeTruthy()
+	})
+})

@@ -13,6 +13,7 @@ import { HighlightKeyPipe } from '../../shared/pipes/highlight-key.pipe'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { UserService } from '../../shared/services/user.service'
 import { GlobalStore } from '../../state/global.store'
+import { InputSet } from './components/input-set/input-set'
 import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad } from './interfaces/triad.interface'
 import { GamePlayApi } from './services/game-play-api'
@@ -21,7 +22,7 @@ import { TurnService } from './services/turn-service'
 
 @Component({
 	selector: 'app-game-play',
-	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe],
+	imports: [LottieComponent, ReactiveFormsModule, NgClass, BubbleContainer, LottieDirective, HighlightKeyPipe, InputSet],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
@@ -30,7 +31,7 @@ export class GamePlay implements OnInit {
 
 	cueFetchingState = signal<RequestState>(RequestState.LOADING)
 
-	keywordLengthHint = signal<string | null>(null)
+	keywordLengthHint = signal<number | null>(null)
 
 	boxStatus = signal<'OPEN' | 'CLOSED'>('CLOSED')
 
@@ -162,7 +163,7 @@ export class GamePlay implements OnInit {
 						if (triadsForHint && triadsForHint.hint) {
 							// When the player uses a hint with an extra value, show a special hint
 							if (triadsForHint.with === 'KEYWORD_LENGTH') {
-								this.keywordLengthHint.set(triadsForHint.withValue ?? null)
+								this.keywordLengthHint.set(triadsForHint.withValue ? Number(triadsForHint.withValue) : null)
 							} else if (triadsForHint.with === 'FIRST_LETTER' && triadsForHint.withValue) {
 								this.answerFormControl.setValue(triadsForHint.withValue)
 							}
@@ -229,11 +230,11 @@ export class GamePlay implements OnInit {
 		}
 	}
 
-	submitAnswer() {
+	submitAnswer(answer: string | null) {
 		const selectedCues = this.store.selectedCues()
-		if (this.answerFormControl.valid && this.answerFormControl.value && selectedCues && selectedCues.length === 3) {
+		if (answer !== null && answer.length > 0 && selectedCues && selectedCues.length === 3) {
 			this.gamePlayApi
-				.checkAnswer(selectedCues, this.answerFormControl.value)
+				.checkAnswer(selectedCues, answer)
 				.pipe(
 					tap((success) => {
 						if (success && typeof success !== 'boolean') {
@@ -280,11 +281,16 @@ export class GamePlay implements OnInit {
 									this.store.updateTriadStep('INITIAL')
 								}
 							} else {
-								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-								this.answerFieldRef()?.nativeElement.focus()
+								const availableHints = this.store.hints().filter((hint) => hint.available).length
+								if (availableHints === 0) {
+									this.store.setGamePlayState(GamePlayState.PLAYING)
+									this.store.setSelectedCues([])
+									this.keywordLengthHint.set(null)
+								} else {
+									this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+									this.answerFieldRef()?.nativeElement.focus()
+								}
 							}
-
-							this.keywordLengthHint.set(null)
 						}
 
 						this.hintUsed = false
@@ -349,19 +355,6 @@ export class GamePlay implements OnInit {
 		return 10 // More than 2 attempts
 	}
 
-	private calculatePartialSuccessScore(solvedTriads: number): number {
-		switch (solvedTriads) {
-			case 3:
-				return 8 // Got 3 triads, couldn't solve bonus
-			case 2:
-				return 6 // Got 2 triads
-			case 1:
-				return 3 // Got 1 triad
-			default:
-				return 0 // Went down in flames
-		}
-	}
-
 	// private showTheFinalTriadCues() {
 	// 	const finalTriadCuesCues = this.store.finalTriadCues()?.cues ?? []
 	//
@@ -375,6 +368,19 @@ export class GamePlay implements OnInit {
 	// 		this.boxAnimationItem?.removeEventListener('complete')
 	// 	})
 	// }
+
+	private calculatePartialSuccessScore(solvedTriads: number): number {
+		switch (solvedTriads) {
+			case 3:
+				return 8 // Got 3 triads, couldn't solve bonus
+			case 2:
+				return 6 // Got 2 triads
+			case 1:
+				return 3 // Got 1 triad
+			default:
+				return 0 // Went down in flames
+		}
+	}
 
 	private useTurn() {
 		try {
