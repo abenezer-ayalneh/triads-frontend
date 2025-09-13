@@ -256,6 +256,9 @@ export class GamePlay implements OnInit {
 					next: (response) => {
 						// Only change state if not in the WON or LOST state
 						if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
+							// Always reset the keyword length hint back to null so the normal input field is shown
+							this.keywordLengthHint.set(null)
+
 							if (response && typeof response != 'boolean') {
 								this.store.setSelectedCues([])
 								this.store.removeSolvedCues(response.cues)
@@ -269,8 +272,8 @@ export class GamePlay implements OnInit {
 										.then((finalTriadCuesCues) => {
 											this.store.setFinalTriadCues(finalTriadCuesCues)
 										})
-										.catch((error) => {
-											console.error('Error fetching fourth triad:', error)
+										.catch(() => {
+											// Error handling for fourth triad fetch failure
 										})
 										.finally(() => {
 											this.isFetchingFinalTriadCues.set(false)
@@ -285,7 +288,6 @@ export class GamePlay implements OnInit {
 								if (availableHints === 0) {
 									this.store.setGamePlayState(GamePlayState.PLAYING)
 									this.store.setSelectedCues([])
-									this.keywordLengthHint.set(null)
 								} else {
 									this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 									this.answerFieldRef()?.nativeElement.focus()
