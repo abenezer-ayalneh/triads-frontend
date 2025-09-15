@@ -35,6 +35,13 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private isInitialSpawn = true
 
+	// Properties for sequential bubble creation
+	private bubbleCreationQueue: Bubble[] = []
+
+	private bubbleCreationInterval: ReturnType<typeof setInterval> | undefined
+
+	private bubbleCreationDelay = 500 // milliseconds between each bubble creation (increased for more visible sequence)
+
 	private gravitationalCenter: { x: number; y: number } = { x: 0, y: 0 }
 
 	constructor() {
@@ -73,90 +80,22 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	ngAfterViewInit() {
-		this.createBodies(this.bubbleComponents())
+		// Start sequential bubble creation
+		this.startSequentialBubbleCreation(this.bubbleComponents())
 	}
 
 	createBodies(bubbleComponents: readonly Bubble[]) {
-		const Composite = Matter.Composite,
-			Bodies = Matter.Bodies
-
-		const container = this.container().nativeElement
-		const width = container.clientWidth || container.offsetWidth || 0
-		const height = container.clientHeight || container.offsetHeight || 0
-
-		// Set gravitational center
-		this.gravitationalCenter = { x: width / 2, y: height / 2 }
-
-		// Create boundaries immediately with the same dimensions
-		this.createOrUpdateBoundaries()
-
-		// Create bodies for each bubble element
-		this.entities = bubbleComponents.map((bubbleComponent, index) => {
-			const element = bubbleComponent.element.nativeElement
-			// Ensure positioned absolutely so left/top works
-			element.style.position = 'absolute'
-			element.style.zIndex = '1'
-
-			const halfWidth = (element.offsetWidth || 60) / 2
-			const halfHeight = (element.offsetHeight || 60) / 2
-
-			const radius = Math.max(halfWidth, halfHeight)
-
-			// Start bubbles from bottom of screen for rising animation
-			// Spread bubbles across the width to ensure all are visible
-			const bubbleSpacing = width / bubbleComponents.length
-			const startX = index * bubbleSpacing + bubbleSpacing / 2
-			// Start bubbles just below the visible area but above the ground wall
-			// Ground wall is now at height + wallThickness/2, so start above it
-			const startY = height - 50 // Start 50px above the bottom of container
-
-			// Start position created
-
-			const body = Bodies.circle(startX, startY, radius, {
-				restitution: 0.294, // Reduced bounce force by 30% (from 0.42)
-				frictionAir: 0.005, // Very low air friction for more movement
-				friction: 0.05, // Very low friction between objects
-				frictionStatic: 0.05, // Very low static friction
-				density: 0.0005, // Lower density for more responsive movement
-				inertia: Infinity, // Prevent rotation
-			})
-
-			// Initial upward velocity for rising effect with horizontal drift - slower rise
-			const upwardSpeed = 2 + Math.random() * 1.5 // 2-3.5 pixels per frame upward (much slower)
-			const horizontalDrift = (Math.random() - 0.5) * 1.5 // Reduced horizontal drift
-			Matter.Body.setVelocity(body, { x: horizontalDrift, y: -upwardSpeed })
-
-			// Shimmy parameters per bubble
-			const shimmyFreqX = 0.2 + Math.random() * 0.6 // Hz
-			const shimmyFreqY = 0.2 + Math.random() * 0.6
-			const shimmyPhaseX = Math.random() * Math.PI * 2
-			const shimmyPhaseY = Math.random() * Math.PI * 2
-			const shimmyForceMag = 0.00002 + Math.random() * 0.00006
-
-			return { element, body, halfWidth, halfHeight, shimmyFreqX, shimmyFreqY, shimmyPhaseX, shimmyPhaseY, shimmyForceMag }
-		})
-
-		// Add bodies to the world
-		Composite.add(
-			this.engine.world,
-			this.entities.map(({ body }) => body),
-		)
-
-		// Observe container resizes to keep boundaries and canvas in sync
-		this.setupResizeHandling()
-
-		// Use custom simulation loop
-		this.runSimulation()
-
-		// Mark initial spawn as complete after rising animation
-		if (this.isInitialSpawn) {
-			setTimeout(() => {
-				this.isInitialSpawn = false
-			}, 3000) // 3 seconds delay to allow rising animation
-		}
+		// Use our sequential creation method instead
+		this.startSequentialBubbleCreation(bubbleComponents)
 	}
 
 	ngOnDestroy(): void {
+		// Clear the bubble creation interval
+		if (this.bubbleCreationInterval) {
+			clearInterval(this.bubbleCreationInterval)
+			this.bubbleCreationInterval = undefined
+		}
+
 		if (this.resizeObserver) {
 			this.resizeObserver.disconnect()
 			this.resizeObserver = undefined
@@ -178,14 +117,40 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		const update = () => {
 			Matter.Engine.update(this.engine, 1000 / 60) // 60 FPS
 
+			// Get container dimensions for calculations
+			const container = this.container().nativeElement
+			const height = container.clientHeight || container.offsetHeight || 0
+
 			const now = performance.now() / 1000 // seconds
 			this.entities.forEach(({ body, shimmyFreqX, shimmyFreqY, shimmyPhaseX, shimmyPhaseY, shimmyForceMag }) => {
 				const { x, y } = body.position
 
-				// Apply upward force during initial rising phase
+				// Apply gentle upward force during initial rising phase for more visible rising
 				if (this.isInitialSpawn && y > 0) {
-					const upwardForce = 0.0005 // Gentle upward force
+					// Calculate how far the bubble has risen from the bottom
+					const distanceFromBottom = height - y
+					const maxRisingDistance = height * 0.7 // Consider bubble "risen" when it reaches 70% of container height
+
+					// Apply stronger force at the beginning, gradually decreasing as bubble rises
+					const progressFactor = Math.max(0, 1 - distanceFromBottom / maxRisingDistance)
+					const upwardForce = 0.001 * (progressFactor * 0.8 + 0.2) // Gentle continuous upward force that decreases as bubble rises
 					Matter.Body.applyForce(body, { x, y }, { x: 0, y: -upwardForce })
+
+					// Apply a small force toward the center during rising, stronger as bubble rises higher
+					const dx = this.gravitationalCenter.x - x
+					const dy = this.gravitationalCenter.y - y
+					const distance = Math.sqrt(dx * dx + dy * dy)
+
+					if (distance > 0) {
+						// Centering force increases as bubble rises higher
+						const centeringFactor = Math.min(1, distanceFromBottom / (height * 0.3))
+						const centeringForce = 0.0003 * centeringFactor
+						const forceX = (dx / distance) * centeringForce
+						// Minimal vertical centering until bubble is higher up
+						const verticalFactor = Math.min(1, distanceFromBottom / (height * 0.5))
+						const forceY = (dy / distance) * centeringForce * verticalFactor
+						Matter.Body.applyForce(body, { x, y }, { x: forceX, y: forceY })
+					}
 				}
 
 				// Apply gravitational pull toward center after rising phase
@@ -228,6 +193,131 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			requestAnimationFrame(update)
 		}
 		update()
+	}
+
+	/**
+	 * Start the sequential bubble creation process
+	 * @param bubbleComponents The bubble components to create
+	 */
+	private startSequentialBubbleCreation(bubbleComponents: readonly Bubble[]) {
+		// Clear any existing queue and interval
+		this.bubbleCreationQueue = [...bubbleComponents]
+		clearInterval(this.bubbleCreationInterval)
+		this.entities = []
+
+		// Create boundaries immediately
+		const container = this.container().nativeElement
+		const width = container.clientWidth || container.offsetWidth || 0
+		const height = container.clientHeight || container.offsetHeight || 0
+		this.gravitationalCenter = { x: width / 2, y: height / 2 }
+		this.createOrUpdateBoundaries()
+
+		// Initially hide all bubbles
+		bubbleComponents.forEach((bubbleComponent) => {
+			const element = bubbleComponent.element.nativeElement
+			element.style.position = 'absolute'
+			element.style.zIndex = '1'
+			element.style.opacity = '0' // Start invisible
+			element.style.transform = 'scale(0)' // Start small
+		})
+
+		// Setup simulation and resize handling
+		this.setupResizeHandling()
+		this.runSimulation()
+
+		// Start the creation interval
+		this.bubbleCreationInterval = setInterval(() => {
+			if (this.bubbleCreationQueue.length > 0) {
+				const bubbleComponent = this.bubbleCreationQueue.shift()
+				this.createSingleBubble(bubbleComponent!, this.bubbleCreationQueue.length)
+			} else {
+				clearInterval(this.bubbleCreationInterval)
+				// All bubbles created, mark initial spawn as complete after a longer delay
+				// Calculate total rising time based on number of bubbles and creation delay
+				const totalBubbles = this.bubbleComponents().length
+				const risingTime = totalBubbles * this.bubbleCreationDelay + 5000 // Creation time + extra time for rising
+
+				setTimeout(() => {
+					this.isInitialSpawn = false
+				}, risingTime) // Dynamic delay to ensure all bubbles have time to rise to the center
+			}
+		}, this.bubbleCreationDelay)
+	}
+
+	/**
+	 * Create a single bubble with animation
+	 * @param bubbleComponent The bubble component to create
+	 * @param remainingBubbles The number of bubbles remaining in the queue
+	 */
+	private createSingleBubble(bubbleComponent: Bubble, remainingBubbles: number) {
+		const Bodies = Matter.Bodies
+		const Composite = Matter.Composite
+
+		const container = this.container().nativeElement
+		const width = container.clientWidth || container.offsetWidth || 0
+		const height = container.clientHeight || container.offsetHeight || 0
+
+		const element = bubbleComponent.element.nativeElement
+		const halfWidth = (element.offsetWidth || 60) / 2
+		const halfHeight = (element.offsetHeight || 60) / 2
+		const radius = Math.max(halfWidth, halfHeight)
+
+		// Calculate position - spread across width
+		const totalBubbles = this.bubbleComponents().length
+		const index = totalBubbles - remainingBubbles - 1
+		const bubbleSpacing = width / totalBubbles
+		const startX = index * bubbleSpacing + bubbleSpacing / 2
+		// Start at the bottom wall of the container (visible inside the container)
+		const startY = height - radius // Position at the bottom wall, fully visible
+
+		// Create the physics body
+		const body = Bodies.circle(startX, startY, radius, {
+			restitution: 0.294, // Reduced bounce force by 30% (from 0.42)
+			frictionAir: 0.001, // Even lower air friction for better movement
+			friction: 0.03, // Lower friction between objects
+			frictionStatic: 0.03, // Lower static friction
+			density: 0.0003, // Even lower density for more responsive rising
+			inertia: Infinity, // Prevent rotation
+		})
+
+		// Initial upward velocity for rising effect with horizontal drift - slower for more visible rising
+		const upwardSpeed = 1.5 + Math.random() * 1 // 1.5-2.5 pixels per frame upward (slower, more visible rise)
+		const horizontalDrift = (Math.random() - 0.5) * 1 // Minimal horizontal drift
+		Matter.Body.setVelocity(body, { x: horizontalDrift, y: -upwardSpeed })
+
+		// Apply a smaller initial impulse for a more gradual rise
+		const initialImpulse = 0.005
+		Matter.Body.applyForce(body, body.position, { x: 0, y: -initialImpulse })
+
+		// Shimmy parameters per bubble
+		const shimmyFreqX = 0.2 + Math.random() * 0.6 // Hz
+		const shimmyFreqY = 0.2 + Math.random() * 0.6
+		const shimmyPhaseX = Math.random() * Math.PI * 2
+		const shimmyPhaseY = Math.random() * Math.PI * 2
+		const shimmyForceMag = 0.00002 + Math.random() * 0.00006
+
+		// Add body to world
+		Composite.add(this.engine.world, body)
+
+		// Add to entities array
+		this.entities.push({
+			element,
+			body,
+			halfWidth,
+			halfHeight,
+			shimmyFreqX,
+			shimmyFreqY,
+			shimmyPhaseX,
+			shimmyPhaseY,
+			shimmyForceMag,
+		})
+
+		// Animate the bubble appearance
+		element.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out'
+		setTimeout(() => {
+			element.style.opacity = '1'
+			element.style.transform = 'scale(1)'
+		}, 50) // Small delay to ensure transition applies
 	}
 
 	private moveToBubblesContainer(cue: string) {
