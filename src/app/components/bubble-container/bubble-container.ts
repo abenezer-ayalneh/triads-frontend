@@ -113,7 +113,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			// Start position created
 
 			const body = Bodies.circle(startX, startY, radius, {
-				restitution: 0.42, // Reduced bounce force by 30% (from 0.6)
+				restitution: 0.294, // Reduced bounce force by 30% (from 0.42)
 				frictionAir: 0.005, // Very low air friction for more movement
 				friction: 0.05, // Very low friction between objects
 				frictionStatic: 0.05, // Very low static friction
@@ -272,7 +272,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Create boundaries aligned to the current container size
 		ceiling = Matter.Bodies.rectangle(width / 2, -wallThickness / 2, width, wallThickness, {
 			isStatic: true,
-			restitution: 0.42, // Same bounce as bubbles (reduced by 30%)
+			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
 			frictionStatic: 0.05, // Same static friction as bubbles
 			label: 'Ceiling',
@@ -280,7 +280,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Ground wall positioned at the bottom of the container to prevent overflow
 		ground = Matter.Bodies.rectangle(width / 2, height + wallThickness / 2, width, wallThickness, {
 			isStatic: true,
-			restitution: 0.42, // Same bounce as bubbles (reduced by 30%)
+			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
 			frictionStatic: 0.05, // Same static friction as bubbles
 			label: 'Ground',
@@ -289,14 +289,14 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Walls created with appropriate dimensions
 		leftWall = Matter.Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height, {
 			isStatic: true,
-			restitution: 0.42, // Same bounce as bubbles (reduced by 30%)
+			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
 			frictionStatic: 0.05, // Same static friction as bubbles
 			label: 'LeftWall',
 		})
 		rightWall = Matter.Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height, {
 			isStatic: true,
-			restitution: 0.42, // Same bounce as bubbles (reduced by 30%)
+			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
 			frictionStatic: 0.05, // Same static friction as bubbles
 			label: 'RightWall',
@@ -389,7 +389,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		if (entityA && entityB) {
 			// Apply reduced bounce force for more controlled collisions
-			const force = 0.0175 // Reduced by 30% from 0.025
+			const force = 0.01225 // Reduced by 30% (from 0.0175)
 			const directionA = {
 				x: (bodyA.position.x - bodyB.position.x) * force,
 				y: (bodyA.position.y - bodyB.position.y) * force,
@@ -403,7 +403,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			Matter.Body.applyForce(bodyB, bodyB.position, directionB)
 
 			// Add reduced velocity boost for more controlled separation
-			const velocityBoost = 0.105 // Reduced by 30% from 0.15
+			const velocityBoost = 0.0735 // Reduced by 30% (from 0.105)
 			const currentVelA = bodyA.velocity
 			const currentVelB = bodyB.velocity
 
@@ -428,9 +428,9 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 			// Only add random movement to non-selected bubbles
 			if (!isSelected) {
-				// Add stronger random forces for more active movement
-				const randomForceX = (Math.random() - 0.5) * 0.002 // Increased from 0.0005
-				const randomForceY = (Math.random() - 0.5) * 0.002 // Increased from 0.0005
+				// Add random forces for movement (reduced by 30%)
+				const randomForceX = (Math.random() - 0.5) * 0.0014 // Reduced by 30% (from 0.002)
+				const randomForceY = (Math.random() - 0.5) * 0.0014 // Reduced by 30% (from 0.002)
 
 				Matter.Body.applyForce(entity.body, entity.body.position, {
 					x: randomForceX,
