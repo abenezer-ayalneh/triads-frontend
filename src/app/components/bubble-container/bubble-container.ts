@@ -321,19 +321,36 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	private moveToBubblesContainer(cue: string) {
-		const bubbleSelector = `#bubble-${cue}`
+		// Find the bubble by looking for elements with the matching cue text
+		// This approach works for both single-word and multi-word cues
 		const solutionBox = document.getElementById('solutionBox')
 
 		if (solutionBox) {
+			// Find the bubble by its cue text content instead of ID
+			const allBubbles = Array.from(document.querySelectorAll('[id^="bubble-"]'))
+			let foundBubble: HTMLElement | null = null
+
+			// Find the bubble with the matching cue text
+			for (const elem of allBubbles) {
+				const cueElement = elem.querySelector('p')
+				if (cueElement && cueElement.textContent?.trim() === cue) {
+					foundBubble = elem as HTMLElement
+					break
+				}
+			}
+
+			// If no matching bubble found, exit
+			if (!foundBubble) {
+				return
+			}
+
+			// Now TypeScript knows foundBubble is definitely an HTMLElement
 			const boxRect = solutionBox.getBoundingClientRect()
-			const bubbleElem = document.querySelector(bubbleSelector) as HTMLElement
-			if (!bubbleElem) return
+			const bubbleRect = foundBubble.getBoundingClientRect()
+			const startX = boxRect.left + boxRect.width / 2 - bubbleRect.width / 2 - bubbleRect.left + foundBubble.offsetLeft
+			const startY = boxRect.top + boxRect.height / 2 - bubbleRect.height / 2 - bubbleRect.top + foundBubble.offsetTop
 
-			const bubbleRect = bubbleElem.getBoundingClientRect()
-			const startX = boxRect.left + boxRect.width / 2 - bubbleRect.width / 2 - bubbleRect.left + bubbleElem.offsetLeft
-			const startY = boxRect.top + boxRect.height / 2 - bubbleRect.height / 2 - bubbleRect.top + bubbleElem.offsetTop
-
-			gsap.fromTo(bubbleElem, { x: startX, y: startY, scale: 0.2, display: 'block' }, { duration: 3, x: 0, y: 0, scale: 1, display: 'block' })
+			gsap.fromTo(foundBubble, { x: startX, y: startY, scale: 0.2, display: 'block' }, { duration: 3, x: 0, y: 0, scale: 1, display: 'block' })
 		}
 	}
 

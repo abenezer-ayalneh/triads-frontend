@@ -426,25 +426,56 @@ export class GamePlay implements OnInit, AfterViewChecked {
 
 		this.explodingBubbles.update((currentValue) => [...currentValue, cue])
 
-		const bubbleSelector = `#bubble-${cue}`
+		// Find the bubble by its text content instead of ID to handle multi-word phrases
 		const solutionBox = this.solutionBox().nativeElement
 
-		const point = MotionPathPlugin.convertCoordinates(solutionBox, document.querySelector(bubbleSelector) as Element, { x: 0, y: 0 })
+		// Find all bubble elements
+		const allBubbles = Array.from(document.querySelectorAll('[id^="bubble-"]'))
+		let bubbleElement: Element | null = null
 
-		// gsap.to(bubbleSelector, { x: point.x, y: point.y });
+		// Find the bubble with the matching cue text
+		for (const elem of allBubbles) {
+			const cueElement = elem.querySelector('p')
+			if (cueElement && cueElement.textContent?.trim() === cue) {
+				bubbleElement = elem
+				break
+			}
+		}
 
-		// or with '{ x: 0, y: 0 }' in the convertCoordinates method:
-		await gsap.to(bubbleSelector, { delay: 0.5, duration: 3, x: '+=' + point.x, y: '+=' + point.y, scale: 0.5, opacity: 0.2, display: 'none' })
+		// If no matching bubble found, exit
+		if (!bubbleElement) {
+			return
+		}
+
+		const point = MotionPathPlugin.convertCoordinates(solutionBox, bubbleElement, { x: 0, y: 0 })
+
+		// Animate the bubble to the solution box
+		await gsap.to(bubbleElement, {
+			delay: 0.5,
+			duration: 3,
+			x: '+=' + point.x,
+			y: '+=' + point.y,
+			scale: 0.5,
+			opacity: 0.2,
+			display: 'none',
+		})
+
 		this.closeSolutionsBox()
 	}
 
 	private moveToBubblesContainer(cueId: number) {
+		// For numeric IDs, the selector approach still works fine
 		const bubbleSelector = `#bubble-${cueId}`
 		const solutionBox = this.solutionBox().nativeElement
+		const bubbleElement = document.querySelector(bubbleSelector)
 
-		const point = MotionPathPlugin.convertCoordinates(solutionBox, document.querySelector(bubbleSelector) as Element, { x: 0, y: 0 })
+		if (!bubbleElement) {
+			return
+		}
 
-		gsap.fromTo(bubbleSelector, { x: point.x, y: point.y, display: 'block' }, { x: 0, y: 0, display: 'block' }).then(() => {
+		const point = MotionPathPlugin.convertCoordinates(solutionBox, bubbleElement, { x: 0, y: 0 })
+
+		gsap.fromTo(bubbleElement, { x: point.x, y: point.y, display: 'block' }, { x: 0, y: 0, display: 'block' }).then(() => {
 			this.closeSolutionsBox()
 		})
 	}
