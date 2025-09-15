@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common'
-import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
+import { AfterViewChecked, Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { gsap } from 'gsap'
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
@@ -26,7 +26,7 @@ import { TurnService } from './services/turn-service'
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
-export class GamePlay implements OnInit {
+export class GamePlay implements OnInit, AfterViewChecked {
 	readonly store = inject(GlobalStore)
 
 	cueFetchingState = signal<RequestState>(RequestState.LOADING)
@@ -118,6 +118,9 @@ export class GamePlay implements OnInit {
 
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
 
+	// Flag to track if we need to focus the answer field
+	private shouldFocusAnswerField = false
+
 	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
 
 	constructor() {
@@ -129,6 +132,29 @@ export class GamePlay implements OnInit {
 				this.store.setGamePlayState(GamePlayState.LOST)
 			}
 		})
+
+		// Watch for game state changes to determine when to focus the answer field
+		effect(() => {
+			const gameState = this.store.gamePlayState()
+			// When game state changes to ACCEPT_ANSWER or WRONG_ANSWER, set flag to focus
+			if (gameState === GamePlayState.ACCEPT_ANSWER || gameState === GamePlayState.WRONG_ANSWER) {
+				this.shouldFocusAnswerField = true
+			}
+		})
+	}
+
+	ngAfterViewChecked() {
+		// Focus the answer field if needed
+		if (this.shouldFocusAnswerField) {
+			const answerField = this.answerFieldRef()?.nativeElement
+			if (answerField) {
+				// Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
+				setTimeout(() => {
+					answerField.focus()
+					this.shouldFocusAnswerField = false
+				}, 0)
+			}
+		}
 	}
 
 	ngOnInit() {
@@ -166,6 +192,8 @@ export class GamePlay implements OnInit {
 								this.keywordLengthHint.set(triadsForHint.withValue ? Number(triadsForHint.withValue) : null)
 							} else if (triadsForHint.with === 'FIRST_LETTER' && triadsForHint.withValue) {
 								this.answerFormControl.setValue(triadsForHint.withValue)
+								// Set flag to focus the answer field when it appears
+								this.shouldFocusAnswerField = true
 							}
 
 							// Close the extra hint modal
@@ -210,7 +238,7 @@ export class GamePlay implements OnInit {
 					tap((success) => {
 						if (success) {
 							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-							this.answerFieldRef()?.nativeElement.focus()
+							this.shouldFocusAnswerField = true
 						} else {
 							this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
 							this.useTurn()
@@ -290,7 +318,7 @@ export class GamePlay implements OnInit {
 									this.store.setSelectedCues([])
 								} else {
 									this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-									this.answerFieldRef()?.nativeElement.focus()
+									this.shouldFocusAnswerField = true
 								}
 							}
 						}
