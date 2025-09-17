@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, effect, ElementRef, inject, input, OnDestroy, viewChild, viewChildren } from '@angular/core'
-import { gsap } from 'gsap'
 import Matter from 'matter-js'
 
 import { GlobalStore } from '../../state/global.store'
@@ -119,14 +118,18 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 			// Get container dimensions for calculations
 			const container = this.container().nativeElement
+			const width = container.clientWidth || container.offsetWidth || 0
 			const height = container.clientHeight || container.offsetHeight || 0
 
 			const now = performance.now() / 1000 // seconds
-			this.entities.forEach(({ body, shimmyFreqX, shimmyFreqY, shimmyPhaseX, shimmyPhaseY, shimmyForceMag }) => {
+			this.entities.forEach(({ body, element, shimmyFreqX, shimmyFreqY, shimmyPhaseX, shimmyPhaseY, shimmyForceMag }) => {
 				const { x, y } = body.position
 
-				// Apply gentle upward force during initial rising phase for more visible rising
-				if (this.isInitialSpawn && y > 0) {
+				// Check if this is a final triad bubble (by checking if it has the finalTriadCuesBubble attribute)
+				const isFinalTriadBubble = element.hasAttribute('finalTriadCuesBubble')
+
+				// Apply gentle upward force during initial rising phase for visible rising
+				if (this.isInitialSpawn && y > 0 && !isFinalTriadBubble) {
 					// Calculate how far the bubble has risen from the bottom
 					const distanceFromBottom = height - y
 					const maxRisingDistance = height * 0.7 // Consider bubble "risen" when it reaches 70% of container height
@@ -153,8 +156,45 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 					}
 				}
 
-				// Apply gravitational pull toward center after rising phase
-				if (!this.isInitialSpawn) {
+				// Special handling for final triad bubbles - keep them contained
+				if (isFinalTriadBubble) {
+					// Check if bubble is getting too close to any wall and apply containment force
+					const centerX = width / 2
+					const centerY = height / 2
+
+					// Calculate distance from center
+					const dx = x - centerX
+					const dy = y - centerY
+					const distance = Math.sqrt(dx * dx + dy * dy)
+
+					// If bubble is getting too far from center, apply force toward center
+					const maxAllowedDistance = Math.min(width, height) * 0.4 // 40% of container size
+					if (distance > maxAllowedDistance) {
+						const containmentForce = 0.0005 * (distance / maxAllowedDistance - 1)
+						const forceX = (-dx / distance) * containmentForce
+						const forceY = (-dy / distance) * containmentForce
+						Matter.Body.applyForce(body, { x, y }, { x: forceX, y: forceY })
+					}
+
+					// Also apply a small continuous force toward center
+					const gentleCenteringForce = 0.00005
+					const gentleForceX = (-dx / distance) * gentleCenteringForce
+					const gentleForceY = (-dy / distance) * gentleCenteringForce
+					Matter.Body.applyForce(body, { x, y }, { x: gentleForceX, y: gentleForceY })
+
+					// Limit maximum velocity to prevent escaping
+					const maxVelocity = 2
+					const velocity = body.velocity
+					const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
+					if (speed > maxVelocity) {
+						Matter.Body.setVelocity(body, {
+							x: (velocity.x * maxVelocity) / speed,
+							y: (velocity.y * maxVelocity) / speed,
+						})
+					}
+				}
+				// Apply gravitational pull toward center after rising phase for normal bubbles
+				else if (!this.isInitialSpawn) {
 					const dx = this.gravitationalCenter.x - x
 					const dy = this.gravitationalCenter.y - y
 					const distance = Math.sqrt(dx * dx + dy * dy)
@@ -320,40 +360,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		}, 50) // Small delay to ensure transition applies
 	}
 
-	private moveToBubblesContainer(cue: string) {
-		// Find the bubble by looking for elements with the matching cue text
-		// This approach works for both single-word and multi-word cues
-		const solutionBox = document.getElementById('solutionBox')
-
-		if (solutionBox) {
-			// Find the bubble by its cue text content instead of ID
-			const allBubbles = Array.from(document.querySelectorAll('[id^="bubble-"]'))
-			let foundBubble: HTMLElement | null = null
-
-			// Find the bubble with the matching cue text
-			for (const elem of allBubbles) {
-				const cueElement = elem.querySelector('p')
-				if (cueElement && cueElement.textContent?.trim() === cue) {
-					foundBubble = elem as HTMLElement
-					break
-				}
-			}
-
-			// If no matching bubble found, exit
-			if (!foundBubble) {
-				return
-			}
-
-			// Now TypeScript knows foundBubble is definitely an HTMLElement
-			const boxRect = solutionBox.getBoundingClientRect()
-			const bubbleRect = foundBubble.getBoundingClientRect()
-			const startX = boxRect.left + boxRect.width / 2 - bubbleRect.width / 2 - bubbleRect.left + foundBubble.offsetLeft
-			const startY = boxRect.top + boxRect.height / 2 - bubbleRect.height / 2 - bubbleRect.top + foundBubble.offsetTop
-
-			gsap.fromTo(foundBubble, { x: startX, y: startY, scale: 0.2, display: 'block' }, { duration: 3, x: 0, y: 0, scale: 1, display: 'block' })
-		}
-	}
-
 	private createOrUpdateBoundaries() {
 		let ceiling: Matter.Body | null = null
 		let ground: Matter.Body | null = null
@@ -430,10 +436,195 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	private animateFinalTriadCues() {
-		this.finalTriadCuesBubbleComponents().forEach((bubble) => {
-			this.moveToBubblesContainer(bubble.cue())
+		// Start sequential creation of final triad bubbles
+		this.startFinalTriadSequentialCreation(this.finalTriadCuesBubbleComponents())
+	}
+
+	/**
+	 * Start sequential creation of final triad bubbles
+	 * @param bubbleComponents The final triad bubble components to create
+	 */
+	private startFinalTriadSequentialCreation(bubbleComponents: readonly Bubble[]) {
+		// Create a queue for the final triad bubbles
+		const finalTriadQueue = [...bubbleComponents]
+
+		// Initially hide all final triad bubbles
+		bubbleComponents.forEach((bubbleComponent) => {
+			const element = bubbleComponent.element.nativeElement
+			element.style.position = 'absolute'
+			element.style.zIndex = '2' // Higher z-index than regular bubbles
+			element.style.opacity = '0' // Start invisible
+			element.style.transform = 'scale(0)' // Start small
+
+			// Add attribute to identify final triad bubbles for physics handling
+			element.setAttribute('finalTriadCuesBubble', 'true')
 		})
-		this.createBodies(this.finalTriadCuesBubbleComponents())
+
+		// Create bubbles one after the other with a delay
+		let index = 0
+		const createNextBubble = () => {
+			if (index < finalTriadQueue.length) {
+				const bubbleComponent = finalTriadQueue[index]
+				this.createFinalTriadBubble(bubbleComponent, index)
+				index++
+				setTimeout(createNextBubble, this.bubbleCreationDelay)
+			}
+		}
+
+		// Start the sequential creation
+		createNextBubble()
+	}
+
+	/**
+	 * Create a single final triad bubble with animation
+	 * @param bubbleComponent The bubble component to create
+	 * @param index The index of the bubble in the final triad
+	 */
+	private createFinalTriadBubble(bubbleComponent: Bubble, index: number) {
+		const Bodies = Matter.Bodies
+		const Composite = Matter.Composite
+
+		const container = this.container().nativeElement
+		const width = container.clientWidth || container.offsetWidth || 0
+		const height = container.clientHeight || container.offsetHeight || 0
+
+		const element = bubbleComponent.element.nativeElement
+		const halfWidth = (element.offsetWidth || 60) / 2
+		const halfHeight = (element.offsetHeight || 60) / 2
+		const radius = Math.max(halfWidth, halfHeight)
+
+		// Calculate starting position at the bottom of the container
+		// Distribute horizontally based on index
+		const bubbleCount = this.finalTriadCuesBubbleComponents().length
+		const bubbleSpacing = width / (bubbleCount + 1)
+		const startX = (index + 1) * bubbleSpacing
+		const startY = height - radius // Start at the bottom
+
+		// Create the physics body
+		const body = Bodies.circle(startX, startY, radius, {
+			restitution: 0.2, // Lower bounce to prevent escaping
+			frictionAir: 0.01, // Moderate air friction for smooth movement
+			friction: 0.05, // Moderate friction between objects
+			frictionStatic: 0.05, // Moderate static friction
+			density: 0.0005, // Lower density for more responsive movement
+			inertia: Infinity, // Prevent rotation
+		})
+
+		// Initial upward velocity with slight horizontal drift
+		const upwardSpeed = 1.0 + Math.random() * 0.5 // 1.0-1.5 pixels per frame upward
+		const horizontalDrift = (Math.random() - 0.5) * 0.5 // Minimal horizontal drift
+		Matter.Body.setVelocity(body, { x: horizontalDrift, y: -upwardSpeed })
+
+		// Apply a small initial impulse for a gradual rise
+		const initialImpulse = 0.003
+		Matter.Body.applyForce(body, body.position, { x: 0, y: -initialImpulse })
+
+		// Shimmy parameters for gentle movement
+		const shimmyFreqX = 0.1 + Math.random() * 0.2
+		const shimmyFreqY = 0.1 + Math.random() * 0.2
+		const shimmyPhaseX = Math.random() * Math.PI * 2
+		const shimmyPhaseY = Math.random() * Math.PI * 2
+		const shimmyForceMag = 0.00001 + Math.random() * 0.00001 // Very gentle force
+
+		// Add body to world
+		Composite.add(this.engine.world, body)
+
+		// Add to entities array
+		this.entities.push({
+			element,
+			body,
+			halfWidth,
+			halfHeight,
+			shimmyFreqX,
+			shimmyFreqY,
+			shimmyPhaseX,
+			shimmyPhaseY,
+			shimmyForceMag,
+		})
+
+		// Animate the bubble appearance
+		element.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out'
+		setTimeout(() => {
+			element.style.opacity = '1'
+			element.style.transform = 'scale(1)'
+		}, 50) // Small delay to ensure transition applies
+	}
+
+	/**
+	 * Create physics bodies that stay contained within the walls
+	 * @deprecated This method is no longer used, replaced by startFinalTriadSequentialCreation
+	 */
+	private createContainedBodies(bubbleComponents: readonly Bubble[]) {
+		const Composite = Matter.Composite
+		const Bodies = Matter.Bodies
+
+		const container = this.container().nativeElement
+		const width = container.clientWidth || container.offsetWidth || 0
+		const height = container.clientHeight || container.offsetHeight || 0
+
+		// Create bodies for each bubble element
+		const newEntities = bubbleComponents.map((bubbleComponent, index) => {
+			const element = bubbleComponent.element.nativeElement
+			element.style.position = 'absolute'
+			element.style.zIndex = '1'
+
+			const halfWidth = (element.offsetWidth || 60) / 2
+			const halfHeight = (element.offsetHeight || 60) / 2
+			const radius = Math.max(halfWidth, halfHeight)
+
+			// Position bubbles in the center area of the container
+			// Distribute them in a circular pattern around the center
+			const bubbleCount = bubbleComponents.length
+			const angle = (index / bubbleCount) * Math.PI * 2
+			const distance = Math.min(width, height) * 0.25 // Keep them within 25% of center
+
+			const bubbleX = width / 2 + Math.cos(angle) * distance
+			const bubbleY = height / 2 + Math.sin(angle) * distance
+
+			// Create the physics body with parameters that keep it contained
+			const body = Bodies.circle(bubbleX, bubbleY, radius, {
+				restitution: 0.2, // Lower bounce to prevent escaping
+				frictionAir: 0.03, // Higher air friction to slow movement
+				friction: 0.1, // Higher friction between objects
+				frictionStatic: 0.1, // Higher static friction
+				density: 0.001, // Higher density for more stability
+				inertia: Infinity, // Prevent rotation
+			})
+
+			// Add very minimal initial velocity
+			const smallVelocity = 0.2
+			const randomVelX = (Math.random() - 0.5) * smallVelocity
+			const randomVelY = (Math.random() - 0.5) * smallVelocity
+			Matter.Body.setVelocity(body, { x: randomVelX, y: randomVelY })
+
+			// Shimmy parameters per bubble - much gentler for final triad
+			const shimmyFreqX = 0.1 + Math.random() * 0.2
+			const shimmyFreqY = 0.1 + Math.random() * 0.2
+			const shimmyPhaseX = Math.random() * Math.PI * 2
+			const shimmyPhaseY = Math.random() * Math.PI * 2
+			const shimmyForceMag = 0.000005 + Math.random() * 0.000005 // Very small force
+
+			return {
+				element,
+				body,
+				halfWidth,
+				halfHeight,
+				shimmyFreqX,
+				shimmyFreqY,
+				shimmyPhaseX,
+				shimmyPhaseY,
+				shimmyForceMag,
+			}
+		})
+
+		// Add bodies to the world
+		Composite.add(
+			this.engine.world,
+			newEntities.map(({ body }) => body),
+		)
+
+		// Add new entities to the existing ones
+		this.entities = [...this.entities, ...newEntities]
 	}
 
 	private checkForRemovedBubbles() {
