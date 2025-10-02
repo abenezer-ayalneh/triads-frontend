@@ -1,0 +1,31 @@
+<div
+	class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
+	<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Hints</p>
+	<div class="w-full flex justify-center items-center gap-2">
+		@for (hint of store.hints(); track hint.id) {
+			<button class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16 circle" (click)="onHintClick()" [disabled]="!hint.available" aria-label="Use a hint">
+				@if (hint.available) {
+					<img src="images/lifesaver.svg" alt="hint" />
+				}
+			</button>
+		}
+	</div>
+</div>
+
+<!-- Hint Choice Modal -->
+<dialog #hintChoiceModal class="modal modal-bottom sm:modal-middle">
+	<div class="modal-box">
+		<h3 class="text-lg font-bold">Choose your hint</h3>
+		<p class="py-2 text-sm">Pick one of the options below to help solve the Triad.</p>
+		<div class="w-full h-fit flex flex-col gap-2 mt-2">
+			<button type="button" class="btn btn-info text-base-100" (click)="useHint('KEYWORD_LENGTH')">Number of letters</button>
+			<button type="button" class="btn btn-primary text-base-100" (click)="useHint('FIRST_LETTER')">1st letter of word</button>
+		</div>
+
+		<div class="modal-action">
+			<form method="dialog">
+				<button class="btn">Cancel</button>
+			</form>
+		</div>
+	</div>
+</dialog>

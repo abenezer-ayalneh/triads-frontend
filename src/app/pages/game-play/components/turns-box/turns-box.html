@@ -1,0 +1,11 @@
+<div
+	class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
+	<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Turns</p>
+	<div class="w-full flex justify-center items-center gap-1">
+		@for (turn of store.turns(); track turn.id) {
+			<span class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16" [ngClass]="turn.available ? 'opacity-100' : 'opacity-0'">
+				<img [src]="turn.icon" alt="turn" class="w-full h-full" />
+			</span>
+		}
+	</div>
+</div>

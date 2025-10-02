@@ -6,28 +6,6 @@
 	clip-path: circle(50%); /* Creates a circle filling the element, centered */
 }
 
-/* Background decorative bubbles */
-.bg-bubble {
-	position: absolute;
-	border-radius: 9999px;
-	pointer-events: none;
-	background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.05));
-	box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
-	animation: float-animation var(--duration, 20s) linear infinite;
-	animation-delay: var(--delay, 0s);
-	opacity: 0.9; /* Increased opacity to 0.75 */
-	bottom: -50px; /* Start just below the viewport */
-}
-
-@keyframes float-animation {
-	0% {
-		transform: translateY(0) scale(1);
-	}
-	100% {
-		transform: translateY(-120vh) scale(0.8);
-	}
-}
-
 .scale-in-center {
 	-webkit-animation: scale-in-center 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 	animation: scale-in-center 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;

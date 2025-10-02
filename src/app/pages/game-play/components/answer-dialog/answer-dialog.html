@@ -1,0 +1,10 @@
+<div class="w-full h-full flex justify-center items-center">
+	<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
+		<div class="w-40 h-40 rounded-2xl">
+			<ng-lottie [options]="type() === 'CORRECT' ? correctAnswerAnimationOptions : wrongAnswerAnimationOptions" />
+		</div>
+		<p class="text-base-100 text-2xl font-semibold text-pretty text-center">
+			<ng-content />
+		</p>
+	</div>
+</div>

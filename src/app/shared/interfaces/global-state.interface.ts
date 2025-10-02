@@ -1,4 +1,5 @@
 import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
+import { SolvedTriad } from '../../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../../pages/game-play/interfaces/turn-and-hint.interface'
 import { User } from './user.interface'
 
@@ -12,4 +13,9 @@ export interface GlobalState {
 	hints: TurnAndHint[]
 	gamePlayState: GamePlayState
 	triadsStep: 'INITIAL' | 'FINAL'
+	keywordLengthHint: number | null
+	solvedTriads: SolvedTriad[]
+	hintUsed: boolean
+	isFetchingFinalTriadCues: boolean
+	gameScore: number
 }

@@ -2,6 +2,7 @@ import { inject } from '@angular/core'
 import { patchState, signalStore, withHooks, withMethods, withProps, withState } from '@ngrx/signals'
 
 import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
+import { SolvedTriad } from '../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
@@ -24,6 +25,11 @@ const initialState: GlobalState = {
 	],
 	gamePlayState: GamePlayState.IDLE,
 	triadsStep: 'INITIAL',
+	keywordLengthHint: null,
+	solvedTriads: [],
+	hintUsed: false,
+	isFetchingFinalTriadCues: false,
+	gameScore: 0,
 }
 
 export const GlobalStore = signalStore(
@@ -74,6 +80,18 @@ export const GlobalStore = signalStore(
 		},
 		updateTriadStep: (triadsStep: 'INITIAL' | 'FINAL') => {
 			patchState(store, (state) => ({ ...state, triadsStep }))
+		},
+		setKeywordLengthHint: (keywordLengthHint: number | null) => {
+			patchState(store, (state) => ({ ...state, keywordLengthHint }))
+		},
+		addSolvedTriad: (solvedTriad: SolvedTriad) => {
+			patchState(store, (state) => ({ ...state, solvedTriads: [...state.solvedTriads, solvedTriad] }))
+		},
+		setHintUsage: (hintUsed: boolean) => {
+			patchState(store, (state) => ({ ...state, hintUsed }))
+		},
+		setIsFetchingFinalTriadCues: (isFetchingFinalTriadCues: boolean) => {
+			patchState(store, (state) => ({ ...state, isFetchingFinalTriadCues }))
 		},
 	})),
 	withHooks({

@@ -1,37 +1,10 @@
 <div class="w-full h-full flex flex-col relative overflow-hidden">
 	<!-- Decorative background bubbles -->
-	<div class="fixed inset-0 z-10 overflow-hidden pointer-events-none">
-		<!-- Tiny bubbles -->
-		<div class="bg-bubble w-6 h-6" style="--duration: 15s; --delay: 0s; --opacity: 0.75; left: 10%"></div>
-		<div class="bg-bubble w-8 h-8" style="--duration: 18s; --delay: 3s; --opacity: 0.75; left: 25%"></div>
-		<div class="bg-bubble w-5 h-5" style="--duration: 12s; --delay: 7s; --opacity: 0.75; left: 42%"></div>
-		<div class="bg-bubble w-7 h-7" style="--duration: 16s; --delay: 5s; --opacity: 0.75; left: 68%"></div>
-		<div class="bg-bubble w-6 h-6" style="--duration: 14s; --delay: 2s; --opacity: 0.75; left: 85%"></div>
+	<app-background-bubbles />
 
-		<!-- Small bubbles -->
-		<div class="bg-bubble w-10 h-10" style="--duration: 20s; --delay: 1s; --opacity: 0.75; left: 15%"></div>
-		<div class="bg-bubble w-12 h-12" style="--duration: 22s; --delay: 6s; --opacity: 0.75; left: 35%"></div>
-		<div class="bg-bubble w-9 h-9" style="--duration: 19s; --delay: 4s; --opacity: 0.75; left: 55%"></div>
-		<div class="bg-bubble w-11 h-11" style="--duration: 21s; --delay: 8s; --opacity: 0.75; left: 75%"></div>
-
-		<!-- Medium bubbles -->
-		<div class="bg-bubble w-16 h-16" style="--duration: 25s; --delay: 2s; --opacity: 0.75; left: 20%"></div>
-		<div class="bg-bubble w-14 h-14" style="--duration: 23s; --delay: 7s; --opacity: 0.75; left: 50%"></div>
-		<div class="bg-bubble w-18 h-18" style="--duration: 26s; --delay: 0s; --opacity: 0.75; left: 80%"></div>
-
-		<!-- Large bubbles -->
-		<div class="bg-bubble w-24 h-24" style="--duration: 30s; --delay: 5s; --opacity: 0.75; left: 30%"></div>
-		<div class="bg-bubble w-28 h-28" style="--duration: 32s; --delay: 9s; --opacity: 0.75; left: 65%"></div>
-
-		<!-- Extra bubbles for more density -->
-		<div class="bg-bubble w-7 h-7" style="--duration: 17s; --delay: 10s; --opacity: 0.75; left: 5%"></div>
-		<div class="bg-bubble w-9 h-9" style="--duration: 19s; --delay: 12s; --opacity: 0.75; left: 95%"></div>
-		<div class="bg-bubble w-12 h-12" style="--duration: 24s; --delay: 14s; --opacity: 0.75; left: 45%"></div>
-		<div class="bg-bubble w-20 h-20" style="--duration: 28s; --delay: 16s; --opacity: 0.75; left: 70%"></div>
-	</div>
 	<!--Ballons Section-->
 	<div class="w-full h-[calc(100%-208px)] p-2 md:p-4 lg:p-6 overflow-visible">
-		@if (cueFetchingState() === RequestState.LOADING || isFetchingFinalTriadCues()) {
+		@if (cueFetchingState() === RequestState.LOADING || store.isFetchingFinalTriadCues()) {
 			<div class="w-full h-full flex justify-center items-center">
 				<span class="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
 					<ng-lottie [options]="loadingAnimationOptions" />
@@ -43,62 +16,14 @@
 	</div>
 
 	<!--Solution Input Section-->
-	<div class="w-full h-20 md:h-24 lg:h-28 flex flex-col justify-center items-center">
-		<div
-			class="w-full h-fit flex-col justify-center items-center px-4 md:px-6 lg:px-8 py-2"
-			[class]="{ flex: store.gamePlayState() === GamePlayState.CHECK_SOLUTION, hidden: store.gamePlayState() !== GamePlayState.CHECK_SOLUTION }">
-			<button type="button" (click)="checkTriad()" class="w-80 md:w-96 lg:w-[28rem] triad-gradient btn btn-lg border-none text-primary-content">
-				Check Solution
-			</button>
-		</div>
-
-		<div
-			class="w-full h-fit flex-col justify-center items-center px-4 md:px-6 lg:px-8 py-2 gap-2"
-			[class]="{
-				flex: store.gamePlayState() === GamePlayState.ACCEPT_ANSWER || store.gamePlayState() === GamePlayState.WRONG_ANSWER,
-				hidden: store.gamePlayState() !== GamePlayState.ACCEPT_ANSWER && store.gamePlayState() !== GamePlayState.WRONG_ANSWER,
-			}">
-			<div class="w-[80%] md:w-[70%] lg:w-[60%] max-w-3xl h-fit flex justify-center items-center gap-2">
-				@let letKeywordLengthHint = keywordLengthHint();
-				@if (letKeywordLengthHint !== null) {
-					<app-input-set [quantity]="letKeywordLengthHint" (whenSubmitClicked)="submitAnswer($event)" />
-				} @else {
-					<input
-						#answerField
-						[formControl]="answerFormControl"
-						placeholder="Answer here..."
-						(keydown.enter)="submitAnswer(answerFormControl.value)"
-						class="flex-1 h-10 md:h-12 input focus:outline-none text-base md:text-lg lg:text-xl xl:text-2xl text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
-					<button
-						type="button"
-						(click)="submitAnswer(answerFormControl.value)"
-						[disabled]="!answerFormControl.valid"
-						aria-label="Submit answer"
-						class="h-10 md:h-12 px-4 md:px-6 rounded-full triad-gradient text-primary-content font-semibold shadow-lg hover:shadow-xl active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-						<svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M19 12H5" />
-						</svg>
-						<span class="hidden sm:inline">Submit</span>
-					</button>
-				}
-			</div>
-		</div>
+	<div class="w-full h-20 md:h-24 lg:h-28">
+		<app-solution-section (whenMovingCueToSolutionBox)="moveToSolutionBox($event)" />
 	</div>
 
 	<!--Turn & Hint Section-->
 	<div class="w-full h-32 md:h-36 lg:h-40 flex justify-between items-center px-4 md:px-6 lg:px-8">
 		<!--Turn Section-->
-		<div
-			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
-			<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Turns</p>
-			<div class="w-full flex justify-center items-center gap-1">
-				@for (turn of store.turns(); track turn.id) {
-					<span class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16" [ngClass]="turn.available ? 'opacity-100' : 'opacity-0'">
-						<img [src]="turn.icon" alt="turn" class="w-full h-full" />
-					</span>
-				}
-			</div>
-		</div>
+		<app-turns-box />
 
 		<!--Solution Box-->
 		<div
@@ -111,131 +36,40 @@
 			class="h-full cursor-pointer"></div>
 
 		<!--Hint Section-->
-		<div
-			class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
-			<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Hints</p>
-			<div class="w-full flex justify-center items-center gap-2">
-				@for (hint of store.hints(); track hint.id) {
-					<button class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16 circle" (click)="onHintClick()" [disabled]="!hint.available" aria-label="Use a hint">
-						@if (hint.available) {
-							<img src="images/lifesaver.svg" alt="hint" />
-						}
-					</button>
-				}
-			</div>
-		</div>
+		<app-hints-box />
 	</div>
-	@if (showSolvedPopup()) {
-		<div class="w-full h-full flex justify-center items-center absolute z-10">
-			<div
-				class="w-fit max-w-[90%] md:max-w-[70%] h-fit flex flex-col justify-center items-center gap-3 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
-				<p class="text-base-100 text-2xl font-semibold">Solved Words</p>
-				@if (solvedTriads().length === 0) {
-					<p class="text-base-200 text-center">No solved words yet. Solve a Triad to see it here.</p>
-				} @else {
-					<div class="grid grid-cols-3 gap-2">
-						@for (triad of solvedTriads(); track triad.id) {
-							@for (fullPhrase of triad.fullPhrases; track $index) {
-								<span
-									class="px-2 py-1 rounded-full border border-success text-primary-content font-medium"
-									[innerHTML]="fullPhrase | highlightKey: triad.keyword : 'text-success'"></span>
-							}
-						}
-					</div>
-				}
-				<button (click)="closeSolvedPopup()" class="btn btn-info btn-sm text-base-100 mt-2">Close</button>
-			</div>
-		</div>
-	}
-
-	<!-- Hint Choice Modal -->
-	<dialog #hintChoiceModal class="modal modal-bottom sm:modal-middle">
-		<div class="modal-box">
-			<h3 class="text-lg font-bold">Choose your hint</h3>
-			<p class="py-2 text-sm">Pick one of the options below to help solve the Triad.</p>
-			<div class="w-full h-fit flex flex-col gap-2 mt-2">
-				<button type="button" class="btn btn-info text-base-100" (click)="useHint('KEYWORD_LENGTH')">Number of letters</button>
-				<button type="button" class="btn btn-primary text-base-100" (click)="useHint('FIRST_LETTER')">1st letter of word</button>
-			</div>
-
-			<div class="modal-action">
-				<form method="dialog">
-					<button class="btn">Cancel</button>
-				</form>
-			</div>
-		</div>
-	</dialog>
 
 	<!--Popup Section-->
 	@switch (store.gamePlayState()) {
 		@case (GamePlayState.CORRECT_ANSWER) {
-			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
-					<div class="w-40 h-40 rounded-2xl">
-						<ng-lottie [options]="correctAnswerAnimationOptions" />
-					</div>
-					<p class="text-base-100 text-2xl font-semibold text-pretty text-center">Correct Answer!</p>
-				</div>
-			</div>
+			<app-answer-dialog [type]="'CORRECT'"> Correct Answer! </app-answer-dialog>
 		}
 		@case (GamePlayState.WRONG_ANSWER) {
-			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
-					<div class="w-40 h-40 rounded-2xl">
-						<ng-lottie [options]="wrongAnswerAnimationOptions" />
-					</div>
-					<p class="text-base-100 text-2xl font-semibold text-pretty text-center">
-						Wrong Answer! <br />
-						Try Again.
-					</p>
-				</div>
-			</div>
+			<app-answer-dialog [type]="'WRONG'">
+				Wrong Answer! <br />
+				Try Again.
+			</app-answer-dialog>
 		}
 		@case (GamePlayState.WRONG_TRIAD) {
-			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
-					<div class="w-40 h-40 rounded-2xl">
-						<ng-lottie [options]="wrongAnswerAnimationOptions" />
-					</div>
-					<p class="text-base-100 text-2xl font-semibold text-pretty text-center">
-						Oops! <br />
-						{{ availableTurns() }} More {{ availableTurns() <= 1 ? 'Try' : 'Tries' }}.
-					</p>
-				</div>
-			</div>
+			<app-answer-dialog [type]="'WRONG'">
+				Oops! <br />
+				{{ availableTurns() }} More {{ availableTurns() <= 1 ? 'Try' : 'Tries' }}.
+			</app-answer-dialog>
 		}
 		@case (GamePlayState.WON) {
-			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div
-					class="w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-success/50">
-					<div class="w-40 h-40 rounded-2xl">
-						<ng-lottie [options]="correctAnswerAnimationOptions" />
-					</div>
-					<div class="text-center space-y-2">
-						<h2 class="text-success text-4xl font-bold">You Won!</h2>
-						<p class="text-base-100 text-lg">Congratulations! You solved all the triads!</p>
-						<div class="bg-success/20 rounded-lg px-4 py-2 border border-success/30">
-							<p class="text-success font-semibold text-xl">Final Score: {{ gameScore() }}</p>
-						</div>
-					</div>
-					<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
+			<app-game-result-dialog [result]="'WON'">
+				<h2 class="text-success text-4xl font-bold">You Won!</h2>
+				<p class="text-base-100 text-lg">Congratulations! You solved all the triads!</p>
+				<div class="bg-success/20 rounded-lg px-4 py-2 border border-success/30">
+					<p class="text-success font-semibold text-xl">Final Score: {{ store.gameScore() }}</p>
 				</div>
-			</div>
+			</app-game-result-dialog>
 		}
 		@case (GamePlayState.LOST) {
-			<div class="w-full h-full flex justify-center items-center absolute z-10">
-				<div
-					class="w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-error/50">
-					<div class="w-40 h-40 rounded-2xl">
-						<ng-lottie [options]="wrongAnswerAnimationOptions" />
-					</div>
-					<div class="text-center space-y-2">
-						<h2 class="text-error text-4xl font-bold">Nice Try!</h2>
-						<p class="text-base-100 text-lg">You ran out of turns. Better luck next time!</p>
-					</div>
-					<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
-				</div>
-			</div>
+			<app-game-result-dialog [result]="'LOST'">
+				<h2 class="text-error text-4xl font-bold">Nice Try!</h2>
+				<p class="text-base-100 text-lg">You ran out of turns. Better luck next time!</p>
+			</app-game-result-dialog>
 		}
 	}
 </div>
