@@ -35,6 +35,7 @@ export class HintsBox {
 		const availableHints = this.store.hints().filter((hint) => hint.available).length
 		const visibleCues = this.store.cues()
 		const shouldShowChoice = availableHints === 1 || visibleCues?.length === 3
+
 		if (shouldShowChoice) {
 			this.hintChoiceModalRef()?.nativeElement.showModal()
 		} else {

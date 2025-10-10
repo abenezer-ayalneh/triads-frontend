@@ -7,6 +7,7 @@ export interface GlobalState {
 	user: User | null
 	showHowToPlay: boolean
 	cues: string[] | null
+	isFetchingFinalTriadCues: boolean
 	finalTriadCues: string[] | null
 	selectedCues: string[]
 	turns: TurnAndHint[]
@@ -16,6 +17,5 @@ export interface GlobalState {
 	keywordLengthHint: number | null
 	solvedTriads: SolvedTriad[]
 	hintUsed: boolean
-	isFetchingFinalTriadCues: boolean
 	gameScore: number
 }

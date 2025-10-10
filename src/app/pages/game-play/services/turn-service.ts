@@ -10,7 +10,7 @@ export class TurnService {
 		return turns.some((turn) => turn.available)
 	}
 
-	numberOfTurnsLeft(turns: TurnAndHint[]) {
+	numberOfAvailableTurns(turns: TurnAndHint[]) {
 		return turns.filter((turn) => turn.available).length
 	}
 

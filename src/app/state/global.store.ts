@@ -93,6 +93,9 @@ export const GlobalStore = signalStore(
 		setIsFetchingFinalTriadCues: (isFetchingFinalTriadCues: boolean) => {
 			patchState(store, (state) => ({ ...state, isFetchingFinalTriadCues }))
 		},
+		setGameScore: (gameScore: number) => {
+			patchState(store, (state) => ({ ...state, gameScore }))
+		},
 	})),
 	withHooks({
 		onInit(store) {

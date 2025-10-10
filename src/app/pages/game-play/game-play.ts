@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
+import { Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
 import { gsap } from 'gsap'
 import { MotionPathPlugin } from 'gsap/MotionPathPlugin'
@@ -16,7 +16,6 @@ import { SolutionSection } from './components/solution-section/solution-section'
 import { TurnsBox } from './components/turns-box/turns-box'
 import { GamePlayState } from './enums/game-play.enum'
 import { GamePlayApi } from './services/game-play-api'
-import { GamePlayLogic } from './services/game-play-logic'
 
 @Component({
 	selector: 'app-game-play',
@@ -49,20 +48,6 @@ export class GamePlay implements OnInit {
 
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
-	ranOutOfTurns = computed(() => this.store.turns().filter((turn) => turn.available).length === 0)
-
-	gameWon = computed(() => {
-		return (
-			this.store.cues() !== null &&
-			this.store.cues()?.length === 0 &&
-			this.store.finalTriadCues() !== null &&
-			Array.isArray(this.store.finalTriadCues()) &&
-			this.store.finalTriadCues()?.length === 0
-		)
-	})
-
-	gameLost = computed(() => this.ranOutOfTurns() && !this.gameWon())
-
 	solutionBox = viewChild.required<ElementRef>('solutionBox')
 
 	boxAnimationItem: AnimationItem | null = null
@@ -84,19 +69,6 @@ export class GamePlay implements OnInit {
 	protected readonly GamePlayState = GamePlayState
 
 	private readonly gamePlayApi = inject(GamePlayApi)
-
-	private readonly gamePlayLogic = inject(GamePlayLogic)
-
-	constructor() {
-		// Check for game end conditions
-		effect(() => {
-			if (this.gameWon()) {
-				this.gamePlayLogic.handleGameWon()
-			} else if (this.gameLost()) {
-				this.store.setGamePlayState(GamePlayState.LOST)
-			}
-		})
-	}
 
 	ngOnInit() {
 		this.initializeGame()

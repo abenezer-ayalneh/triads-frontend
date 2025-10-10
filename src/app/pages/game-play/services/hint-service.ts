@@ -24,7 +24,7 @@ export class HintService {
 			throw new Error('No available hints to use')
 		}
 
-		const numberOfTurnsLeft = this.turnService.numberOfTurnsLeft(turns)
+		const numberOfTurnsLeft = this.turnService.numberOfAvailableTurns(turns)
 		if (numberOfTurnsLeft > 1) {
 			turns = this.turnService.useTurn(turns)
 		}
@@ -41,5 +41,9 @@ export class HintService {
 		}
 
 		return this.httpClient.get<{ hint: string[] | null; with?: string; withValue?: string }>('triads/hint', { params })
+	}
+
+	numberOfAvailableHints(hints: TurnAndHint[]) {
+		return hints.filter((hint) => hint.available).length
 	}
 }
