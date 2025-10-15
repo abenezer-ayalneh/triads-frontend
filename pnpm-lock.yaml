@@ -43,6 +43,12 @@ importers:
             '@tailwindcss/postcss':
                 specifier: ^4.1.11
                 version: 4.1.11
+            ag-charts-angular:
+                specifier: ^12.2.0
+                version: 12.2.0(@angular/common@20.1.6(@angular/core@20.1.6(@angular/compiler@20.1.6)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.6(@angular/compiler@20.1.6)(rxjs@7.8.2)(zone.js@0.15.1))
+            ag-charts-community:
+                specifier: ^12.2.0
+                version: 12.2.0
             gsap:
                 specifier: ^3.13.0
                 version: 3.13.0
@@ -2357,6 +2363,24 @@ packages:
     adjust-sourcemap-loader@4.0.0:
         resolution: { integrity: sha512-OXwN5b9pCUXNQHJpwwD2qP40byEmSgzj8B4ydSN0uMNYWiFmJ6x6KwUllMmfk8Rwu/HJDFR7U8ubsWBoN0Xp0A== }
         engines: { node: '>=8.9' }
+
+    ag-charts-angular@12.2.0:
+        resolution: { integrity: sha512-q18DmHsUGalYI4l6CdxWfWoIxe0lXD7p9Qd/tw7I3TxJmBKM8/S5UNV7X07fCpeuhpkQWRcd4p0ks6mMl82TkQ== }
+        peerDependencies:
+            '@angular/common': '>= 17.0.0'
+            '@angular/core': '>= 17.0.0'
+
+    ag-charts-community@12.2.0:
+        resolution: { integrity: sha512-j5IYDtePqOde5LdnmpcKGSkgqhWRCke4W3uJvIFRFDQrFmI+hrnIRFgoea6+QBmtsKcho2vv5N8FqHOwN/udOw== }
+
+    ag-charts-core@12.2.0:
+        resolution: { integrity: sha512-3hTpW9MGJCyvonfHHOrIeN3VPW7Crses9Os2W/TFJzRqFD0O4Zf0lzIYTQFfPCQRhCLM8Ch211XvoCkX/Goo5g== }
+
+    ag-charts-locale@12.2.0:
+        resolution: { integrity: sha512-xwMTzoNi/SAV6EwApRuBXOc3K+Thi/ijsKIkIhaGPmc3VPkCVCWW/TcAontiZ3dXUgxsL3jXBNyarH7f+XzWkQ== }
+
+    ag-charts-types@12.2.0:
+        resolution: { integrity: sha512-d2qQrQirt9wP36YW5HPuOvXsiajyiFnr1CTsoCbs02bavPDz7Lk2jHp64+waM4YKgXb3GN7gafbBI9Qgk33BmQ== }
 
     agent-base@7.1.4:
         resolution: { integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ== }
@@ -8233,6 +8257,27 @@ snapshots:
         dependencies:
             loader-utils: 2.0.4
             regex-parser: 2.3.1
+
+    ag-charts-angular@12.2.0(@angular/common@20.1.6(@angular/core@20.1.6(@angular/compiler@20.1.6)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2))(@angular/core@20.1.6(@angular/compiler@20.1.6)(rxjs@7.8.2)(zone.js@0.15.1)):
+        dependencies:
+            '@angular/common': 20.1.6(@angular/core@20.1.6(@angular/compiler@20.1.6)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)
+            '@angular/core': 20.1.6(@angular/compiler@20.1.6)(rxjs@7.8.2)(zone.js@0.15.1)
+            ag-charts-community: 12.2.0
+            tslib: 2.8.1
+
+    ag-charts-community@12.2.0:
+        dependencies:
+            ag-charts-core: 12.2.0
+            ag-charts-locale: 12.2.0
+            ag-charts-types: 12.2.0
+
+    ag-charts-core@12.2.0:
+        dependencies:
+            ag-charts-types: 12.2.0
+
+    ag-charts-locale@12.2.0: {}
+
+    ag-charts-types@12.2.0: {}
 
     agent-base@7.1.4: {}
 

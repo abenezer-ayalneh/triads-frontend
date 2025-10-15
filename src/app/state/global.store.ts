@@ -42,12 +42,6 @@ export const GlobalStore = signalStore(
 		setUser: (user: User | null) => {
 			patchState(store, (state) => ({ ...state, user }))
 		},
-		setUserScore: (score: number) => {
-			const user = store.user()
-			if (user) {
-				patchState(store, (state) => ({ ...state, user: { ...user, score } }))
-			}
-		},
 		setShowHowToPlay: (value: boolean) => {
 			patchState(store, (state) => ({ ...state, showHowToPlay: value }))
 		},

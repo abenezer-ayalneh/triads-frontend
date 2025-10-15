@@ -27,6 +27,8 @@
 		"@angular/router": "^20.1.6",
 		"@ngrx/signals": "^20.0.0",
 		"@tailwindcss/postcss": "^4.1.11",
+		"ag-charts-angular": "^12.2.0",
+		"ag-charts-community": "^12.2.0",
 		"gsap": "^3.13.0",
 		"lottie-web": "^5.13.0",
 		"matter-js": "^0.20.0",

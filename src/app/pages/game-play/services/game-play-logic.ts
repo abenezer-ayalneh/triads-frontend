@@ -47,11 +47,13 @@ export class GamePlayLogic {
 		const user = this.store.user()
 		this.store.setGameScore(score)
 
-		if (user) {
-			const newScore = user.score + score
+		if (user && user.scores) {
 			this.store.setGamePlayState(GamePlayState.WON)
-			this.store.setUserScore(newScore)
-			this.userService.setUser({ ...user, score: newScore })
+
+			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
+			const newUser = { ...user, scores: newScores, firstGameDate: user.firstGameDate ?? new Date().toISOString() }
+			this.store.setUser(newUser)
+			this.userService.setUser(newUser)
 		}
 	}
 

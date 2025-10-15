@@ -11,6 +11,10 @@ export class UserService {
 		localStorage.setItem('user', JSON.stringify(user))
 	}
 
+	clearUserData() {
+		localStorage.removeItem('user')
+	}
+
 	/**
 	 * Get the user's stored information.
 	 *
@@ -19,7 +23,7 @@ export class UserService {
 	getUser(): User | null {
 		const parsedUser = JSON.parse(localStorage.getItem('user') ?? '{}') as User
 
-		if (parsedUser && parsedUser.username && parsedUser.score !== null && parsedUser.score !== undefined) {
+		if (parsedUser && parsedUser.username && parsedUser.scores !== undefined && parsedUser.firstGameDate !== undefined) {
 			return parsedUser
 		}
 		return null
