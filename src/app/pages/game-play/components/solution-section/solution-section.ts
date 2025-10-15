@@ -157,13 +157,18 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 						this.store.updateTriadStep('INITIAL')
 					}
 				} else {
-					const availableHints = this.store.hints().filter((hint) => hint.available).length
-					if (availableHints === 0) {
-						this.store.setGamePlayState(GamePlayState.PLAYING)
-						this.store.setSelectedCues([])
+					// If the game was in its initial stage and the player ran out of turns
+					if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+						this.gamePlayLogic.handleGameLost()
 					} else {
-						this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-						this.shouldFocusAnswerField = true
+						const availableHints = this.store.hints().filter((hint) => hint.available).length
+						if (availableHints === 0) {
+							this.store.setGamePlayState(GamePlayState.PLAYING)
+							this.store.setSelectedCues([])
+						} else {
+							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+							this.shouldFocusAnswerField = true
+						}
 					}
 				}
 			}

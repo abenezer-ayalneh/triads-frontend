@@ -57,9 +57,29 @@ export class GamePlayLogic {
 		}
 	}
 
+	handleGameLost() {
+		// Score updates
+		const score = this.calculateScore()
+
+		// User state updates
+		const user = this.store.user()
+		this.store.setGameScore(score)
+
+		if (user && user.scores) {
+			this.store.setGamePlayState(GamePlayState.LOST)
+
+			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
+			const newUser = { ...user, scores: newScores, firstGameDate: user.firstGameDate ?? new Date().toISOString() }
+			this.store.setUser(newUser)
+			this.userService.setUser(newUser)
+		}
+	}
+
 	calculateScore() {
 		const availableTurns = this.turnService.numberOfAvailableTurns(this.store.turns())
 		const availableHints = this.hintService.numberOfAvailableHints(this.store.hints())
+		const availableCues = this.store.cues()
+		const finalTriadCues = this.store.finalTriadCues()
 
 		// A perfect score! Got all 4 Triads with no misses, no hints => 15
 		if (availableTurns === 3 && availableHints === 2) {
@@ -72,6 +92,18 @@ export class GamePlayLogic {
 		// Success (all 4), but with 2 misses and/or hints => 10
 		else if ((availableTurns === 1 && availableHints === 2) || (availableTurns === 1 && availableHints === 0)) {
 			return 10
+		}
+		// Got 3 Triads, but just couldn’t solve the bonus => 8
+		else if (availableTurns === 0 && availableCues && availableCues.length === 0 && finalTriadCues && finalTriadCues.length === 3) {
+			return 8
+		}
+		// Got 2 Triad but couldn’t get the other 3rd, no bonus round => 6
+		else if (availableTurns === 0 && availableCues && availableCues.length === 3) {
+			return 6
+		}
+		// Got 1 Triad before using up turns => 3
+		else if (availableTurns === 0 && availableCues && availableCues.length === 6) {
+			return 3
 		}
 
 		return 0

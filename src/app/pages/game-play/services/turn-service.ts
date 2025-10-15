@@ -6,10 +6,6 @@ import { TurnAndHint } from '../interfaces/turn-and-hint.interface'
 	providedIn: 'root',
 })
 export class TurnService {
-	hasRemainingTurns(turns: TurnAndHint[]) {
-		return turns.some((turn) => turn.available)
-	}
-
 	numberOfAvailableTurns(turns: TurnAndHint[]) {
 		return turns.filter((turn) => turn.available).length
 	}

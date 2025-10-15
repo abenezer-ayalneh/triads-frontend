@@ -69,6 +69,9 @@
 			<app-game-result-dialog [result]="'LOST'">
 				<h2 class="text-error text-4xl font-bold">Nice Try!</h2>
 				<p class="text-base-100 text-lg">You ran out of turns. Better luck next time!</p>
+				<div class="bg-error/20 rounded-lg px-4 py-2 border border-error/30">
+					<p class="text-error font-semibold text-xl">Final Score: {{ store.gameScore() }}</p>
+				</div>
 			</app-game-result-dialog>
 		}
 	}
