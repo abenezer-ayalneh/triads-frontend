@@ -41,7 +41,11 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
 
+	private readonly bubblePopAudio = new Audio()
+
 	constructor() {
+		this.bubblePopAudio.src = 'sounds/three-pops.mp3'
+
 		// Watch for game state changes to determine when to focus the answer field
 		effect(() => {
 			const gameState = this.store.gamePlayState()
@@ -111,9 +115,23 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 
 	private handleAnswerResponse(response: boolean | SolvedTriad) {
 		if (response && typeof response !== 'boolean') {
-			this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
-			this.store.selectedCues().forEach((cue) => this.whenMovingCueToSolutionBox.emit(cue))
+			this.bubblePopAudio.playbackRate = 0.7
+			this.bubblePopAudio.play()
 			this.store.addSolvedTriad(response)
+
+			for (let i = 0; i < response.cues.length; i++) {
+				setTimeout(
+					() => {
+						this.store.addCueToExplode(response.cues[i])
+					},
+					100 * (i + 1),
+				)
+			}
+
+			setTimeout(() => {
+				this.store.selectedCues().forEach((cue) => this.whenMovingCueToSolutionBox.emit(cue))
+				this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
+			}, 1000)
 		} else {
 			this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
 			if (!this.store.hintUsed()) {
@@ -174,7 +192,7 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 			}
 
 			this.store.setHintUsage(false)
-		}, 3000)
+		}, 4000)
 	}
 
 	private useTurn() {

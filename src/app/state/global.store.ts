@@ -30,6 +30,7 @@ const initialState: GlobalState = {
 	hintUsed: false,
 	isFetchingFinalTriadCues: false,
 	gameScore: 0,
+	cuesToExplode: [],
 }
 
 export const GlobalStore = signalStore(
@@ -89,6 +90,9 @@ export const GlobalStore = signalStore(
 		},
 		setGameScore: (gameScore: number) => {
 			patchState(store, (state) => ({ ...state, gameScore }))
+		},
+		addCueToExplode: (cueToExplode: string) => {
+			patchState(store, (state) => ({ ...state, cuesToExplode: [...state.cuesToExplode, cueToExplode] }))
 		},
 	})),
 	withHooks({

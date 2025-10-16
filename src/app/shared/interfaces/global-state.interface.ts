@@ -18,4 +18,5 @@ export interface GlobalState {
 	solvedTriads: SolvedTriad[]
 	hintUsed: boolean
 	gameScore: number
+	cuesToExplode: string[]
 }

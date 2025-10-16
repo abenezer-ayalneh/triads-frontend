@@ -1,4 +1,4 @@
-import { Component, computed, effect, ElementRef, inject, input } from '@angular/core'
+import { Component, computed, ElementRef, inject, input } from '@angular/core'
 import { AnimationOptions, LottieDirective } from 'ngx-lottie'
 
 import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
@@ -19,28 +19,15 @@ export class Bubble {
 
 	selected = computed<boolean>(() => this.store.selectedCues().some((cue) => cue === this.cue()))
 
-	pop = computed<boolean>(() => this.selected() && this.store.gamePlayState() === GamePlayState.CORRECT_ANSWER)
+	pop = computed<boolean>(() => this.store.cuesToExplode().includes(this.cue()))
 
 	// Expose host element so parent can position it
 	element = inject<ElementRef<HTMLElement>>(ElementRef)
 
 	bubblePopAnimationOptions: AnimationOptions = {
-		path: 'lotties/pop-lottie.json',
+		path: 'lotties/bubble-explosion.json',
 		autoplay: true,
 		loop: false,
-	}
-
-	popAudio = new Audio()
-
-	constructor() {
-		this.popAudio.src = 'sounds/pop.mp3'
-
-		effect(() => {
-			const isPopping = this.pop()
-			if (isPopping) {
-				this.popAudio.play()
-			}
-		})
 	}
 
 	whenClicked() {

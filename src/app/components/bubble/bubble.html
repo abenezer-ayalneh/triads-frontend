@@ -7,8 +7,7 @@
 	(click)="whenClicked()">
 	@if (pop()) {
 		<div lottie [options]="bubblePopAnimationOptions" class="w-full h-full aspect-square circle contain-content relative cursor-pointer"></div>
-	}
-	@if (selected() && !pop()) {
+	} @else if (selected()) {
 		<div class="w-full h-full aspect-square circle selected"></div>
 	}
 	<p
