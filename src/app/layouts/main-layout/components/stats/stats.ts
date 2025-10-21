@@ -17,16 +17,6 @@ export class Stats {
 
 	showDataClearingConfirmation = signal<boolean>(false)
 
-	protected readonly store = inject(GlobalStore)
-
-	totalScore = computed(() => {
-		return Object.values(this.store.user()?.scores ?? {}).reduce((acc, curr) => acc + curr, 0)
-	})
-
-	chartData = computed(() => {
-		return this.generateChartData(this.store.user()?.scores ?? ({} as Record<number, number>))
-	})
-
 	chartOptions = computed<AgChartOptions>(() => ({
 		title: {
 			enabled: false,
@@ -71,6 +61,16 @@ export class Stats {
 			enabled: false,
 		},
 	}))
+
+	protected readonly store = inject(GlobalStore)
+
+	totalScore = computed(() => {
+		return Object.values(this.store.user()?.scores ?? {}).reduce((acc, curr) => acc + curr, 0)
+	})
+
+	chartData = computed(() => {
+		return this.generateChartData(this.store.user()?.scores ?? ({} as Record<number, number>))
+	})
 
 	private readonly userService = inject(UserService)
 
@@ -117,7 +117,7 @@ export class Stats {
 		return Object.entries(scores).map(([score, frequency]) => ({
 			score: generateScoreText(Number(score)),
 			frequency,
-			percentage: (frequency / totalPlayedGames) * 100,
+			percentage: Math.round((frequency / totalPlayedGames) * 100),
 		}))
 	}
 }
