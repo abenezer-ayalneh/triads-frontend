@@ -39,7 +39,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private bubbleCreationInterval: ReturnType<typeof setInterval> | undefined
 
-	private bubbleCreationDelay = 500 // milliseconds between each bubble creation (increased for more visible sequence)
+	private bubbleCreationDelay = 275 // milliseconds between each bubble creation (reduced for faster succession)
 
 	private gravitationalCenter: { x: number; y: number } = { x: 0, y: 0 }
 
@@ -128,31 +128,29 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				// Check if this is a final triad bubble (by checking if it has the finalTriadCuesBubble attribute)
 				const isFinalTriadBubble = element.hasAttribute('finalTriadCuesBubble')
 
-				// Apply gentle upward force during initial rising phase for visible rising
+				// Apply forces during initial rising phase to guide bubbles to center
 				if (this.isInitialSpawn && y > 0 && !isFinalTriadBubble) {
-					// Calculate how far the bubble has risen from the bottom
-					const distanceFromBottom = height - y
-					const maxRisingDistance = height * 0.7 // Consider bubble "risen" when it reaches 70% of container height
-
-					// Apply stronger force at the beginning, gradually decreasing as bubble rises
-					const progressFactor = Math.max(0, 1 - distanceFromBottom / maxRisingDistance)
-					const upwardForce = 0.001 * (progressFactor * 0.8 + 0.2) // Gentle continuous upward force that decreases as bubble rises
-					Matter.Body.applyForce(body, { x, y }, { x: 0, y: -upwardForce })
-
-					// Apply a small force toward the center during rising, stronger as bubble rises higher
+					// Calculate distance from center
 					const dx = this.gravitationalCenter.x - x
 					const dy = this.gravitationalCenter.y - y
 					const distance = Math.sqrt(dx * dx + dy * dy)
 
 					if (distance > 0) {
-						// Centering force increases as bubble rises higher
-						const centeringFactor = Math.min(1, distanceFromBottom / (height * 0.3))
-						const centeringForce = 0.0003 * centeringFactor
+						// Strong centering force to pull bubbles toward center immediately
+						const centeringForce = 0.002 // Much stronger centering force
 						const forceX = (dx / distance) * centeringForce
-						// Minimal vertical centering until bubble is higher up
-						const verticalFactor = Math.min(1, distanceFromBottom / (height * 0.5))
-						const forceY = (dy / distance) * centeringForce * verticalFactor
+						const forceY = (dy / distance) * centeringForce
 						Matter.Body.applyForce(body, { x, y }, { x: forceX, y: forceY })
+					}
+
+					// Apply gentle upward force only if bubble is still near bottom
+					const distanceFromBottom = height - y
+					const bottomThreshold = height * 0.3 // Only apply upward force in bottom 30% of container
+
+					if (distanceFromBottom < bottomThreshold) {
+						// Gentle upward force only when near bottom
+						const upwardForce = 0.0008 // Reduced upward force
+						Matter.Body.applyForce(body, { x, y }, { x: 0, y: -upwardForce })
 					}
 				}
 
@@ -241,7 +239,9 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	 */
 	private startSequentialBubbleCreation(bubbleComponents: readonly Bubble[]) {
 		// Clear any existing queue and interval
-		this.bubbleCreationQueue = [...bubbleComponents]
+		// Shuffle the bubble components for random appearance order
+		const shuffledBubbles = [...bubbleComponents].sort(() => Math.random() - 0.5)
+		this.bubbleCreationQueue = shuffledBubbles
 		clearInterval(this.bubbleCreationInterval)
 		this.entities = []
 
@@ -275,7 +275,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				// All bubbles created, mark initial spawn as complete after a longer delay
 				// Calculate total rising time based on number of bubbles and creation delay
 				const totalBubbles = this.bubbleComponents().length
-				const risingTime = totalBubbles * this.bubbleCreationDelay + 5000 // Creation time + extra time for rising
+				const risingTime = totalBubbles * this.bubbleCreationDelay + 3500 // Creation time + extra time for rising (reduced for faster speed)
 
 				setTimeout(() => {
 					this.isInitialSpawn = false
@@ -320,14 +320,24 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			inertia: Infinity, // Prevent rotation
 		})
 
-		// Initial upward velocity for rising effect with horizontal drift - slower for more visible rising
-		const upwardSpeed = 1.5 + Math.random() * 1 // 1.5-2.5 pixels per frame upward (slower, more visible rise)
-		const horizontalDrift = (Math.random() - 0.5) * 1 // Minimal horizontal drift
-		Matter.Body.setVelocity(body, { x: horizontalDrift, y: -upwardSpeed })
+		// Initial velocity toward center with slight upward component
+		const centerX = width / 2
+		const centerY = height / 2
+		const dx = centerX - startX
+		const dy = centerY - startY
+		const distance = Math.sqrt(dx * dx + dy * dy)
 
-		// Apply a smaller initial impulse for a more gradual rise
-		const initialImpulse = 0.005
-		Matter.Body.applyForce(body, body.position, { x: 0, y: -initialImpulse })
+		// Calculate velocity toward center with some upward bias
+		const speed = 2.0 + Math.random() * 1.0 // 2.0-3.0 pixels per frame
+		const velocityX = (dx / distance) * speed * 0.8 // 80% toward center horizontally
+		const velocityY = (dy / distance) * speed * 0.6 - 0.5 // 60% toward center vertically, with slight upward bias
+		Matter.Body.setVelocity(body, { x: velocityX, y: velocityY })
+
+		// Apply initial impulse toward center
+		const initialImpulse = 0.0075 // 1.5x stronger impulse
+		const impulseX = (dx / distance) * initialImpulse * 0.8 // 80% toward center horizontally
+		const impulseY = (dy / distance) * initialImpulse * 0.6 - initialImpulse * 0.2 // 60% toward center, 20% upward
+		Matter.Body.applyForce(body, body.position, { x: impulseX, y: impulseY })
 
 		// Shimmy parameters per bubble
 		const shimmyFreqX = 0.2 + Math.random() * 0.6 // Hz
