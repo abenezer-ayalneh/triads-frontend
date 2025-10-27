@@ -365,6 +365,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Animate the bubble appearance
 		element.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out'
 		setTimeout(() => {
+			element.style.visibility = 'visible' // Make visible first
 			element.style.opacity = '1'
 			element.style.transform = 'scale(1)'
 		}, 50) // Small delay to ensure transition applies
@@ -446,8 +447,86 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	private animateFinalTriadCues() {
-		// Start sequential creation of final triad bubbles
+		// First animate the 3 solved bubbles floating up to center
+		this.animateSolvedBubblesFloatUp()
+	}
+
+	private async animateSolvedBubblesFloatUp() {
+		// Find all solved-triad components
+		const solvedTriads = Array.from(document.querySelectorAll('[id^="solved-"]'))
+
+		if (solvedTriads.length === 0) {
+			// Fallback to direct creation if no solved triads found
+			this.startFinalTriadSequentialCreation(this.finalTriadCuesBubbleComponents())
+			return
+		}
+
+		// Immediately hide all final triad bubbles to prevent glitch
+		this.hideFinalTriadBubblesImmediately()
+
+		// Get container dimensions for center calculation
+		const container = this.container().nativeElement
+		const containerRect = container.getBoundingClientRect()
+		// const centerX = containerRect.width / 2
+		const centerY = containerRect.height / 2
+
+		// Animate each solved bubble to center, then fade out
+		const animations = solvedTriads.map((solvedTriad, index) => {
+			const element = solvedTriad as HTMLElement
+			const rect = element.getBoundingClientRect()
+			const containerRect = this.container().nativeElement.getBoundingClientRect()
+
+			// Calculate relative position within container
+			const currentX = rect.left - containerRect.left
+			const currentY = rect.top - containerRect.top
+
+			// Calculate target position (center with slight spread to match final triad positioning)
+			const bubbleCount = this.finalTriadCuesBubbleComponents().length
+			const bubbleSpacing = containerRect.width / (bubbleCount + 1)
+			const targetX = (index + 1) * bubbleSpacing - currentX
+			const targetY = centerY - currentY
+
+			return new Promise<void>((resolve) => {
+				// Use GSAP for smooth animation
+				import('gsap').then(({ gsap }) => {
+					gsap.to(element, {
+						duration: 1.2, // Slightly faster to align with existing timing
+						x: targetX,
+						y: targetY,
+						scale: 1.0, // Scale to normal size (not oversized)
+						opacity: 0, // Fade out the keyword
+						ease: 'power2.out',
+						onComplete: () => {
+							// Hide the solved triad after animation
+							element.style.display = 'none'
+							resolve()
+						},
+					})
+				})
+			})
+		})
+
+		// Wait for all float-up animations to complete
+		await Promise.all(animations)
+
+		// Start the final triad bubble creation with proper timing
+		// The existing system uses bubbleCreationDelay (275ms) between bubbles
+		// We'll start immediately after our animation completes
 		this.startFinalTriadSequentialCreation(this.finalTriadCuesBubbleComponents())
+	}
+
+	private hideFinalTriadBubblesImmediately() {
+		// Immediately hide all final triad bubbles to prevent visual glitch
+		const finalTriadBubbles = this.finalTriadCuesBubbleComponents()
+		finalTriadBubbles.forEach((bubbleComponent) => {
+			const element = bubbleComponent.element.nativeElement
+			element.style.position = 'absolute'
+			element.style.zIndex = '2'
+			element.style.opacity = '0'
+			element.style.transform = 'scale(0)'
+			element.style.visibility = 'hidden' // Additional hiding
+			element.setAttribute('finalTriadCuesBubble', 'true')
+		})
 	}
 
 	/**
@@ -458,13 +537,14 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Create a queue for the final triad bubbles
 		const finalTriadQueue = [...bubbleComponents]
 
-		// Initially hide all final triad bubbles
+		// Ensure all final triad bubbles are properly hidden (they should already be hidden from hideFinalTriadBubblesImmediately)
 		bubbleComponents.forEach((bubbleComponent) => {
 			const element = bubbleComponent.element.nativeElement
 			element.style.position = 'absolute'
 			element.style.zIndex = '2' // Higher z-index than regular bubbles
 			element.style.opacity = '0' // Start invisible
 			element.style.transform = 'scale(0)' // Start small
+			element.style.visibility = 'hidden' // Ensure hidden
 
 			// Add attribute to identify final triad bubbles for physics handling
 			element.setAttribute('finalTriadCuesBubble', 'true')
@@ -555,6 +635,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Animate the bubble appearance
 		element.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out'
 		setTimeout(() => {
+			element.style.visibility = 'visible' // Make visible first
 			element.style.opacity = '1'
 			element.style.transform = 'scale(1)'
 		}, 50) // Small delay to ensure transition applies

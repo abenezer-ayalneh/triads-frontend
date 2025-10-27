@@ -17,7 +17,7 @@
 
 	<!--Solution Input Section-->
 	<div class="w-full h-20 md:h-24 lg:h-28">
-		<app-solution-section (whenMovingCueToSolutionBox)="moveToSolutionBox($event)" />
+		<app-solution-section (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
 	</div>
 
 	<!--Turn & Hint Section-->
@@ -25,15 +25,12 @@
 		<!--Turn Section-->
 		<app-turns-box />
 
-		<!--Solution Box-->
-		<div
-			#solutionBox
-			id="solutionBox"
-			lottie
-			[options]="boxAnimationOptions"
-			(animationCreated)="animationCreated($event)"
-			(click)="onBoxClick()"
-			class="h-full cursor-pointer"></div>
+		<!--Solved Triads Section-->
+		<div #solvedArea class="h-full flex justify-center items-center gap-2">
+			@for (solvedTriad of store.solvedTriads(); track solvedTriad.id) {
+				<app-solved-triad id="solved-{{ solvedTriad.id }}" [solvedTriad]="solvedTriad" />
+			}
+		</div>
 
 		<!--Hint Section-->
 		<app-hints-box />
@@ -42,7 +39,7 @@
 	<!--Popup Section-->
 	@switch (store.gamePlayState()) {
 		@case (GamePlayState.CORRECT_ANSWER) {
-			<app-answer-dialog [type]="'CORRECT'"> Correct Answer! </app-answer-dialog>
+			<app-answer-dialog [type]="'CORRECT'"> Correct Answer!</app-answer-dialog>
 		}
 		@case (GamePlayState.WRONG_ANSWER) {
 			<app-answer-dialog [type]="'WRONG'">

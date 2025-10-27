@@ -18,7 +18,7 @@ import { InputSet } from '../input-set/input-set'
 	styleUrl: './solution-section.scss',
 })
 export class SolutionSection implements OnInit, AfterViewChecked {
-	whenMovingCueToSolutionBox = output<string>()
+	whenMovingCueToSolutionBox = output<SolvedTriad>()
 
 	readonly store = inject(GlobalStore)
 
@@ -129,7 +129,7 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 			}
 
 			setTimeout(() => {
-				this.store.selectedCues().forEach((cue) => this.whenMovingCueToSolutionBox.emit(cue))
+				this.whenMovingCueToSolutionBox.emit(response)
 				this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
 			}, 1000)
 		} else {
