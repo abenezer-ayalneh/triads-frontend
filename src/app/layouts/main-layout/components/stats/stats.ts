@@ -17,6 +17,16 @@ export class Stats {
 
 	showDataClearingConfirmation = signal<boolean>(false)
 
+	protected readonly store = inject(GlobalStore)
+
+	totalScore = computed(() => {
+		return Object.values(this.store.user()?.scores ?? {}).reduce((acc, curr) => acc + curr, 0)
+	})
+
+	chartData = computed(() => {
+		return this.generateChartData(this.store.user()?.scores ?? ({} as Record<number, number>))
+	})
+
 	chartOptions = computed<AgChartOptions>(() => ({
 		title: {
 			enabled: false,
@@ -62,16 +72,6 @@ export class Stats {
 		},
 	}))
 
-	protected readonly store = inject(GlobalStore)
-
-	totalScore = computed(() => {
-		return Object.values(this.store.user()?.scores ?? {}).reduce((acc, curr) => acc + curr, 0)
-	})
-
-	chartData = computed(() => {
-		return this.generateChartData(this.store.user()?.scores ?? ({} as Record<number, number>))
-	})
-
 	private readonly userService = inject(UserService)
 
 	resetData() {
@@ -102,7 +102,7 @@ export class Stats {
 			} else if (score === 12) {
 				return 'Prideful 12'
 			} else if (score === 10) {
-				return 'Proper 10'
+				return 'Proficient 10'
 			} else if (score === 8) {
 				return 'Passable 8'
 			} else if (score === 6) {
@@ -114,10 +114,12 @@ export class Stats {
 			return 'Painful 0'
 		}
 
-		return Object.entries(scores).map(([score, frequency]) => ({
-			score: generateScoreText(Number(score)),
-			frequency,
-			percentage: Math.round((frequency / totalPlayedGames) * 100),
-		}))
+		return Object.entries(scores)
+			.sort(([a], [b]) => Number(b) - Number(a))
+			.map(([score, frequency]) => ({
+				score: generateScoreText(Number(score)),
+				frequency,
+				percentage: Math.round((frequency / totalPlayedGames) * 100),
+			}))
 	}
 }
