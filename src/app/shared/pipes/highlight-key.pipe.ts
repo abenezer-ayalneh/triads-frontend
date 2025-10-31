@@ -13,6 +13,6 @@ export class HighlightKeyPipe implements PipeTransform {
 		const colorClassAttribute = extraClasses ? `${extraClasses}` : 'text-primary-content'
 
 		const regex = new RegExp(`(${keyword})`, 'i') // Case-insensitive match
-		return phrase.replace(regex, `<span class="font-semibold ${colorClassAttribute}">$1</span>`)
+		return phrase.replace(regex, `<span class="font-bold ${colorClassAttribute}">$1</span>`)
 	}
 }

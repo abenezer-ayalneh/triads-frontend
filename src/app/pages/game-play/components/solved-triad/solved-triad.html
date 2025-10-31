@@ -1,20 +1,12 @@
-<div
-	class="w-20 h-20 md:w-24 md:h-24 xl:w-28 xl:h-28 flex justify-center items-center p-0 m-0 aspect-square circle contain-content relative cursor-pointer animated-color bubble opacity-65 hover:opacity-100 transition-opacity duration-300"
-	(mouseenter)="onMouseEnter()"
-	(mouseleave)="onMouseLeave()"
-	(click)="onClick()">
-	<p class="text-primary-content text-xs md:text-sm xl:text-base text-center font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-		{{ solvedTriad().keyword }}
-	</p>
-
+<div class="relative">
 	<!-- Tooltip for full phrases -->
-	@if (showTooltip()) {
+	@if (isTooltipVisible()) {
 		<div
+			(appClickOutside)="hideTooltip()"
 			class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-base-100 text-base-content p-3 rounded-lg shadow-lg border border-base-300 z-50 min-w-max max-w-xs">
-			<div class="text-sm font-semibold mb-2">{{ solvedTriad().keyword }}</div>
 			<div class="text-xs space-y-1">
-				@for (phrase of showFullPhrases(); track phrase) {
-					<div class="text-base-content/80">{{ phrase }}</div>
+				@for (phrase of solvedTriad().fullPhrases; track phrase) {
+					<p [innerHTML]="phrase | highlightKey: solvedTriad().keyword : 'text-base-content/80'"></p>
 				}
 			</div>
 			<!-- Tooltip arrow -->
@@ -22,4 +14,12 @@
 				class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-base-100"></div>
 		</div>
 	}
+
+	<div
+		class="w-16 h-16 md:w-20 md:h-20 xl:w-24 xl:h-24 flex justify-center items-center p-0 m-0 aspect-square circle contain-content relative cursor-pointer bubble"
+		(click)="showTooltip()">
+		<p class="text-primary-content text-xs md:text-sm text-center font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+			{{ solvedTriad().keyword }}
+		</p>
+	</div>
 </div>
