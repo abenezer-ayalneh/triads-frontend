@@ -32,14 +32,12 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private resizeObserver?: ResizeObserver
 
-	private isInitialSpawn = true
-
 	// Properties for sequential bubble creation
 	private bubbleCreationQueue: Bubble[] = []
 
 	private bubbleCreationInterval: ReturnType<typeof setInterval> | undefined
 
-	private bubbleCreationDelay = 275 // milliseconds between each bubble creation (reduced for faster succession)
+	private bubbleCreationDelay = 1100 // milliseconds between each bubble creation (75% slower than before)
 
 	private gravitationalCenter: { x: number; y: number } = { x: 0, y: 0 }
 
@@ -71,7 +69,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Watch for changes in cues to trigger rearrangement
 		effect(() => {
 			const currentCues = this.cues()
-			if (currentCues && !this.isInitialSpawn) {
+			if (currentCues) {
 				// Check if any bubbles need to be hidden (removed from game)
 				this.checkForRemovedBubbles()
 			}
@@ -128,32 +126,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				// Check if this is a final triad bubble (by checking if it has the finalTriadCuesBubble attribute)
 				const isFinalTriadBubble = element.hasAttribute('finalTriadCuesBubble')
 
-				// Apply forces during initial rising phase to guide bubbles to center
-				if (this.isInitialSpawn && y > 0 && !isFinalTriadBubble) {
-					// Calculate distance from center
-					const dx = this.gravitationalCenter.x - x
-					const dy = this.gravitationalCenter.y - y
-					const distance = Math.sqrt(dx * dx + dy * dy)
-
-					if (distance > 0) {
-						// Strong centering force to pull bubbles toward center immediately
-						const centeringForce = 0.002 // Much stronger centering force
-						const forceX = (dx / distance) * centeringForce
-						const forceY = (dy / distance) * centeringForce
-						Matter.Body.applyForce(body, { x, y }, { x: forceX, y: forceY })
-					}
-
-					// Apply gentle upward force only if bubble is still near bottom
-					const distanceFromBottom = height - y
-					const bottomThreshold = height * 0.3 // Only apply upward force in bottom 30% of container
-
-					if (distanceFromBottom < bottomThreshold) {
-						// Gentle upward force only when near bottom
-						const upwardForce = 0.0008 // Reduced upward force
-						Matter.Body.applyForce(body, { x, y }, { x: 0, y: -upwardForce })
-					}
-				}
-
 				// Special handling for final triad bubbles - keep them contained
 				if (isFinalTriadBubble) {
 					// Check if bubble is getting too close to any wall and apply containment force
@@ -191,8 +163,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 						})
 					}
 				}
-				// Apply gravitational pull toward center after rising phase for normal bubbles
-				else if (!this.isInitialSpawn) {
+				// Apply gravitational pull toward center for normal bubbles
+				else {
 					const dx = this.gravitationalCenter.x - x
 					const dy = this.gravitationalCenter.y - y
 					const distance = Math.sqrt(dx * dx + dy * dy)
@@ -217,10 +189,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				}
 			})
 
-			// Add random movement to non-selected bubbles after rising phase
-			if (!this.isInitialSpawn) {
-				this.addRandomMovementToNonSelectedBubbles()
-			}
+			// Add random movement to non-selected bubbles
+			this.addRandomMovementToNonSelectedBubbles()
 
 			this.entities.forEach(({ element, body, halfWidth, halfHeight }) => {
 				const { x, y } = body.position
@@ -272,14 +242,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				this.createSingleBubble(bubbleComponent!, this.bubbleCreationQueue.length)
 			} else {
 				clearInterval(this.bubbleCreationInterval)
-				// All bubbles created, mark initial spawn as complete after a longer delay
-				// Calculate total rising time based on number of bubbles and creation delay
-				const totalBubbles = this.bubbleComponents().length
-				const risingTime = totalBubbles * this.bubbleCreationDelay + 3500 // Creation time + extra time for rising (reduced for faster speed)
-
-				setTimeout(() => {
-					this.isInitialSpawn = false
-				}, risingTime) // Dynamic delay to ensure all bubbles have time to rise to the center
 			}
 		}, this.bubbleCreationDelay)
 	}

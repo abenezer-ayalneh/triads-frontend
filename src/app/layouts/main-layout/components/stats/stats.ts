@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common'
+import { DecimalPipe } from '@angular/common'
 import { Component, computed, inject, output, signal } from '@angular/core'
 import { AgCharts } from 'ag-charts-angular'
 import { AgChartOptions } from 'ag-charts-community'
@@ -11,6 +12,7 @@ import { GlobalStore } from '../../../../state/global.store'
 	imports: [AgCharts, DatePipe],
 	templateUrl: './stats.html',
 	styleUrl: './stats.scss',
+	providers: [DecimalPipe],
 })
 export class Stats {
 	whenClosingStatsWindow = output()
@@ -74,6 +76,8 @@ export class Stats {
 
 	private readonly userService = inject(UserService)
 
+	private readonly decimalPipe = inject(DecimalPipe)
+
 	resetData() {
 		this.userService.clearUserData()
 		window.location.reload()
@@ -119,7 +123,7 @@ export class Stats {
 			.map(([score, frequency]) => ({
 				score: generateScoreText(Number(score)),
 				frequency,
-				percentage: Math.round((frequency / totalPlayedGames) * 100),
+				percentage: Number(this.decimalPipe.transform((frequency / totalPlayedGames) * 100, '1.0-1') ?? '0'),
 			}))
 	}
 }
