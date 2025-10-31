@@ -32,6 +32,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private resizeObserver?: ResizeObserver
 
+	private resizeDebounceTimer?: ReturnType<typeof setTimeout>
+
+	private windowResizeListener?: () => void
+
 	// Properties for sequential bubble creation
 	private bubbleCreationQueue: Bubble[] = []
 
@@ -40,6 +44,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	private bubbleCreationDelay = 1100 // milliseconds between each bubble creation (75% slower than before)
 
 	private gravitationalCenter: { x: number; y: number } = { x: 0, y: 0 }
+
+	private boundaryWalls: Matter.Body[] = []
 
 	constructor() {
 		this.engine = Matter.Engine.create({
@@ -91,6 +97,16 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		if (this.bubbleCreationInterval) {
 			clearInterval(this.bubbleCreationInterval)
 			this.bubbleCreationInterval = undefined
+		}
+
+		if (this.resizeDebounceTimer) {
+			clearTimeout(this.resizeDebounceTimer)
+			this.resizeDebounceTimer = undefined
+		}
+
+		if (this.windowResizeListener) {
+			window.removeEventListener('resize', this.windowResizeListener)
+			this.windowResizeListener = undefined
 		}
 
 		if (this.resizeObserver) {
@@ -334,29 +350,21 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	private createOrUpdateBoundaries() {
-		let ceiling: Matter.Body | null = null
-		let ground: Matter.Body | null = null
-		let leftWall: Matter.Body | null = null
-		let rightWall: Matter.Body | null = null
-
 		const container = this.container().nativeElement
 		const width = container.offsetWidth
 		const height = container.offsetHeight
 		const wallThickness = 50
 
-		// Remove previous boundaries if they exist
 		const world = this.engine.world
-		const toRemove: Matter.Body[] = []
-		if (ceiling) toRemove.push(ceiling)
-		if (ground) toRemove.push(ground)
-		if (leftWall) toRemove.push(leftWall)
-		if (rightWall) toRemove.push(rightWall)
-		if (toRemove.length) {
-			Matter.Composite.remove(world, toRemove)
+
+		// Remove previous boundaries if they exist
+		if (this.boundaryWalls.length > 0) {
+			Matter.Composite.remove(world, this.boundaryWalls)
+			this.boundaryWalls = []
 		}
 
 		// Create boundaries aligned to the current container size
-		ceiling = Matter.Bodies.rectangle(width / 2, -wallThickness / 2, width, wallThickness, {
+		const ceiling = Matter.Bodies.rectangle(width / 2, -wallThickness / 2, width, wallThickness, {
 			isStatic: true,
 			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
@@ -364,7 +372,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			label: 'Ceiling',
 		})
 		// Ground wall positioned at the bottom of the container to prevent overflow
-		ground = Matter.Bodies.rectangle(width / 2, height + wallThickness / 2, width, wallThickness, {
+		const ground = Matter.Bodies.rectangle(width / 2, height + wallThickness / 2, width, wallThickness, {
 			isStatic: true,
 			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
@@ -373,14 +381,14 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		})
 
 		// Walls created with appropriate dimensions
-		leftWall = Matter.Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height, {
+		const leftWall = Matter.Bodies.rectangle(-wallThickness / 2, height / 2, wallThickness, height, {
 			isStatic: true,
 			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
 			frictionStatic: 0.05, // Same static friction as bubbles
 			label: 'LeftWall',
 		})
-		rightWall = Matter.Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height, {
+		const rightWall = Matter.Bodies.rectangle(width + wallThickness / 2, height / 2, wallThickness, height, {
 			isStatic: true,
 			restitution: 0.294, // Same bounce as bubbles (reduced by 30%)
 			friction: 0.05, // Same friction as bubbles
@@ -388,12 +396,15 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			label: 'RightWall',
 		})
 
-		Matter.Composite.add(world, [ceiling, rightWall, ground, leftWall])
+		this.boundaryWalls = [ceiling, rightWall, ground, leftWall]
+		Matter.Composite.add(world, this.boundaryWalls)
 	}
 
 	private setupResizeHandling() {
 		const container = this.container().nativeElement
-		this.resizeObserver = new ResizeObserver(() => {
+
+		// Handler function that updates everything on resize
+		const handleResize = () => {
 			// Keep the render canvas in sync with container size
 			if (this.render) {
 				const width = container.offsetWidth
@@ -403,9 +414,32 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				this.render.canvas.width = width
 				this.render.canvas.height = height
 			}
+
+			// Update gravitational center
+			const width = container.clientWidth || container.offsetWidth || 0
+			const height = container.clientHeight || container.offsetHeight || 0
+			this.gravitationalCenter = { x: width / 2, y: height / 2 }
+
 			this.createOrUpdateBoundaries()
-		})
+			this.updateBubbleBodySizes()
+		}
+
+		// Debounced resize handler
+		const debouncedResize = () => {
+			if (this.resizeDebounceTimer) {
+				clearTimeout(this.resizeDebounceTimer)
+			}
+			this.resizeDebounceTimer = setTimeout(handleResize, 150) // 150ms debounce delay
+		}
+
+		// Observe container resize
+		this.resizeObserver = new ResizeObserver(debouncedResize)
 		this.resizeObserver.observe(container)
+
+		// Also listen to window resize events as backup (handles TailwindCSS breakpoint changes)
+		// This ensures we catch size changes when the container doesn't change but bubble elements do
+		this.windowResizeListener = debouncedResize
+		window.addEventListener('resize', this.windowResizeListener)
 	}
 
 	private animateFinalTriadCues() {
@@ -789,5 +823,277 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				})
 			}
 		})
+	}
+
+	/**
+	 * Update Matter.js body sizes to match current DOM element dimensions
+	 * This handles TailwindCSS responsive class changes on window resize
+	 */
+	private updateBubbleBodySizes() {
+		const container = this.container().nativeElement
+		const containerWidth = container.clientWidth || container.offsetWidth || 0
+		const containerHeight = container.clientHeight || container.offsetHeight || 0
+
+		const updatedEntities: typeof this.entities = []
+
+		// First pass: scale all bubbles and update dimensions
+		this.entities.forEach((entity) => {
+			const { element, body } = entity
+
+			// Check if bubble should be visible (is in current cues)
+			const isInCurrentCues =
+				this.cues()?.some((cue) => {
+					const cueElement = element.querySelector('p')
+					return cueElement?.textContent?.trim() === cue
+				}) ?? true
+
+			// Skip only if element is explicitly meant to be hidden AND not in current cues
+			if (element.style.display === 'none' && !isInCurrentCues) {
+				return
+			}
+
+			// Ensure element remains visible during resize (restore if accidentally hidden)
+			// This prevents bubbles from disappearing during resize
+			if (element.style.display === 'none') {
+				element.style.display = ''
+			}
+			if (element.style.visibility === 'hidden') {
+				element.style.visibility = 'visible'
+			}
+			// Ensure opacity is visible (don't override if it's being animated via transition)
+			if (element.style.opacity === '0' && !element.style.transition) {
+				element.style.opacity = '1'
+			}
+
+			// Ensure element has position absolute (required for proper positioning)
+			if (!element.style.position || element.style.position === 'static') {
+				element.style.position = 'absolute'
+			}
+
+			// Force a reflow to ensure TailwindCSS classes have been applied
+			void element.offsetHeight
+
+			// Get current DOM element dimensions (after TailwindCSS responsive changes)
+			// Ensure we get valid dimensions even if element is temporarily 0-sized
+			let currentWidth = element.offsetWidth || element.clientWidth
+			let currentHeight = element.offsetHeight || element.clientHeight
+
+			// If dimensions are 0, try getBoundingClientRect as fallback
+			if (!currentWidth || !currentHeight) {
+				const rect = element.getBoundingClientRect()
+				currentWidth = rect.width || currentWidth || 60
+				currentHeight = rect.height || currentHeight || 60
+			}
+
+			// Final fallback to stored dimensions or default
+			currentWidth = currentWidth || entity.halfWidth * 2 || 60
+			currentHeight = currentHeight || entity.halfHeight * 2 || 60
+
+			const newHalfWidth = currentWidth / 2
+			const newHalfHeight = currentHeight / 2
+			const newRadius = Math.max(newHalfWidth, newHalfHeight)
+
+			// Calculate current body radius from stored dimensions
+			// Use stored halfWidth/halfHeight which represents the current physics body size
+			const currentRadius = Math.max(entity.halfWidth, entity.halfHeight)
+
+			// Avoid division by zero or invalid values
+			if (currentRadius <= 0 || newRadius <= 0 || !isFinite(currentRadius) || !isFinite(newRadius)) {
+				// Reset to reasonable defaults if invalid
+				if (currentRadius <= 0 || !isFinite(currentRadius)) {
+					entity.halfWidth = newHalfWidth
+					entity.halfHeight = newHalfHeight
+				}
+				return
+			}
+
+			// Calculate scale factor
+			const scaleFactor = newRadius / currentRadius
+
+			// Only update if size has actually changed (more than 1% difference)
+			if (Math.abs(scaleFactor - 1) > 0.01 && isFinite(scaleFactor)) {
+				// Scale the body while maintaining its position
+				Matter.Body.scale(body, scaleFactor, scaleFactor)
+
+				// Update stored dimensions in entity
+				entity.halfWidth = newHalfWidth
+				entity.halfHeight = newHalfHeight
+
+				// Ensure bubble remains within container boundaries
+				const { x, y } = body.position
+				const maxX = containerWidth - newRadius
+				const maxY = containerHeight - newRadius
+				const minX = newRadius
+				const minY = newRadius
+
+				// Ensure bubble position is valid
+				if (!isFinite(x) || !isFinite(y)) {
+					// Reset position to center if invalid
+					Matter.Body.setPosition(body, {
+						x: Math.max(minX, Math.min(maxX, containerWidth / 2)),
+						y: Math.max(minY, Math.min(maxY, containerHeight / 2)),
+					})
+					return
+				}
+
+				// Apply gentle containment if bubble is outside boundaries
+				if (x < minX || x > maxX || y < minY || y > maxY) {
+					const centerX = containerWidth / 2
+					const centerY = containerHeight / 2
+					const dx = centerX - x
+					const dy = centerY - y
+					const distance = Math.sqrt(dx * dx + dy * dy)
+
+					if (distance > 0 && isFinite(distance)) {
+						const containmentForce = 0.0003
+						const forceX = (dx / distance) * containmentForce
+						const forceY = (dy / distance) * containmentForce
+						Matter.Body.applyForce(body, body.position, { x: forceX, y: forceY })
+					}
+
+					// Clamp position to boundaries if way outside
+					if (x < minX - newRadius || x > maxX + newRadius || y < minY - newRadius || y > maxY + newRadius) {
+						const clampedX = Math.max(minX, Math.min(maxX, x))
+						const clampedY = Math.max(minY, Math.min(maxY, y))
+						Matter.Body.setPosition(body, { x: clampedX, y: clampedY })
+					}
+				}
+
+				// Ensure element position is updated to match body
+				element.style.left = `${body.position.x - newHalfWidth}px`
+				element.style.top = `${body.position.y - newHalfHeight}px`
+
+				// Track updated entities for overlap resolution
+				updatedEntities.push(entity)
+			}
+		})
+
+		// Second pass: resolve overlaps after scaling
+		// This prevents bubbles from getting stuck when they grow in size
+		if (updatedEntities.length > 0) {
+			this.resolveOverlapsAfterResize(updatedEntities)
+			// Also resolve wall intersections
+			this.resolveWallIntersections(updatedEntities, containerWidth, containerHeight)
+		}
+	}
+
+	/**
+	 * Resolve intersections between bubbles and walls after resize
+	 * Pushes bubbles away from walls if they're intersecting
+	 */
+	private resolveWallIntersections(entities: typeof this.entities, containerWidth: number, containerHeight: number) {
+		entities.forEach((entity) => {
+			const { body } = entity
+			const radius = Math.max(entity.halfWidth, entity.halfHeight)
+			const { x, y } = body.position
+
+			// Check and resolve intersections with each wall
+			// Left wall (at x = 0)
+			if (x - radius < 0) {
+				const overlap = radius - x
+				const pushForce = 0.02 * overlap
+				Matter.Body.applyForce(body, body.position, { x: pushForce, y: 0 })
+				// Immediately adjust position if severely intersecting
+				if (x - radius < -radius * 0.5) {
+					Matter.Body.setPosition(body, { x: radius, y })
+				}
+			}
+
+			// Right wall (at x = containerWidth)
+			if (x + radius > containerWidth) {
+				const overlap = x + radius - containerWidth
+				const pushForce = -0.02 * overlap
+				Matter.Body.applyForce(body, body.position, { x: pushForce, y: 0 })
+				// Immediately adjust position if severely intersecting
+				if (x + radius > containerWidth + radius * 0.5) {
+					Matter.Body.setPosition(body, { x: containerWidth - radius, y })
+				}
+			}
+
+			// Ceiling (at y = 0)
+			if (y - radius < 0) {
+				const overlap = radius - y
+				const pushForce = 0.02 * overlap
+				Matter.Body.applyForce(body, body.position, { x: 0, y: pushForce })
+				// Immediately adjust position if severely intersecting
+				if (y - radius < -radius * 0.5) {
+					Matter.Body.setPosition(body, { x, y: radius })
+				}
+			}
+
+			// Ground (at y = containerHeight)
+			if (y + radius > containerHeight) {
+				const overlap = y + radius - containerHeight
+				const pushForce = -0.02 * overlap
+				Matter.Body.applyForce(body, body.position, { x: 0, y: pushForce })
+				// Immediately adjust position if severely intersecting
+				if (y + radius > containerHeight + radius * 0.5) {
+					Matter.Body.setPosition(body, { x, y: containerHeight - radius })
+				}
+			}
+		})
+	}
+
+	/**
+	 * Resolve overlaps between bubbles after resize
+	 * Applies separation forces to prevent bubbles from getting stuck
+	 */
+	private resolveOverlapsAfterResize(entities: typeof this.entities) {
+		// Check each pair of bubbles for overlaps
+		for (let i = 0; i < entities.length; i++) {
+			const entityA = entities[i]
+			const { body: bodyA, halfWidth: halfWidthA, halfHeight: halfHeightA } = entityA
+			const radiusA = Math.max(halfWidthA, halfHeightA)
+			const posA = bodyA.position
+
+			for (let j = i + 1; j < entities.length; j++) {
+				const entityB = entities[j]
+				const { body: bodyB, halfWidth: halfWidthB, halfHeight: halfHeightB } = entityB
+				const radiusB = Math.max(halfWidthB, halfHeightB)
+				const posB = bodyB.position
+
+				// Calculate distance between bubble centers
+				const dx = posA.x - posB.x
+				const dy = posA.y - posB.y
+				const distance = Math.sqrt(dx * dx + dy * dy)
+				const minDistance = radiusA + radiusB
+
+				// If bubbles are overlapping or too close
+				if (distance < minDistance && distance > 0) {
+					// Calculate overlap amount
+					const overlap = minDistance - distance
+					const overlapRatio = overlap / minDistance
+
+					// Apply separation force proportional to overlap
+					// Stronger force for larger overlaps
+					const separationForce = 0.015 * overlapRatio // Increased from 0.01 for better separation
+					const forceMagnitude = separationForce * (overlap / distance)
+
+					const forceXA = (dx / distance) * forceMagnitude
+					const forceYA = (dy / distance) * forceMagnitude
+					const forceXB = (-dx / distance) * forceMagnitude
+					const forceYB = (-dy / distance) * forceMagnitude
+
+					// Apply forces to both bodies
+					Matter.Body.applyForce(bodyA, posA, { x: forceXA, y: forceYA })
+					Matter.Body.applyForce(bodyB, posB, { x: forceXB, y: forceYB })
+
+					// Also apply velocity boost for immediate separation
+					const velocityBoost = 0.5 * overlapRatio
+					const currentVelA = bodyA.velocity
+					const currentVelB = bodyB.velocity
+
+					Matter.Body.setVelocity(bodyA, {
+						x: currentVelA.x + forceXA * velocityBoost,
+						y: currentVelA.y + forceYA * velocityBoost,
+					})
+
+					Matter.Body.setVelocity(bodyB, {
+						x: currentVelB.x + forceXB * velocityBoost,
+						y: currentVelB.y + forceYB * velocityBoost,
+					})
+				}
+			}
+		}
 	}
 }
