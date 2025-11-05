@@ -41,7 +41,7 @@
 
 			<!-- Hints and Misses Section -->
 			<div class="w-full lg:w-1/2 h-full flex flex-col justify-center items-center py-4">
-				<ag-charts style="height: 100%" [options]="chartOptions()"> </ag-charts>
+				<ag-charts class="w-full h-full" [options]="chartOptions()"> </ag-charts>
 				<p class="text-center text-sm">
 					*since first game, <span class="font-bold">{{ (store.user()?.firstGameDate | date: 'MMMM dd, yyyy') ?? '-' }}</span>
 				</p>

@@ -46,7 +46,7 @@ export class Stats {
 				cornerRadius: 8,
 				label: {
 					enabled: true,
-					placement: 'inside-end',
+					placement: 'outside-end',
 					formatter: (params) => (params.value > 0 ? `${params.value}%` : ''),
 				},
 				tooltip: {
@@ -64,6 +64,8 @@ export class Stats {
 			{
 				type: 'number',
 				position: 'bottom',
+				max: 105,
+				gridLine: { enabled: false },
 				label: {
 					enabled: false, // Disable the default y-axis labels as the values are displayed in the bars
 				},
