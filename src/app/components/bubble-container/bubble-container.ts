@@ -244,7 +244,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			element.style.position = 'absolute'
 			element.style.zIndex = '1'
 			element.style.opacity = '0' // Start invisible
-			element.style.transform = 'scale(0)' // Start small
 		})
 
 		// Setup simulation and resize handling
@@ -345,7 +344,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		setTimeout(() => {
 			element.style.visibility = 'visible' // Make visible first
 			element.style.opacity = '1'
-			element.style.transform = 'scale(1)'
 		}, 50) // Small delay to ensure transition applies
 	}
 
@@ -629,11 +627,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		})
 
 		// Animate the bubble appearance
-		element.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out'
+		element.style.transition = 'opacity 0.5s ease-out'
 		setTimeout(() => {
 			element.style.visibility = 'visible' // Make visible first
 			element.style.opacity = '1'
-			element.style.transform = 'scale(1)'
 		}, 50) // Small delay to ensure transition applies
 	}
 
