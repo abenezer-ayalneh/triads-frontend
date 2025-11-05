@@ -33,22 +33,27 @@ export class HintsBox {
 
 	onHintClick() {
 		const availableHints = this.store.hints().filter((hint) => hint.available).length
-		const visibleCues = this.store.cues()
-		const shouldShowChoice = availableHints === 1 || visibleCues?.length === 3
+		const cues = this.store.cues()
+		const availableCues = cues && cues.length > 0 ? this.store.cues() : this.store.finalTriadCues()
+		const shouldShowChoice = availableHints === 1 || availableCues?.length === 3
 
-		if (shouldShowChoice) {
-			this.hintChoiceModalRef()?.nativeElement.showModal()
-		} else {
-			this.useHint()
+		if (availableCues && availableCues.length > 0) {
+			if (shouldShowChoice) {
+				this.hintChoiceModalRef()?.nativeElement.showModal()
+			} else {
+				this.useHint()
+			}
 		}
 	}
 
 	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
 		this.store.setHintUsage(true)
 		const cues = this.store.cues()
-		if (cues) {
+		const availableCues = cues && cues.length > 0 ? this.store.cues() : this.store.finalTriadCues()
+
+		if (availableCues) {
 			try {
-				firstValueFrom(this.hintService.getHint(cues, hintExtra))
+				firstValueFrom(this.hintService.getHint(availableCues, hintExtra))
 					.then((triadsForHint) => {
 						const hints = this.store.hints()
 						const useHintResponse = this.hintService.useHint(hints, this.store.turns())

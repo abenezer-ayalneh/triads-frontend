@@ -90,7 +90,11 @@ export class GamePlayLogic {
 			return 12
 		}
 		// Success (all 4), but with 2 misses and/or hints => 10
-		else if ((availableTurns === 1 && availableHints === 2) || (availableTurns === 1 && availableHints === 0)) {
+		else if (
+			(availableTurns === 1 && availableHints === 2) ||
+			(availableTurns === 1 && availableHints === 1) ||
+			(availableTurns === 1 && availableHints === 0)
+		) {
 			return 10
 		}
 		// Got 3 Triads, but just couldn’t solve the bonus => 8
