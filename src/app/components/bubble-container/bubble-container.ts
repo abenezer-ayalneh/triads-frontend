@@ -43,6 +43,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private bubbleCreationDelay = 1100 // milliseconds between each bubble creation (75% slower than before)
 
+	private nextBubbleSide: 'left' | 'right' = 'left' // Track which side to spawn next bubble from
+
 	private gravitationalCenter: { x: number; y: number } = { x: 0, y: 0 }
 
 	private boundaryWalls: Matter.Body[] = []
@@ -230,6 +232,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		this.bubbleCreationQueue = shuffledBubbles
 		clearInterval(this.bubbleCreationInterval)
 		this.entities = []
+		// Reset side tracking to start with left
+		this.nextBubbleSide = 'left'
 
 		// Create boundaries immediately
 		const container = this.container().nativeElement
@@ -254,7 +258,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		this.bubbleCreationInterval = setInterval(() => {
 			if (this.bubbleCreationQueue.length > 0) {
 				const bubbleComponent = this.bubbleCreationQueue.shift()
-				this.createSingleBubble(bubbleComponent!, this.bubbleCreationQueue.length)
+				this.createSingleBubble(bubbleComponent!)
 			} else {
 				clearInterval(this.bubbleCreationInterval)
 			}
@@ -266,7 +270,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	 * @param bubbleComponent The bubble component to create
 	 * @param remainingBubbles The number of bubbles remaining in the queue
 	 */
-	private createSingleBubble(bubbleComponent: Bubble, remainingBubbles: number) {
+	private createSingleBubble(bubbleComponent: Bubble) {
 		const Bodies = Matter.Bodies
 		const Composite = Matter.Composite
 
@@ -279,11 +283,13 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		const halfHeight = (element.offsetHeight || 60) / 2
 		const radius = Math.max(halfWidth, halfHeight)
 
-		// Calculate position - spread across width
-		const totalBubbles = this.bubbleComponents().length
-		const index = totalBubbles - remainingBubbles - 1
-		const bubbleSpacing = width / totalBubbles
-		const startX = index * bubbleSpacing + bubbleSpacing / 2
+		// Calculate position - alternate between bottom-left and bottom-right
+		const side = this.nextBubbleSide
+		this.nextBubbleSide = side === 'left' ? 'right' : 'left' // Toggle for next bubble
+
+		// Position at bottom corners with some padding from edges
+		const padding = radius + 20 // Add padding to prevent touching edges
+		const startX = side === 'left' ? padding : width - padding
 		// Start at the bottom wall of the container (visible inside the container)
 		const startY = height - radius // Position at the bottom wall, fully visible
 
@@ -305,14 +311,16 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		const distance = Math.sqrt(dx * dx + dy * dy)
 
 		// Calculate velocity toward center with some upward bias
+		// For bubbles from left, angle slightly right; from right, angle slightly left
+		const angleVariation = side === 'left' ? 0.2 : -0.2 // Slight angle variation based on side
 		const speed = 2.0 + Math.random() * 1.0 // 2.0-3.0 pixels per frame
-		const velocityX = (dx / distance) * speed * 0.8 // 80% toward center horizontally
+		const velocityX = (dx / distance) * speed * 0.8 + angleVariation // 80% toward center horizontally with side-based angle
 		const velocityY = (dy / distance) * speed * 0.6 - 0.5 // 60% toward center vertically, with slight upward bias
 		Matter.Body.setVelocity(body, { x: velocityX, y: velocityY })
 
 		// Apply initial impulse toward center
 		const initialImpulse = 0.0075 // 1.5x stronger impulse
-		const impulseX = (dx / distance) * initialImpulse * 0.8 // 80% toward center horizontally
+		const impulseX = (dx / distance) * initialImpulse * 0.8 + angleVariation * 0.1 // 80% toward center horizontally with side-based angle
 		const impulseY = (dy / distance) * initialImpulse * 0.6 - initialImpulse * 0.2 // 60% toward center, 20% upward
 		Matter.Body.applyForce(body, body.position, { x: impulseX, y: impulseY })
 
