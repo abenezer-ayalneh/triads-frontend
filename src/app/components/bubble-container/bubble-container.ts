@@ -639,6 +639,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		setTimeout(() => {
 			element.style.visibility = 'visible' // Make visible first
 			element.style.opacity = '1'
+			element.style.transform = 'scale(1)'
 		}, 50) // Small delay to ensure transition applies
 	}
 
