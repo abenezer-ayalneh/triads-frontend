@@ -2,6 +2,7 @@ import { AfterViewChecked, Component, effect, ElementRef, inject, OnInit, output
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
+import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
@@ -13,7 +14,7 @@ import { InputSet } from '../input-set/input-set'
 
 @Component({
 	selector: 'app-solution-section',
-	imports: [InputSet, ReactiveFormsModule],
+	imports: [InputSet, ReactiveFormsModule, AutoCapitalize],
 	templateUrl: './solution-section.html',
 	styleUrl: './solution-section.scss',
 })

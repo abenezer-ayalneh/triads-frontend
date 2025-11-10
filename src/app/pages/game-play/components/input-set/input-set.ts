@@ -2,13 +2,15 @@ import { AfterViewInit, Component, effect, ElementRef, input, OnDestroy, output,
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 import { Subscription } from 'rxjs'
 
+import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
+
 @Component({
 	selector: 'app-input-set',
 	templateUrl: './input-set.html',
 	styleUrls: ['./input-set.scss'],
 
 	standalone: true,
-	imports: [ReactiveFormsModule],
+	imports: [ReactiveFormsModule, AutoCapitalize],
 })
 export class InputSet implements AfterViewInit, OnDestroy {
 	subscriptions$ = new Subscription()
