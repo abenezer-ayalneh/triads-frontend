@@ -193,7 +193,7 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 			}
 
 			this.store.setHintUsage(false)
-		}, 4000)
+		}, 2000)
 	}
 
 	private useTurn() {

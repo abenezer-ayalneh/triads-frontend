@@ -38,13 +38,9 @@
 
 	<!--Popup Section-->
 	@switch (store.gamePlayState()) {
-		@case (GamePlayState.CORRECT_ANSWER) {
-			<app-answer-dialog [type]="'CORRECT'"> Correct Answer!</app-answer-dialog>
-		}
 		@case (GamePlayState.WRONG_ANSWER) {
 			<app-answer-dialog [type]="'WRONG'">
-				Wrong Answer! <br />
-				Try Again.
+				{{ answerDialogMessage() }}
 			</app-answer-dialog>
 		}
 		@case (GamePlayState.WRONG_TRIAD) {
@@ -55,8 +51,8 @@
 		}
 		@case (GamePlayState.WON) {
 			<app-game-result-dialog [result]="'WON'">
-				<h2 class="text-success text-4xl font-bold">You Won!</h2>
-				<p class="text-base-100 text-lg">Congratulations! You solved all the triads!</p>
+				<!--				<h2 class="text-success text-4xl font-bold">You Won!</h2>-->
+				<p class="text-base-100 text-lg">{{ answerDialogMessage() }}</p>
 				<div class="bg-success/20 rounded-lg px-4 py-2 border border-success/30">
 					<p class="text-success font-semibold text-xl">Final Score: {{ store.gameScore() }}</p>
 				</div>
@@ -64,8 +60,8 @@
 		}
 		@case (GamePlayState.LOST) {
 			<app-game-result-dialog [result]="'LOST'">
-				<h2 class="text-error text-4xl font-bold">Nice Try!</h2>
-				<p class="text-base-100 text-lg">You ran out of turns. Better luck next time!</p>
+				<!--				<h2 class="text-error text-4xl font-bold">Nice Try!</h2>-->
+				<p class="text-base-100 text-lg">{{ answerDialogMessage() }}</p>
 				<div class="bg-error/20 rounded-lg px-4 py-2 border border-error/30">
 					<p class="text-error font-semibold text-xl">Final Score: {{ store.gameScore() }}</p>
 				</div>

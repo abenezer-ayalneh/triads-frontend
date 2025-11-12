@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, OnInit, signal, viewChild } from '@angular/core'
+import { Component, computed, inject, OnInit, signal } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
 import { gsap } from 'gsap'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
@@ -13,6 +13,7 @@ import { HintsBox } from './components/hints-box/hints-box'
 import { SolutionSection } from './components/solution-section/solution-section'
 import { SolvedTriad } from './components/solved-triad/solved-triad'
 import { TurnsBox } from './components/turns-box/turns-box'
+import { GAME_END_MESSAGES, WRONG_MESSAGES } from './constants/game-play.constant'
 import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad as SolvedTriadInterface } from './interfaces/triad.interface'
 import { GamePlayApi } from './services/game-play-api'
@@ -39,16 +40,21 @@ export class GamePlay implements OnInit {
 
 	cueFetchingState = signal<RequestState>(RequestState.LOADING)
 
-	boxStatus = signal<'OPEN' | 'CLOSED'>('CLOSED')
-
 	explodingBubbles = signal<string[]>([])
-
-	// Popup: show solved cue words when the word box is clicked
-	showSolvedPopup = signal<boolean>(false)
 
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
-	solvedArea = viewChild.required<ElementRef>('solvedArea')
+	answerDialogMessage = computed(() => {
+		const gameState = this.store.gamePlayState()
+
+		if (gameState === GamePlayState.WRONG_ANSWER) {
+			return this.generateWrongAnswerMessage()
+		} else if (gameState === GamePlayState.WON || gameState === GamePlayState.LOST) {
+			return this.generateGameResultMessage()
+		}
+
+		return ''
+	})
 
 	loadingAnimationOptions: AnimationOptions = {
 		path: 'lotties/loading-lottie.json',
@@ -137,6 +143,15 @@ export class GamePlay implements OnInit {
 
 		// Animate the solved-triad component appearance
 		await this.animateSolvedTriadAppearance(solvedArea)
+	}
+
+	generateWrongAnswerMessage() {
+		return WRONG_MESSAGES[Math.floor(Math.random() * WRONG_MESSAGES.length)]
+	}
+
+	generateGameResultMessage() {
+		const gameScore = this.store.gameScore()
+		return GAME_END_MESSAGES[gameScore]
 	}
 
 	private async animateSolvedTriadAppearance(solvedArea: HTMLElement) {
