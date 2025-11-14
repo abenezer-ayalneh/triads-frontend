@@ -165,6 +165,8 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 				this.store.setActiveHintType(null)
 
 				if (response && typeof response != 'boolean') {
+					// Reset used hint types only when a triad is solved correctly (not on wrong guesses)
+					this.store.resetUsedHintTypes()
 					this.store.setSelectedCues([])
 					this.store.removeSolvedCues(response.cues) // Remove the solved cues from the list of cues shown to the player
 					this.store.setGamePlayState(GamePlayState.PLAYING)

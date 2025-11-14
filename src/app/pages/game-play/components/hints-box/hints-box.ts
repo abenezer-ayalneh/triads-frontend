@@ -65,6 +65,8 @@ export class HintsBox {
 								this.store.setKeywordLengthHint(triadsForHint.withValue ? Number(triadsForHint.withValue) : null)
 								// Track that this hint type is now active
 								this.store.setActiveHintType('KEYWORD_LENGTH')
+								// Track that this hint type has been used (so it stays disabled after wrong guesses)
+								this.store.addUsedHintType('KEYWORD_LENGTH')
 								// If first letter hint already exists, keep it for combination
 								// The first letter will be filled in InputSet when it's displayed
 								// Clear answerFieldValue$ since we're switching to InputSet
@@ -76,6 +78,8 @@ export class HintsBox {
 								this.store.setFirstLetterHint(triadsForHint.withValue)
 								// Track that this hint type is now active
 								this.store.setActiveHintType('FIRST_LETTER')
+								// Track that this hint type has been used (so it stays disabled after wrong guesses)
+								this.store.addUsedHintType('FIRST_LETTER')
 
 								// If keyword length hint already exists, we'll fill the first box in InputSet
 								// Otherwise, set it for the regular input field

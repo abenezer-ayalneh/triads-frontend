@@ -21,14 +21,14 @@
 			<button
 				type="button"
 				class="btn btn-info text-base-100"
-				[disabled]="store.activeHintType() === 'KEYWORD_LENGTH'"
+				[disabled]="store.usedHintTypes().includes('KEYWORD_LENGTH')"
 				(click)="useHint('KEYWORD_LENGTH')">
 				Number of letters
 			</button>
 			<button
 				type="button"
 				class="btn btn-primary text-base-100"
-				[disabled]="store.activeHintType() === 'FIRST_LETTER'"
+				[disabled]="store.usedHintTypes().includes('FIRST_LETTER')"
 				(click)="useHint('FIRST_LETTER')">
 				1st letter of word
 			</button>

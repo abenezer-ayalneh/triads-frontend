@@ -17,6 +17,7 @@ export interface GlobalState {
 	keywordLengthHint: number | null
 	firstLetterHint: string | null
 	activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null
+	usedHintTypes: ('KEYWORD_LENGTH' | 'FIRST_LETTER')[]
 	solvedTriads: SolvedTriad[]
 	hintUsed: boolean
 	gameScore: number

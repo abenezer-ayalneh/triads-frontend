@@ -28,6 +28,7 @@ const initialState: GlobalState = {
 	keywordLengthHint: null,
 	firstLetterHint: null,
 	activeHintType: null,
+	usedHintTypes: [],
 	solvedTriads: [],
 	hintUsed: false,
 	isFetchingFinalTriadCues: false,
@@ -86,6 +87,17 @@ export const GlobalStore = signalStore(
 		},
 		setActiveHintType: (activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null) => {
 			patchState(store, (state) => ({ ...state, activeHintType }))
+		},
+		addUsedHintType: (hintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER') => {
+			patchState(store, (state) => {
+				if (!state.usedHintTypes.includes(hintType)) {
+					return { ...state, usedHintTypes: [...state.usedHintTypes, hintType] }
+				}
+				return state
+			})
+		},
+		resetUsedHintTypes: () => {
+			patchState(store, (state) => ({ ...state, usedHintTypes: [] }))
 		},
 		addSolvedTriad: (solvedTriad: SolvedTriad) => {
 			patchState(store, (state) => ({ ...state, solvedTriads: [...state.solvedTriads, solvedTriad] }))
