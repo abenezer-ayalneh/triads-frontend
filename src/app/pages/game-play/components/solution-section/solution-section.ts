@@ -152,6 +152,13 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 					this.store.removeSolvedCues(response.cues) // Remove the solved cues from the list of cues shown to the player
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 
+					// Auto-select remaining cues if exactly 3 remain (after 2 triads solved)
+					const remainingCues = this.store.cues()
+					if (remainingCues && remainingCues.length === 3) {
+						this.store.setSelectedCues([...remainingCues])
+						this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
+					}
+
 					// If the game is in its initial state and there are no cues left, fetch the final triad cues and progress the game to the final stage
 					if (this.store.triadsStep() === 'INITIAL' && this.store.cues()?.length === 0) {
 						this.store.updateTriadStep('FINAL')
@@ -160,6 +167,11 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 						this.getFinalTriadCuesCues()
 							.then((finalTriadCuesCues) => {
 								this.store.setFinalTriadCues(finalTriadCuesCues)
+								// Auto-select final triad cues (bonus round) - always 3 cues
+								if (finalTriadCuesCues && finalTriadCuesCues.length === 3) {
+									this.store.setSelectedCues([...finalTriadCuesCues])
+									this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
+								}
 							})
 							.catch(() => {
 								// Error handling for fourth triad fetch failure

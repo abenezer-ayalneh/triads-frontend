@@ -89,11 +89,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		this.startSequentialBubbleCreation(this.bubbleComponents())
 	}
 
-	createBodies(bubbleComponents: readonly Bubble[]) {
-		// Use our sequential creation method instead
-		this.startSequentialBubbleCreation(bubbleComponents)
-	}
-
 	ngOnDestroy(): void {
 		// Clear the bubble creation interval
 		if (this.bubbleCreationInterval) {
