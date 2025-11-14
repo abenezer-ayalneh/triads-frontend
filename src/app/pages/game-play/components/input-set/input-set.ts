@@ -17,6 +17,8 @@ export class InputSet implements AfterViewInit, OnDestroy {
 
 	quantity = input.required<number>()
 
+	firstLetter = input<string | null>(null)
+
 	whenSubmitClicked = output<string>()
 
 	inputRefs = viewChildren<ElementRef<HTMLInputElement>>('inputBoxRef')
@@ -28,9 +30,25 @@ export class InputSet implements AfterViewInit, OnDestroy {
 	constructor() {
 		effect(() => {
 			const element = this.inputRefs()[0]?.nativeElement
+			const firstLetterValue = this.firstLetter()
 
-			// After all input fields are initialized, focus on the first one
-			if (element) {
+			// If first letter is set and input boxes exist, fill the first box
+			if (firstLetterValue && this.inputBoxes.length > 0) {
+				const firstControl = this.inputBoxes.at(0)
+				if (firstControl) {
+					// Only set if empty or if it's different (allows updating when hint is used after InputSet is created)
+					if (!firstControl.value || firstControl.value !== firstLetterValue) {
+						firstControl.setValue(firstLetterValue)
+						// Focus on the second box if it exists
+						if (this.inputRefs().length > 1) {
+							setTimeout(() => {
+								this.inputRefs()[1]?.nativeElement.focus()
+							}, 0)
+						}
+					}
+				}
+			} else if (element && !firstLetterValue) {
+				// After all input fields are initialized, focus on the first one if no first letter
 				element.focus()
 			}
 		})
@@ -42,10 +60,17 @@ export class InputSet implements AfterViewInit, OnDestroy {
 
 	ngAfterViewInit(): void {
 		for (let i = 0; i < this.quantity(); i++) {
-			const newControl: FormControl<string | null> = new FormControl<string | null>(null, {
+			const initialValue = i === 0 && this.firstLetter() ? this.firstLetter() : null
+			const newControl: FormControl<string | null> = new FormControl<string | null>(initialValue, {
 				validators: [Validators.required, Validators.minLength(1), Validators.maxLength(1)],
 			})
 			this.inputBoxes.push(newControl)
+		}
+		// If first letter is set, focus on the second box (index 1) instead of the first
+		if (this.firstLetter() && this.inputRefs().length > 1) {
+			setTimeout(() => {
+				this.inputRefs()[1]?.nativeElement.focus()
+			}, 0)
 		}
 	}
 

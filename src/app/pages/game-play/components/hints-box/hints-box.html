@@ -18,8 +18,20 @@
 		<h3 class="text-lg font-bold">Choose your hint</h3>
 		<p class="py-2 text-sm">Pick one of the options below to help solve the Triad.</p>
 		<div class="w-full h-fit flex flex-col gap-2 mt-2">
-			<button type="button" class="btn btn-info text-base-100" (click)="useHint('KEYWORD_LENGTH')">Number of letters</button>
-			<button type="button" class="btn btn-primary text-base-100" (click)="useHint('FIRST_LETTER')">1st letter of word</button>
+			<button
+				type="button"
+				class="btn btn-info text-base-100"
+				[disabled]="store.activeHintType() === 'KEYWORD_LENGTH'"
+				(click)="useHint('KEYWORD_LENGTH')">
+				Number of letters
+			</button>
+			<button
+				type="button"
+				class="btn btn-primary text-base-100"
+				[disabled]="store.activeHintType() === 'FIRST_LETTER'"
+				(click)="useHint('FIRST_LETTER')">
+				1st letter of word
+			</button>
 		</div>
 
 		<div class="modal-action">

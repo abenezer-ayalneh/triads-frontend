@@ -16,7 +16,7 @@
 		<div class="w-[80%] md:w-[70%] lg:w-[60%] max-w-3xl h-fit flex justify-center items-center gap-2">
 			@let letKeywordLengthHint = store.keywordLengthHint();
 			@if (letKeywordLengthHint !== null) {
-				<app-input-set [quantity]="letKeywordLengthHint" (whenSubmitClicked)="submitAnswer($event)" />
+				<app-input-set [quantity]="letKeywordLengthHint" [firstLetter]="store.firstLetterHint()" (whenSubmitClicked)="submitAnswer($event)" />
 			} @else {
 				<input
 					#answerField

@@ -26,6 +26,8 @@ const initialState: GlobalState = {
 	gamePlayState: GamePlayState.IDLE,
 	triadsStep: 'INITIAL',
 	keywordLengthHint: null,
+	firstLetterHint: null,
+	activeHintType: null,
 	solvedTriads: [],
 	hintUsed: false,
 	isFetchingFinalTriadCues: false,
@@ -78,6 +80,12 @@ export const GlobalStore = signalStore(
 		},
 		setKeywordLengthHint: (keywordLengthHint: number | null) => {
 			patchState(store, (state) => ({ ...state, keywordLengthHint }))
+		},
+		setFirstLetterHint: (firstLetterHint: string | null) => {
+			patchState(store, (state) => ({ ...state, firstLetterHint }))
+		},
+		setActiveHintType: (activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null) => {
+			patchState(store, (state) => ({ ...state, activeHintType }))
 		},
 		addSolvedTriad: (solvedTriad: SolvedTriad) => {
 			patchState(store, (state) => ({ ...state, solvedTriads: [...state.solvedTriads, solvedTriad] }))

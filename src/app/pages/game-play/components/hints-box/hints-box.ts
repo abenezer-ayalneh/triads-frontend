@@ -61,11 +61,29 @@ export class HintsBox {
 						if (triadsForHint && triadsForHint.hint) {
 							// When the player uses a hint with an extra value, show a special hint
 							if (triadsForHint.with === 'KEYWORD_LENGTH') {
+								// Set keyword length hint, but preserve first letter if it exists
 								this.store.setKeywordLengthHint(triadsForHint.withValue ? Number(triadsForHint.withValue) : null)
+								// Track that this hint type is now active
+								this.store.setActiveHintType('KEYWORD_LENGTH')
+								// If first letter hint already exists, keep it for combination
+								// The first letter will be filled in InputSet when it's displayed
+								// Clear answerFieldValue$ since we're switching to InputSet
+								if (this.store.firstLetterHint()) {
+									this.gamePlayLogic.answerFieldValue$.next(null)
+								}
 							} else if (triadsForHint.with === 'FIRST_LETTER' && triadsForHint.withValue) {
-								this.gamePlayLogic.answerFieldValue$.next(triadsForHint.withValue)
-								// Set the flag to focus the answer field when it appears
-								this.gamePlayLogic.answerFieldFocus$.next(true)
+								// Store the first letter hint
+								this.store.setFirstLetterHint(triadsForHint.withValue)
+								// Track that this hint type is now active
+								this.store.setActiveHintType('FIRST_LETTER')
+
+								// If keyword length hint already exists, we'll fill the first box in InputSet
+								// Otherwise, set it for the regular input field
+								if (this.store.keywordLengthHint() === null) {
+									this.gamePlayLogic.answerFieldValue$.next(triadsForHint.withValue)
+									// Set the flag to focus the answer field when it appears
+									this.gamePlayLogic.answerFieldFocus$.next(true)
+								}
 							}
 
 							// Close the extra hint modal

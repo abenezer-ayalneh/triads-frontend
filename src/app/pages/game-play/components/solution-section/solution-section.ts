@@ -144,8 +144,10 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 		setTimeout(() => {
 			// Only change state if not in the WON or LOST state
 			if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
-				// Always reset the keyword length hint back to null so the normal input field is shown
+				// Always reset the keyword length hint and first letter hint back to null so the normal input field is shown
 				this.store.setKeywordLengthHint(null)
+				this.store.setFirstLetterHint(null)
+				this.store.setActiveHintType(null)
 
 				if (response && typeof response != 'boolean') {
 					this.store.setSelectedCues([])

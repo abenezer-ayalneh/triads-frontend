@@ -15,6 +15,8 @@ export interface GlobalState {
 	gamePlayState: GamePlayState
 	triadsStep: 'INITIAL' | 'FINAL'
 	keywordLengthHint: number | null
+	firstLetterHint: string | null
+	activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null
 	solvedTriads: SolvedTriad[]
 	hintUsed: boolean
 	gameScore: number
