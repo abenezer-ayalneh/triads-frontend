@@ -2,8 +2,17 @@
 	<div
 		class="w-full h-fit flex-col justify-center items-center px-4 md:px-6 lg:px-8 py-2"
 		[class]="{ flex: store.gamePlayState() === GamePlayState.CHECK_SOLUTION, hidden: store.gamePlayState() !== GamePlayState.CHECK_SOLUTION }">
-		<button type="button" (click)="checkTriad()" class="w-80 md:w-96 lg:w-[28rem] triad-gradient btn btn-lg border-none text-primary-content">
-			Check Solution
+		<button
+			type="button"
+			(click)="checkTriad()"
+			[disabled]="store.isCheckingTriad()"
+			class="w-80 md:w-96 lg:w-[28rem] triad-gradient btn btn-lg border-none text-primary-content disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+			@if (store.isCheckingTriad()) {
+				<span class="loading loading-spinner loading-sm"></span>
+				<span>Checking...</span>
+			} @else {
+				<span>Check Solution</span>
+			}
 		</button>
 	</div>
 
@@ -15,26 +24,37 @@
 		}">
 		<div class="w-[80%] md:w-[70%] lg:w-[60%] max-w-3xl h-fit flex justify-center items-center gap-2">
 			@let letKeywordLengthHint = store.keywordLengthHint();
+			@let isLoading = store.isCheckingAnswer() || store.isCheckingTriad();
 			@if (letKeywordLengthHint !== null) {
-				<app-input-set [quantity]="letKeywordLengthHint" [firstLetter]="store.firstLetterHint()" (whenSubmitClicked)="submitAnswer($event)" />
+				<app-input-set
+					[quantity]="letKeywordLengthHint"
+					[firstLetter]="store.firstLetterHint()"
+					[isLoading]="isLoading"
+					(whenSubmitClicked)="submitAnswer($event)" />
 			} @else {
 				<input
 					#answerField
 					[formControl]="answerFormControl"
 					placeholder="Answer here..."
 					(keydown.enter)="submitAnswer(answerFormControl.value)"
+					[disabled]="isLoading"
 					appAutoCapitalize
-					class="flex-1 h-10 md:h-12 input focus:outline-none text-base md:text-lg lg:text-xl xl:text-2xl text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400" />
+					class="flex-1 h-10 md:h-12 input focus:outline-none text-base md:text-lg lg:text-xl xl:text-2xl text-center placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400 disabled:cursor-not-allowed" />
 				<button
 					type="button"
 					(click)="submitAnswer(answerFormControl.value)"
-					[disabled]="!answerFormControl.valid"
+					[disabled]="!answerFormControl.valid || isLoading"
 					aria-label="Submit answer"
 					class="h-10 md:h-12 px-4 md:px-6 rounded-full triad-gradient text-primary-content font-semibold shadow-lg hover:shadow-xl active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-					<svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M19 12H5" />
-					</svg>
-					<span class="hidden sm:inline">Submit</span>
+					@if (store.isCheckingAnswer()) {
+						<span class="loading loading-spinner loading-sm"></span>
+						<span class="hidden sm:inline">Checking...</span>
+					} @else {
+						<svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M19 12H5" />
+						</svg>
+						<span class="hidden sm:inline">Submit</span>
+					}
 				</button>
 			}
 		</div>

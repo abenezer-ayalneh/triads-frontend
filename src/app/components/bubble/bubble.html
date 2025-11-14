@@ -1,9 +1,12 @@
 <div
 	id="bubble-{{ cue() }}"
-	class="w-32 h-32 md:w-48 md:h-48 xl:w-60 xl:h-60 p-0 m-0 aspect-square circle contain-content relative cursor-pointer animated-color bubble-container"
-	style="pointer-events: fill"
+	class="w-32 h-32 md:w-48 md:h-48 xl:w-60 xl:h-60 p-0 m-0 aspect-square circle contain-content relative animated-color bubble-container transition-opacity"
 	[class.bubble]="!pop()"
 	[class.backdrop-blur-xs]="!pop()"
+	[class.cursor-pointer]="!isDisabled()"
+	[class.cursor-not-allowed]="isDisabled()"
+	[class.opacity-50]="isDisabled()"
+	[style.pointer-events]="isDisabled() ? 'none' : 'fill'"
 	(click)="whenClicked()">
 	@if (pop()) {
 		<div lottie [options]="bubblePopAnimationOptions" class="w-full h-full aspect-square circle contain-content relative cursor-pointer"></div>

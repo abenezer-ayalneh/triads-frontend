@@ -79,10 +79,12 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 		const selectedCues = this.store.selectedCues()
 
 		if (selectedCues.length === 3) {
+			this.store.setIsCheckingTriad(true)
 			this.gamePlayApi
 				.checkTriad(selectedCues)
 				.pipe(
 					tap((success) => {
+						this.store.setIsCheckingTriad(false)
 						if (success) {
 							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 							this.shouldFocusAnswerField = true
@@ -112,15 +114,26 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 						}
 					}),
 				)
-				.subscribe()
+				.subscribe({
+					error: () => {
+						this.store.setIsCheckingTriad(false)
+					},
+				})
 		}
 	}
 
 	submitAnswer(answer: string | null) {
 		const selectedCues = this.store.selectedCues()
 		if (answer !== null && answer.length > 0 && selectedCues && selectedCues.length === 3) {
+			this.store.setIsCheckingAnswer(true)
 			this.gamePlayApi.checkAnswer(selectedCues, answer).subscribe({
-				next: (response) => this.handleAnswerResponse(response),
+				next: (response) => {
+					this.handleAnswerResponse(response)
+					this.store.setIsCheckingAnswer(false)
+				},
+				error: () => {
+					this.store.setIsCheckingAnswer(false)
+				},
 			})
 		}
 	}

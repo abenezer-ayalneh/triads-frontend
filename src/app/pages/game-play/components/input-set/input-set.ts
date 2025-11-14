@@ -19,6 +19,8 @@ export class InputSet implements AfterViewInit, OnDestroy {
 
 	firstLetter = input<string | null>(null)
 
+	isLoading = input<boolean>(false)
+
 	whenSubmitClicked = output<string>()
 
 	inputRefs = viewChildren<ElementRef<HTMLInputElement>>('inputBoxRef')

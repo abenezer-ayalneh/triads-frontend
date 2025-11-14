@@ -8,6 +8,9 @@ export interface GlobalState {
 	showHowToPlay: boolean
 	cues: string[] | null
 	isFetchingFinalTriadCues: boolean
+	isCheckingTriad: boolean
+	isCheckingAnswer: boolean
+	isFetchingHint: boolean
 	finalTriadCues: string[] | null
 	selectedCues: string[]
 	turns: TurnAndHint[]

@@ -32,6 +32,9 @@ const initialState: GlobalState = {
 	solvedTriads: [],
 	hintUsed: false,
 	isFetchingFinalTriadCues: false,
+	isCheckingTriad: false,
+	isCheckingAnswer: false,
+	isFetchingHint: false,
 	gameScore: 0,
 	cuesToExplode: [],
 }
@@ -107,6 +110,15 @@ export const GlobalStore = signalStore(
 		},
 		setIsFetchingFinalTriadCues: (isFetchingFinalTriadCues: boolean) => {
 			patchState(store, (state) => ({ ...state, isFetchingFinalTriadCues }))
+		},
+		setIsCheckingTriad: (isCheckingTriad: boolean) => {
+			patchState(store, (state) => ({ ...state, isCheckingTriad }))
+		},
+		setIsCheckingAnswer: (isCheckingAnswer: boolean) => {
+			patchState(store, (state) => ({ ...state, isCheckingAnswer }))
+		},
+		setIsFetchingHint: (isFetchingHint: boolean) => {
+			patchState(store, (state) => ({ ...state, isFetchingHint }))
 		},
 		setGameScore: (gameScore: number) => {
 			patchState(store, (state) => ({ ...state, gameScore }))

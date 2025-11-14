@@ -53,6 +53,7 @@ export class HintsBox {
 
 		if (availableCues) {
 			try {
+				this.store.setIsFetchingHint(true)
 				firstValueFrom(this.hintService.getHint(availableCues, hintExtra))
 					.then((triadsForHint) => {
 						const hints = this.store.hints()
@@ -108,9 +109,13 @@ export class HintsBox {
 								this.checkTriad()
 							}
 						}
+						this.store.setIsFetchingHint(false)
 					})
-					.catch()
+					.catch(() => {
+						this.store.setIsFetchingHint(false)
+					})
 			} catch (error) {
+				this.store.setIsFetchingHint(false)
 				this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 			}
 		}
@@ -120,10 +125,12 @@ export class HintsBox {
 		const selectedCues = this.store.selectedCues()
 
 		if (selectedCues.length === 3) {
+			this.store.setIsCheckingTriad(true)
 			this.gamePlayApi
 				.checkTriad(selectedCues)
 				.pipe(
 					tap((success) => {
+						this.store.setIsCheckingTriad(false)
 						if (success) {
 							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 							this.gamePlayLogic.answerFieldFocus$.next(true)
@@ -153,7 +160,11 @@ export class HintsBox {
 						}
 					}),
 				)
-				.subscribe()
+				.subscribe({
+					error: () => {
+						this.store.setIsCheckingTriad(false)
+					},
+				})
 		}
 	}
 

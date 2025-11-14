@@ -2,9 +2,16 @@
 	class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
 	<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Hints</p>
 	<div class="w-full flex justify-center items-center gap-2">
+		@let isLoading = store.isFetchingHint() || store.isCheckingTriad();
 		@for (hint of store.hints(); track hint.id) {
-			<button class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16 circle" (click)="onHintClick()" [disabled]="!hint.available" aria-label="Use a hint">
-				@if (hint.available) {
+			<button
+				class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16 circle relative disabled:opacity-50 disabled:cursor-not-allowed"
+				(click)="onHintClick()"
+				[disabled]="!hint.available || isLoading"
+				aria-label="Use a hint">
+				@if (hint.available && isLoading) {
+					<span class="loading loading-spinner loading-xs absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></span>
+				} @else if (hint.available) {
 					<img src="images/lifesaver.svg" alt="hint" />
 				}
 			</button>
@@ -20,17 +27,23 @@
 		<div class="w-full h-fit flex flex-col gap-2 mt-2">
 			<button
 				type="button"
-				class="btn btn-info text-base-100"
-				[disabled]="store.usedHintTypes().includes('KEYWORD_LENGTH')"
+				class="btn btn-info text-base-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+				[disabled]="store.usedHintTypes().includes('KEYWORD_LENGTH') || store.isFetchingHint()"
 				(click)="useHint('KEYWORD_LENGTH')">
-				Number of letters
+				@if (store.isFetchingHint()) {
+					<span class="loading loading-spinner loading-sm"></span>
+				}
+				<span>Number of letters</span>
 			</button>
 			<button
 				type="button"
-				class="btn btn-primary text-base-100"
-				[disabled]="store.usedHintTypes().includes('FIRST_LETTER')"
+				class="btn btn-primary text-base-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+				[disabled]="store.usedHintTypes().includes('FIRST_LETTER') || store.isFetchingHint()"
 				(click)="useHint('FIRST_LETTER')">
-				1st letter of word
+				@if (store.isFetchingHint()) {
+					<span class="loading loading-spinner loading-sm"></span>
+				}
+				<span>1st letter of word</span>
 			</button>
 		</div>
 

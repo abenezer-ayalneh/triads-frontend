@@ -21,6 +21,10 @@ export class Bubble {
 
 	pop = computed<boolean>(() => this.store.cuesToExplode().includes(this.cue()))
 
+	isDisabled = computed<boolean>(
+		() => this.store.isCheckingTriad() || this.store.isCheckingAnswer() || this.store.isFetchingHint() || this.store.isFetchingFinalTriadCues(),
+	)
+
 	// Expose host element so parent can position it
 	element = inject<ElementRef<HTMLElement>>(ElementRef)
 
@@ -31,6 +35,10 @@ export class Bubble {
 	}
 
 	whenClicked() {
+		if (this.isDisabled()) {
+			return
+		}
+
 		const selectedCuesLength = this.store.selectedCues().length
 		if (this.selected()) {
 			this.store.removeSelectedCue(this.cue())
