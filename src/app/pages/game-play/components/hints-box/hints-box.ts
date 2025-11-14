@@ -96,8 +96,13 @@ export class HintsBox {
 							this.store.setHints(useHintResponse.hints)
 							this.store.setTurns(useHintResponse.turns)
 
-							// Skip the "Check Solution" step
-							this.checkTriad()
+							// Check if turns are exhausted after using a hint
+							if (this.turnService.numberOfAvailableTurns(useHintResponse.turns) === 0) {
+								this.gamePlayLogic.handleGameLost()
+							} else {
+								// Skip the "Check Solution" step
+								this.checkTriad()
+							}
 						}
 					})
 					.catch()
@@ -121,15 +126,26 @@ export class HintsBox {
 						} else {
 							this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
 							this.useTurn()
+							// Check if turns are exhausted immediately after using a turn
+							if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+								this.gamePlayLogic.handleGameLost()
+							}
 						}
 					}),
 					filter((success) => !success),
 					delay(3000),
 					tap(() => {
-						// Only change the state back to PLAYING if not in WON or LOST state
-						if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
+						// Only change the state back to PLAYING if not in WON or LOST state and turns are not exhausted
+						if (
+							this.store.gamePlayState() !== GamePlayState.WON &&
+							this.store.gamePlayState() !== GamePlayState.LOST &&
+							this.turnService.numberOfAvailableTurns(this.store.turns()) > 0
+						) {
 							this.store.setGamePlayState(GamePlayState.PLAYING)
 							this.store.setSelectedCues([])
+						} else if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+							// If turns are exhausted, ensure game lost state is set
+							this.gamePlayLogic.handleGameLost()
 						}
 					}),
 				)

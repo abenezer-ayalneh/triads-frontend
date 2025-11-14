@@ -25,7 +25,7 @@ export class HintService {
 		}
 
 		const numberOfTurnsLeft = this.turnService.numberOfAvailableTurns(turns)
-		if (numberOfTurnsLeft > 1) {
+		if (numberOfTurnsLeft > 0) {
 			turns = this.turnService.useTurn(turns)
 		}
 
