@@ -33,9 +33,15 @@ export class HintsBox {
 
 	onHintClick() {
 		const availableHints = this.store.hints().filter((hint) => hint.available).length
+		const selectedCues = this.store.selectedCues()
 		const cues = this.store.cues()
 		const availableCues = cues && cues.length > 0 ? this.store.cues() : this.store.finalTriadCues()
-		const shouldShowChoice = availableHints === 1 || availableCues?.length === 3
+
+		// Show hint choice modal if:
+		// 1. Only 1 hint available, OR
+		// 2. 3 cues are selected (triad-forming), OR
+		// 3. Only 3 cues remain (final triad)
+		const shouldShowChoice = availableHints === 1 || selectedCues.length === 3 || availableCues?.length === 3
 
 		if (availableCues && availableCues.length > 0) {
 			if (shouldShowChoice) {
@@ -48,8 +54,21 @@ export class HintsBox {
 
 	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
 		this.store.setHintUsage(true)
-		const cues = this.store.cues()
-		const availableCues = cues && cues.length > 0 ? this.store.cues() : this.store.finalTriadCues()
+
+		// Check if user has 3 cues selected - if so, use those for the hint
+		const selectedCues = this.store.selectedCues()
+		const hadThreeSelected = selectedCues.length === 3
+
+		// Determine which cues to use for the hint request
+		let availableCues: string[] | null = null
+		if (hadThreeSelected) {
+			// User has 3 cues selected, use those for the hint
+			availableCues = selectedCues
+		} else {
+			// Fall back to current behavior: use all cues or final triad cues
+			const cues = this.store.cues()
+			availableCues = cues && cues.length > 0 ? this.store.cues() : this.store.finalTriadCues()
+		}
 
 		if (availableCues) {
 			try {
@@ -94,8 +113,12 @@ export class HintsBox {
 							// Close the extra hint modal
 							this.hintChoiceModalRef()?.nativeElement.close()
 
-							// Show the hint cues as selected on the UI
-							this.store.setSelectedCues(triadsForHint.hint)
+							// Only update selected cues if user didn't originally have 3 selected
+							// This preserves the user's selection when they request a hint for their selected triad
+							if (!hadThreeSelected) {
+								// Show the hint cues as selected on the UI
+								this.store.setSelectedCues(triadsForHint.hint)
+							}
 
 							// Update the hints and turn values
 							this.store.setHints(useHintResponse.hints)
