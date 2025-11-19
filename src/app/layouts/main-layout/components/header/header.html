@@ -23,9 +23,35 @@
 	</div>
 
 	<div class="w-fit flex justify-end items-center gap-4">
-		<button class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient">
-			<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
-		</button>
+		<div class="relative" appClickOutside (appClickOutside)="closeUsernameDropdown()">
+			<button
+				(click)="toggleUsernameDropdown()"
+				class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
+				<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
+			</button>
+			@if (showUsernameDropdown()) {
+				<div class="absolute top-full right-0 mt-2 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 p-4 z-50 flex flex-col gap-3">
+					<label class="text-sm font-medium text-base-content">Username</label>
+					<input
+						type="text"
+						[(ngModel)]="editedUsername"
+						placeholder="Enter username"
+						class="input input-bordered w-full text-sm"
+						minlength="3"
+						required />
+					<div class="flex gap-2 justify-end">
+						<button type="button" (click)="cancelUsernameUpdate()" class="btn btn-sm btn-ghost">Cancel</button>
+						<button
+							type="button"
+							(click)="updateUsername()"
+							[disabled]="!editedUsername() || editedUsername()?.trim().length < 3"
+							class="btn btn-sm btn-primary disabled:opacity-50">
+							Update
+						</button>
+					</div>
+				</div>
+			}
+		</div>
 		<button
 			(click)="showHowToPlay()"
 			class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
