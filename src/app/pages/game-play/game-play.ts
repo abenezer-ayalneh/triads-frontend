@@ -1,7 +1,8 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core'
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
 import { gsap } from 'gsap'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
+import { Subscription } from 'rxjs'
 
 import { BubbleContainer } from '../../components/bubble-container/bubble-container'
 import { RequestState } from '../../shared/enums/request-state.enum'
@@ -35,7 +36,7 @@ import { GamePlayApi } from './services/game-play-api'
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
 })
-export class GamePlay implements OnInit {
+export class GamePlay implements OnInit, OnDestroy {
 	readonly store = inject(GlobalStore)
 
 	cueFetchingState = signal<RequestState>(RequestState.LOADING)
@@ -68,19 +69,27 @@ export class GamePlay implements OnInit {
 
 	private readonly gamePlayApi = inject(GamePlayApi)
 
+	private readonly subscriptions$ = new Subscription()
+
 	ngOnInit() {
 		this.initializeGame()
 	}
 
+	ngOnDestroy() {
+		this.subscriptions$.unsubscribe()
+	}
+
 	initializeGame() {
-		this.gamePlayApi.getCues().subscribe({
-			next: (cues) => {
-				// this.store.setTriadsGroup({ id: cues.id, triads: cues.triads.map((triad) => ({ ...triad, available: true })) })
-				this.store.setCues(cues)
-				this.cueFetchingState.set(RequestState.READY)
-				this.store.setGamePlayState(GamePlayState.PLAYING)
-			},
-		})
+		this.subscriptions$.add(
+			this.gamePlayApi.getCues().subscribe({
+				next: (cues) => {
+					// this.store.setTriadsGroup({ id: cues.id, triads: cues.triads.map((triad) => ({ ...triad, available: true })) })
+					this.store.setCues(cues)
+					this.cueFetchingState.set(RequestState.READY)
+					this.store.setGamePlayState(GamePlayState.PLAYING)
+				},
+			}),
+		)
 	}
 
 	async moveToSolvedArea(solvedTriad: SolvedTriadInterface) {

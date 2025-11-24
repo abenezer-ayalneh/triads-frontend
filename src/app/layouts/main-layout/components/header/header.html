@@ -44,7 +44,7 @@
 						<button
 							type="button"
 							(click)="updateUsername()"
-							[disabled]="!editedUsername() || editedUsername()?.trim().length < 3"
+							[disabled]="editedUsername().trim().length === 0"
 							class="btn btn-sm btn-primary disabled:opacity-50">
 							Update
 						</button>

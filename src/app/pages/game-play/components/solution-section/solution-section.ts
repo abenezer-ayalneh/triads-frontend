@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, effect, ElementRef, inject, OnInit, output, viewChild } from '@angular/core'
+import { AfterViewChecked, Component, effect, ElementRef, inject, OnDestroy, OnInit, output, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
@@ -18,7 +18,7 @@ import { InputSet } from '../input-set/input-set'
 	templateUrl: './solution-section.html',
 	styleUrl: './solution-section.scss',
 })
-export class SolutionSection implements OnInit, AfterViewChecked {
+export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	whenMovingCueToSolutionBox = output<SolvedTriad>()
 
 	readonly store = inject(GlobalStore)
@@ -31,6 +31,8 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 	protected readonly GamePlayState = GamePlayState
 
 	private readonly subscriptions$ = new Subscription()
+
+	private timeoutIds: ReturnType<typeof setTimeout>[] = []
 
 	private readonly gamePlayApi = inject(GamePlayApi)
 
@@ -61,16 +63,24 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 		this.subscribeToAnswerFieldChanges()
 	}
 
+	ngOnDestroy() {
+		this.subscriptions$.unsubscribe()
+		// CRITICAL: Clear all pending timeouts
+		this.timeoutIds.forEach((id) => clearTimeout(id))
+		this.timeoutIds = []
+	}
+
 	ngAfterViewChecked() {
 		// Focus the answer field if needed
 		if (this.shouldFocusAnswerField) {
 			const answerField = this.answerFieldRef()?.nativeElement
 			if (answerField) {
 				// Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
-				setTimeout(() => {
+				const timeoutId = setTimeout(() => {
 					answerField.focus()
 					this.shouldFocusAnswerField = false
 				}, 0)
+				this.timeoutIds.push(timeoutId)
 			}
 		}
 	}
@@ -80,45 +90,47 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 
 		if (selectedCues.length === 3) {
 			this.store.setIsCheckingTriad(true)
-			this.gamePlayApi
-				.checkTriad(selectedCues)
-				.pipe(
-					tap((success) => {
-						this.store.setIsCheckingTriad(false)
-						if (success) {
-							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-							this.shouldFocusAnswerField = true
-						} else {
-							this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
-							this.useTurn()
-							// Check if turns are exhausted immediately after using a turn
-							if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+			this.subscriptions$.add(
+				this.gamePlayApi
+					.checkTriad(selectedCues)
+					.pipe(
+						tap((success) => {
+							this.store.setIsCheckingTriad(false)
+							if (success) {
+								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+								this.shouldFocusAnswerField = true
+							} else {
+								this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
+								this.useTurn()
+								// Check if turns are exhausted immediately after using a turn
+								if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+									this.gamePlayLogic.handleGameLost()
+								}
+							}
+						}),
+						filter((success) => !success),
+						delay(3000),
+						tap(() => {
+							// Only change state back to PLAYING if not in WON or LOST state and turns are not exhausted
+							if (
+								this.store.gamePlayState() !== GamePlayState.WON &&
+								this.store.gamePlayState() !== GamePlayState.LOST &&
+								this.turnService.numberOfAvailableTurns(this.store.turns()) > 0
+							) {
+								this.store.setGamePlayState(GamePlayState.PLAYING)
+								this.store.setSelectedCues([])
+							} else if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+								// If turns are exhausted, ensure game lost state is set
 								this.gamePlayLogic.handleGameLost()
 							}
-						}
+						}),
+					)
+					.subscribe({
+						error: () => {
+							this.store.setIsCheckingTriad(false)
+						},
 					}),
-					filter((success) => !success),
-					delay(3000),
-					tap(() => {
-						// Only change state back to PLAYING if not in WON or LOST state and turns are not exhausted
-						if (
-							this.store.gamePlayState() !== GamePlayState.WON &&
-							this.store.gamePlayState() !== GamePlayState.LOST &&
-							this.turnService.numberOfAvailableTurns(this.store.turns()) > 0
-						) {
-							this.store.setGamePlayState(GamePlayState.PLAYING)
-							this.store.setSelectedCues([])
-						} else if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
-							// If turns are exhausted, ensure game lost state is set
-							this.gamePlayLogic.handleGameLost()
-						}
-					}),
-				)
-				.subscribe({
-					error: () => {
-						this.store.setIsCheckingTriad(false)
-					},
-				})
+			)
 		}
 	}
 
@@ -126,15 +138,17 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 		const selectedCues = this.store.selectedCues()
 		if (answer !== null && answer.length > 0 && selectedCues && selectedCues.length === 3) {
 			this.store.setIsCheckingAnswer(true)
-			this.gamePlayApi.checkAnswer(selectedCues, answer).subscribe({
-				next: (response) => {
-					this.handleAnswerResponse(response)
-					this.store.setIsCheckingAnswer(false)
-				},
-				error: () => {
-					this.store.setIsCheckingAnswer(false)
-				},
-			})
+			this.subscriptions$.add(
+				this.gamePlayApi.checkAnswer(selectedCues, answer).subscribe({
+					next: (response) => {
+						this.handleAnswerResponse(response)
+						this.store.setIsCheckingAnswer(false)
+					},
+					error: () => {
+						this.store.setIsCheckingAnswer(false)
+					},
+				}),
+			)
 		}
 	}
 
@@ -145,18 +159,20 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 			this.store.addSolvedTriad(response)
 
 			for (let i = 0; i < response.cues.length; i++) {
-				setTimeout(
+				const timeoutId = setTimeout(
 					() => {
 						this.store.addCueToExplode(response.cues[i])
 					},
 					100 * (i + 1),
 				)
+				this.timeoutIds.push(timeoutId)
 			}
 
-			setTimeout(() => {
+			const timeoutId = setTimeout(() => {
 				this.whenMovingCueToSolutionBox.emit(response)
 				this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
 			}, 1000)
+			this.timeoutIds.push(timeoutId)
 		} else {
 			this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
 			if (!this.store.hintUsed()) {
@@ -169,7 +185,7 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 		}
 		this.answerFormControl.reset()
 
-		setTimeout(() => {
+		const timeoutId = setTimeout(() => {
 			// Only change state if not in the WON or LOST state
 			if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
 				// Always reset the keyword length hint and first letter hint back to null so the normal input field is shown
@@ -238,6 +254,7 @@ export class SolutionSection implements OnInit, AfterViewChecked {
 
 			this.store.setHintUsage(false)
 		}, 2000)
+		this.timeoutIds.push(timeoutId)
 	}
 
 	private useTurn() {

@@ -41,6 +41,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private bubbleCreationInterval: ReturnType<typeof setInterval> | undefined
 
+	private timeoutIds: ReturnType<typeof setTimeout>[] = []
+
 	private bubbleCreationDelay = 1100 // milliseconds between each bubble creation (75% slower than before)
 
 	private nextBubbleSide: 'left' | 'right' = 'left' // Track which side to spawn next bubble from
@@ -49,13 +51,17 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private boundaryWalls: Matter.Body[] = []
 
+	private animationFrameId?: number
+
+	private collisionHandler?: (event: Matter.IEventCollision<Matter.Engine>) => void
+
 	constructor() {
 		this.engine = Matter.Engine.create({
 			gravity: { x: 0, y: 0, scale: 0 },
 		})
 
 		// Add collision detection between bubbles
-		Matter.Events.on(this.engine, 'collisionStart', (event) => {
+		this.collisionHandler = (event) => {
 			const pairs = event.pairs
 			pairs.forEach((pair) => {
 				const { bodyA, bodyB } = pair
@@ -64,7 +70,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 					this.handleBubbleCollision(bodyA, bodyB)
 				}
 			})
-		})
+		}
+		Matter.Events.on(this.engine, 'collisionStart', this.collisionHandler)
 
 		effect(() => {
 			const finalTriadCuesReached = this.store.triadsStep() === 'FINAL'
@@ -90,6 +97,12 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
+		// CRITICAL: Stop the requestAnimationFrame loop
+		if (this.animationFrameId !== undefined) {
+			cancelAnimationFrame(this.animationFrameId)
+			this.animationFrameId = undefined
+		}
+
 		// Clear the bubble creation interval
 		if (this.bubbleCreationInterval) {
 			clearInterval(this.bubbleCreationInterval)
@@ -101,6 +114,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			this.resizeDebounceTimer = undefined
 		}
 
+		// CRITICAL: Clear all pending timeouts
+		this.timeoutIds.forEach((id) => clearTimeout(id))
+		this.timeoutIds = []
+
 		if (this.windowResizeListener) {
 			window.removeEventListener('resize', this.windowResizeListener)
 			this.windowResizeListener = undefined
@@ -110,21 +127,49 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			this.resizeObserver.disconnect()
 			this.resizeObserver = undefined
 		}
+
+		// CRITICAL: Remove Matter.js event listeners
+		if (this.collisionHandler) {
+			Matter.Events.off(this.engine, 'collisionStart', this.collisionHandler)
+			this.collisionHandler = undefined
+		}
+
+		// CRITICAL: Clear all entities and bodies from the world
+		if (this.entities.length > 0) {
+			const bodies = this.entities.map((entity) => entity.body)
+			Matter.Composite.remove(this.engine.world, bodies)
+			this.entities = []
+		}
+
+		// CRITICAL: Remove boundary walls
+		if (this.boundaryWalls.length > 0) {
+			Matter.Composite.remove(this.engine.world, this.boundaryWalls)
+			this.boundaryWalls = []
+		}
+
 		if (this.runner) {
 			Matter.Runner.stop(this.runner)
 			this.runner = undefined
 		}
 		if (this.render) {
 			Matter.Render.stop(this.render)
-			// Matter.Render.clear(this.render) // optional
 			this.render.canvas.width = 0
 			this.render.canvas.height = 0
 			this.render = undefined
 		}
+
+		// CRITICAL: Clear the engine world and destroy the engine
+		Matter.Composite.clear(this.engine.world, false)
+		Matter.Engine.clear(this.engine)
 	}
 
 	runSimulation() {
 		const update = () => {
+			// CRITICAL: Check if component is still alive before continuing
+			if (this.animationFrameId === undefined) {
+				return // Component was destroyed, stop the loop
+			}
+
 			Matter.Engine.update(this.engine, 1000 / 60) // 60 FPS
 
 			// Get container dimensions for calculations
@@ -211,9 +256,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				element.style.top = `${y - halfHeight}px`
 			})
 
-			requestAnimationFrame(update)
+			// CRITICAL: Store the animation frame ID so we can cancel it
+			this.animationFrameId = requestAnimationFrame(update)
 		}
-		update()
+		this.animationFrameId = requestAnimationFrame(update)
 	}
 
 	/**
@@ -344,10 +390,11 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		// Animate the bubble appearance
 		element.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out'
-		setTimeout(() => {
+		const timeoutId = setTimeout(() => {
 			element.style.visibility = 'visible' // Make visible first
 			element.style.opacity = '1'
 		}, 50) // Small delay to ensure transition applies
+		this.timeoutIds.push(timeoutId)
 	}
 
 	private createOrUpdateBoundaries() {
@@ -550,11 +597,12 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Create bubbles one after the other with a delay
 		let index = 0
 		const createNextBubble = () => {
-			if (index < finalTriadQueue.length) {
+			if (index < finalTriadQueue.length && this.animationFrameId !== undefined) {
 				const bubbleComponent = finalTriadQueue[index]
 				this.createFinalTriadBubble(bubbleComponent, index)
 				index++
-				setTimeout(createNextBubble, this.bubbleCreationDelay)
+				const timeoutId = setTimeout(createNextBubble, this.bubbleCreationDelay)
+				this.timeoutIds.push(timeoutId)
 			}
 		}
 
@@ -631,11 +679,12 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		// Animate the bubble appearance
 		element.style.transition = 'opacity 0.5s ease-out'
-		setTimeout(() => {
+		const timeoutId = setTimeout(() => {
 			element.style.visibility = 'visible' // Make visible first
 			element.style.opacity = '1'
 			element.style.transform = 'scale(1)'
 		}, 50) // Small delay to ensure transition applies
+		this.timeoutIds.push(timeoutId)
 	}
 
 	/**
@@ -746,9 +795,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		})
 
 		// Trigger rearrangement after hiding bubbles
-		setTimeout(() => {
+		const timeoutId = setTimeout(() => {
 			this.rearrangeBubbles()
 		}, 100)
+		this.timeoutIds.push(timeoutId)
 	}
 
 	private rearrangeBubbles() {

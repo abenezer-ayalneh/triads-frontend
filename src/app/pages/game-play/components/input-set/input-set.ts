@@ -15,6 +15,8 @@ import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 export class InputSet implements AfterViewInit, OnDestroy {
 	subscriptions$ = new Subscription()
 
+	private timeoutIds: ReturnType<typeof setTimeout>[] = []
+
 	quantity = input.required<number>()
 
 	firstLetter = input<string | null>(null)
@@ -43,9 +45,10 @@ export class InputSet implements AfterViewInit, OnDestroy {
 						firstControl.setValue(firstLetterValue)
 						// Focus on the second box if it exists
 						if (this.inputRefs().length > 1) {
-							setTimeout(() => {
+							const timeoutId = setTimeout(() => {
 								this.inputRefs()[1]?.nativeElement.focus()
 							}, 0)
+							this.timeoutIds.push(timeoutId)
 						}
 					}
 				}
@@ -70,14 +73,18 @@ export class InputSet implements AfterViewInit, OnDestroy {
 		}
 		// If first letter is set, focus on the second box (index 1) instead of the first
 		if (this.firstLetter() && this.inputRefs().length > 1) {
-			setTimeout(() => {
+			const timeoutId = setTimeout(() => {
 				this.inputRefs()[1]?.nativeElement.focus()
 			}, 0)
+			this.timeoutIds.push(timeoutId)
 		}
 	}
 
 	ngOnDestroy() {
 		this.subscriptions$.unsubscribe()
+		// CRITICAL: Clear all pending timeouts
+		this.timeoutIds.forEach((id) => clearTimeout(id))
+		this.timeoutIds = []
 	}
 
 	/**

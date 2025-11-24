@@ -1,6 +1,6 @@
-import { Component, ElementRef, inject, viewChild } from '@angular/core'
+import { Component, ElementRef, inject, OnDestroy, viewChild } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
-import { delay, filter, firstValueFrom, tap } from 'rxjs'
+import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
@@ -16,7 +16,7 @@ import { TurnService } from '../../services/turn-service'
 	templateUrl: './hints-box.html',
 	styleUrl: './hints-box.scss',
 })
-export class HintsBox {
+export class HintsBox implements OnDestroy {
 	readonly store = inject(GlobalStore)
 
 	private readonly hintService = inject(HintService)
@@ -30,6 +30,12 @@ export class HintsBox {
 	private readonly turnService = inject(TurnService)
 
 	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
+
+	private readonly subscriptions$ = new Subscription()
+
+	ngOnDestroy() {
+		this.subscriptions$.unsubscribe()
+	}
 
 	onHintClick() {
 		const availableHints = this.store.hints().filter((hint) => hint.available).length
@@ -149,45 +155,47 @@ export class HintsBox {
 
 		if (selectedCues.length === 3) {
 			this.store.setIsCheckingTriad(true)
-			this.gamePlayApi
-				.checkTriad(selectedCues)
-				.pipe(
-					tap((success) => {
-						this.store.setIsCheckingTriad(false)
-						if (success) {
-							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-							this.gamePlayLogic.answerFieldFocus$.next(true)
-						} else {
-							this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
-							this.useTurn()
-							// Check if turns are exhausted immediately after using a turn
-							if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+			this.subscriptions$.add(
+				this.gamePlayApi
+					.checkTriad(selectedCues)
+					.pipe(
+						tap((success) => {
+							this.store.setIsCheckingTriad(false)
+							if (success) {
+								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+								this.gamePlayLogic.answerFieldFocus$.next(true)
+							} else {
+								this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
+								this.useTurn()
+								// Check if turns are exhausted immediately after using a turn
+								if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+									this.gamePlayLogic.handleGameLost()
+								}
+							}
+						}),
+						filter((success) => !success),
+						delay(3000),
+						tap(() => {
+							// Only change the state back to PLAYING if not in WON or LOST state and turns are not exhausted
+							if (
+								this.store.gamePlayState() !== GamePlayState.WON &&
+								this.store.gamePlayState() !== GamePlayState.LOST &&
+								this.turnService.numberOfAvailableTurns(this.store.turns()) > 0
+							) {
+								this.store.setGamePlayState(GamePlayState.PLAYING)
+								this.store.setSelectedCues([])
+							} else if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+								// If turns are exhausted, ensure game lost state is set
 								this.gamePlayLogic.handleGameLost()
 							}
-						}
+						}),
+					)
+					.subscribe({
+						error: () => {
+							this.store.setIsCheckingTriad(false)
+						},
 					}),
-					filter((success) => !success),
-					delay(3000),
-					tap(() => {
-						// Only change the state back to PLAYING if not in WON or LOST state and turns are not exhausted
-						if (
-							this.store.gamePlayState() !== GamePlayState.WON &&
-							this.store.gamePlayState() !== GamePlayState.LOST &&
-							this.turnService.numberOfAvailableTurns(this.store.turns()) > 0
-						) {
-							this.store.setGamePlayState(GamePlayState.PLAYING)
-							this.store.setSelectedCues([])
-						} else if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
-							// If turns are exhausted, ensure game lost state is set
-							this.gamePlayLogic.handleGameLost()
-						}
-					}),
-				)
-				.subscribe({
-					error: () => {
-						this.store.setIsCheckingTriad(false)
-					},
-				})
+			)
 		}
 	}
 
