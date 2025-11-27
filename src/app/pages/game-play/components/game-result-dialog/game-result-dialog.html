@@ -6,6 +6,9 @@
 		<div class="text-center space-y-2">
 			<ng-content />
 		</div>
-		<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
+		<div class="flex gap-3">
+			<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
+			<button (click)="quitGame()" class="btn btn-outline btn-lg text-base-100 hover:bg-error">Quit Now</button>
+		</div>
 	</div>
 </div>

@@ -126,6 +126,37 @@ export const GlobalStore = signalStore(
 		addCueToExplode: (cueToExplode: string) => {
 			patchState(store, (state) => ({ ...state, cuesToExplode: [...state.cuesToExplode, cueToExplode] }))
 		},
+		resetGameState: () => {
+			patchState(store, (state) => ({
+				...state,
+				cues: null,
+				finalTriadCues: null,
+				selectedCues: [],
+				turns: [
+					{ id: 1, available: true, icon: 'images/turn-one.png' },
+					{ id: 2, available: true, icon: 'images/turn-two.png' },
+					{ id: 3, available: true, icon: 'images/turn-three.png' },
+				],
+				hints: [
+					{ id: 1, available: true },
+					{ id: 2, available: true },
+				],
+				gamePlayState: GamePlayState.IDLE,
+				triadsStep: 'INITIAL' as const,
+				keywordLengthHint: null,
+				firstLetterHint: null,
+				activeHintType: null,
+				usedHintTypes: [],
+				solvedTriads: [],
+				hintUsed: false,
+				isFetchingFinalTriadCues: false,
+				isCheckingTriad: false,
+				isCheckingAnswer: false,
+				isFetchingHint: false,
+				gameScore: 0,
+				cuesToExplode: [],
+			}))
+		},
 	})),
 	withHooks({
 		onInit(store) {

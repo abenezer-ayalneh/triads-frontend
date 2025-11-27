@@ -52,6 +52,7 @@ export class Header implements OnDestroy {
 	}
 
 	quitGame() {
+		this.store.resetGameState()
 		this.router.navigate(['/home'])
 	}
 

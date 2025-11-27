@@ -174,7 +174,7 @@ export class HintsBox implements OnDestroy {
 							}
 						}),
 						filter((success) => !success),
-						delay(3000),
+						delay(2000),
 						tap(() => {
 							// Only change the state back to PLAYING if not in WON or LOST state and turns are not exhausted
 							if (
