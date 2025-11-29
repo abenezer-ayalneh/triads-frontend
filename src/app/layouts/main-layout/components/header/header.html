@@ -22,6 +22,10 @@
 		<app-stats (whenClosingStatsWindow)="closeStatsWindow()" />
 	</div>
 
+	@if (showQuitConfirmation()) {
+		<app-quit-confirmation-dialog (whenConfirmed)="confirmQuit()" (whenCanceled)="cancelQuit()" />
+	}
+
 	<div class="w-fit flex justify-end items-center gap-4">
 		<div class="relative" appClickOutside (appClickOutside)="closeUsernameDropdown()">
 			<button

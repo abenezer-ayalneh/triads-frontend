@@ -4,6 +4,7 @@ import { MatTooltip } from '@angular/material/tooltip'
 import { NavigationEnd, Router } from '@angular/router'
 import { filter, Subscription } from 'rxjs'
 
+import { QuitConfirmationDialog } from '../../../../shared/components/quit-confirmation-dialog/quit-confirmation-dialog'
 import { ClickOutsideDirective } from '../../../../shared/directives/click-outside'
 import { UserService } from '../../../../shared/services/user.service'
 import { GlobalStore } from '../../../../state/global.store'
@@ -11,7 +12,7 @@ import { Stats } from '../stats/stats'
 
 @Component({
 	selector: 'app-header',
-	imports: [Stats, MatTooltip, FormsModule, ClickOutsideDirective],
+	imports: [Stats, MatTooltip, FormsModule, ClickOutsideDirective, QuitConfirmationDialog],
 	templateUrl: './header.html',
 	styleUrl: './header.scss',
 })
@@ -25,6 +26,8 @@ export class Header implements OnDestroy {
 	showStats = signal<boolean>(false)
 
 	showUsernameDropdown = signal<boolean>(false)
+
+	showQuitConfirmation = signal<boolean>(false)
 
 	editedUsername = model<string>('')
 
@@ -52,8 +55,17 @@ export class Header implements OnDestroy {
 	}
 
 	quitGame() {
+		this.showQuitConfirmation.set(true)
+	}
+
+	confirmQuit() {
 		this.store.resetGameState()
 		this.router.navigate(['/home'])
+		this.showQuitConfirmation.set(false)
+	}
+
+	cancelQuit() {
+		this.showQuitConfirmation.set(false)
 	}
 
 	toggleStatusWindow() {
