@@ -1,4 +1,4 @@
-import { Component, inject, input } from '@angular/core'
+import { Component, inject, input, output } from '@angular/core'
 import { Router } from '@angular/router'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
@@ -13,6 +13,8 @@ import { GlobalStore } from '../../../../state/global.store'
 export class GameResultDialog {
 	result = input.required<'WON' | 'LOST'>()
 
+	restartRequested = output<void>()
+
 	readonly store = inject(GlobalStore)
 
 	private readonly router = inject(Router)
@@ -26,7 +28,8 @@ export class GameResultDialog {
 	}
 
 	restartGame() {
-		window.location.reload()
+		this.store.resetGameState()
+		this.restartRequested.emit()
 	}
 
 	quitGame() {

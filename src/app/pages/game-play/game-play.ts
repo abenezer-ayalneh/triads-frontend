@@ -69,7 +69,7 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private readonly gamePlayApi = inject(GamePlayApi)
 
-	private readonly subscriptions$ = new Subscription()
+	private subscriptions$ = new Subscription()
 
 	ngOnInit() {
 		this.initializeGame()
@@ -80,6 +80,7 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	initializeGame() {
+		this.cueFetchingState.set(RequestState.LOADING)
 		this.subscriptions$.add(
 			this.gamePlayApi.getCues().subscribe({
 				next: (cues) => {
@@ -90,6 +91,18 @@ export class GamePlay implements OnInit, OnDestroy {
 				},
 			}),
 		)
+	}
+
+	restartGame() {
+		// Clear existing subscriptions to avoid memory leaks
+		this.subscriptions$.unsubscribe()
+		// Create a new subscription object for the restarted game
+		this.subscriptions$ = new Subscription()
+		// Reset local component state
+		this.cueFetchingState.set(RequestState.LOADING)
+		this.explodingBubbles.set([])
+		// Reinitialize the game (game state was already reset by GameResultDialog)
+		this.initializeGame()
 	}
 
 	async moveToSolvedArea(solvedTriad: SolvedTriadInterface) {

@@ -25,12 +25,18 @@ export class HintService {
 		}
 
 		const numberOfTurnsLeft = this.turnService.numberOfAvailableTurns(turns)
-		if (numberOfTurnsLeft > 0) {
+		let turnDeferred = false
+
+		// Only use a turn if more than 1 turn remains
+		// If exactly 1 turn remains, defer the turn usage (it will be used on wrong answer)
+		if (numberOfTurnsLeft > 1) {
 			turns = this.turnService.useTurn(turns)
+		} else if (numberOfTurnsLeft === 1) {
+			turnDeferred = true
 		}
 
 		hints[currentHintIndex].available = false
-		return { hints, turns }
+		return { hints, turns, turnDeferred }
 	}
 
 	getHint(cues: string[], hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {

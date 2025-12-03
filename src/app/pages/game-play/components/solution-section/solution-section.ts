@@ -154,6 +154,8 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 
 	private handleAnswerResponse(response: boolean | SolvedTriad) {
 		if (response && typeof response !== 'boolean') {
+			// Reset deferred turn flag on correct answer (turn was not consumed)
+			this.store.setHintUsedWithOneTurnRemaining(false)
 			this.bubblePopAudio.playbackRate = 0.7
 			this.bubblePopAudio.play()
 			this.store.addSolvedTriad(response)
@@ -175,7 +177,16 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 			this.timeoutIds.push(timeoutId)
 		} else {
 			this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
-			if (!this.store.hintUsed()) {
+			// If hint was used with one turn remaining, consume the deferred turn
+			if (this.store.hintUsedWithOneTurnRemaining()) {
+				this.useTurn()
+				this.store.setHintUsedWithOneTurnRemaining(false)
+				// Check if turns are exhausted immediately after using a turn
+				if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+					this.gamePlayLogic.handleGameLost()
+				}
+			} else if (!this.store.hintUsed()) {
+				// Normal case: use a turn if hint wasn't used
 				this.useTurn()
 				// Check if turns are exhausted immediately after using a turn
 				if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
@@ -253,6 +264,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 			}
 
 			this.store.setHintUsage(false)
+			this.store.setHintUsedWithOneTurnRemaining(false)
 		}, 2000)
 		this.timeoutIds.push(timeoutId)
 	}

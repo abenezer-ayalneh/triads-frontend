@@ -23,6 +23,7 @@ export interface GlobalState {
 	usedHintTypes: ('KEYWORD_LENGTH' | 'FIRST_LETTER')[]
 	solvedTriads: SolvedTriad[]
 	hintUsed: boolean
+	hintUsedWithOneTurnRemaining: boolean
 	gameScore: number
 	cuesToExplode: string[]
 }

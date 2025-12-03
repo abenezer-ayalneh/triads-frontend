@@ -31,6 +31,7 @@ const initialState: GlobalState = {
 	usedHintTypes: [],
 	solvedTriads: [],
 	hintUsed: false,
+	hintUsedWithOneTurnRemaining: false,
 	isFetchingFinalTriadCues: false,
 	isCheckingTriad: false,
 	isCheckingAnswer: false,
@@ -108,6 +109,9 @@ export const GlobalStore = signalStore(
 		setHintUsage: (hintUsed: boolean) => {
 			patchState(store, (state) => ({ ...state, hintUsed }))
 		},
+		setHintUsedWithOneTurnRemaining: (hintUsedWithOneTurnRemaining: boolean) => {
+			patchState(store, (state) => ({ ...state, hintUsedWithOneTurnRemaining }))
+		},
 		setIsFetchingFinalTriadCues: (isFetchingFinalTriadCues: boolean) => {
 			patchState(store, (state) => ({ ...state, isFetchingFinalTriadCues }))
 		},
@@ -149,6 +153,7 @@ export const GlobalStore = signalStore(
 				usedHintTypes: [],
 				solvedTriads: [],
 				hintUsed: false,
+				hintUsedWithOneTurnRemaining: false,
 				isFetchingFinalTriadCues: false,
 				isCheckingTriad: false,
 				isCheckingAnswer: false,

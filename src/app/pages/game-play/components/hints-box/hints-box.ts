@@ -130,6 +130,13 @@ export class HintsBox implements OnDestroy {
 							this.store.setHints(useHintResponse.hints)
 							this.store.setTurns(useHintResponse.turns)
 
+							// Track if turn was deferred (hint used with only 1 turn remaining)
+							if (useHintResponse.turnDeferred) {
+								this.store.setHintUsedWithOneTurnRemaining(true)
+							} else {
+								this.store.setHintUsedWithOneTurnRemaining(false)
+							}
+
 							// Check if turns are exhausted after using a hint
 							if (this.turnService.numberOfAvailableTurns(useHintResponse.turns) === 0) {
 								this.gamePlayLogic.handleGameLost()
