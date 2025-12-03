@@ -36,6 +36,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private windowResizeListener?: () => void
 
+	private visibilityChangeListener?: () => void
+
 	// Properties for sequential bubble creation
 	private bubbleCreationQueue: Bubble[] = []
 
@@ -121,6 +123,11 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		if (this.windowResizeListener) {
 			window.removeEventListener('resize', this.windowResizeListener)
 			this.windowResizeListener = undefined
+		}
+
+		if (this.visibilityChangeListener) {
+			document.removeEventListener('visibilitychange', this.visibilityChangeListener)
+			this.visibilityChangeListener = undefined
 		}
 
 		if (this.resizeObserver) {
@@ -249,6 +256,9 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 			// Add random movement to non-selected bubbles
 			this.addRandomMovementToNonSelectedBubbles()
+
+			// Enforce boundaries for all bubbles every frame
+			this.enforceBoundaries(width, height)
 
 			this.entities.forEach(({ element, body, halfWidth, halfHeight }) => {
 				const { x, y } = body.position
@@ -474,6 +484,8 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		// Debounced resize handler
 		const debouncedResize = () => {
+			// Immediately clamp bubbles before debounce completes
+			this.clampAllBubblesToBoundaries()
 			if (this.resizeDebounceTimer) {
 				clearTimeout(this.resizeDebounceTimer)
 			}
@@ -486,8 +498,21 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		// Also listen to window resize events as backup (handles TailwindCSS breakpoint changes)
 		// This ensures we catch size changes when the container doesn't change but bubble elements do
-		this.windowResizeListener = debouncedResize
+		this.windowResizeListener = () => {
+			// Immediately clamp bubbles before debounce completes
+			this.clampAllBubblesToBoundaries()
+			debouncedResize()
+		}
 		window.addEventListener('resize', this.windowResizeListener)
+
+		// Handle Page Visibility API - clamp bubbles when tab becomes visible
+		this.visibilityChangeListener = () => {
+			if (document.visibilityState === 'visible') {
+				// Immediately clamp all bubbles when tab becomes visible
+				this.clampAllBubblesToBoundaries()
+			}
+		}
+		document.addEventListener('visibilitychange', this.visibilityChangeListener)
 	}
 
 	private animateFinalTriadCues() {
@@ -1081,6 +1106,152 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 				if (y + radius > containerHeight + radius * 0.5) {
 					Matter.Body.setPosition(body, { x, y: containerHeight - radius })
 				}
+			}
+		})
+	}
+
+	/**
+	 * Enforce boundaries for all bubbles in the simulation loop
+	 * Checks and clamps bubbles to container bounds every frame
+	 * @param containerWidth Container width
+	 * @param containerHeight Container height
+	 */
+	private enforceBoundaries(containerWidth: number, containerHeight: number) {
+		this.entities.forEach((entity) => {
+			const { body, halfWidth, halfHeight } = entity
+			const radius = Math.max(halfWidth, halfHeight)
+			const { x, y } = body.position
+
+			// Calculate boundary limits accounting for bubble radius
+			const minX = radius
+			const maxX = containerWidth - radius
+			const minY = radius
+			const maxY = containerHeight - radius
+
+			// Skip if position is invalid
+			if (!isFinite(x) || !isFinite(y)) {
+				// Reset to center if invalid
+				Matter.Body.setPosition(body, {
+					x: Math.max(minX, Math.min(maxX, containerWidth / 2)),
+					y: Math.max(minY, Math.min(maxY, containerHeight / 2)),
+				})
+				Matter.Body.setVelocity(body, { x: 0, y: 0 })
+				return
+			}
+
+			let needsClamping = false
+			let clampedX = x
+			let clampedY = y
+
+			// Check and clamp X position
+			if (x < minX) {
+				clampedX = minX
+				needsClamping = true
+				// Apply containment force toward center
+				const forceX = 0.0005 * (minX - x)
+				Matter.Body.applyForce(body, body.position, { x: forceX, y: 0 })
+			} else if (x > maxX) {
+				clampedX = maxX
+				needsClamping = true
+				// Apply containment force toward center
+				const forceX = -0.0005 * (x - maxX)
+				Matter.Body.applyForce(body, body.position, { x: forceX, y: 0 })
+			}
+
+			// Check and clamp Y position
+			if (y < minY) {
+				clampedY = minY
+				needsClamping = true
+				// Apply containment force toward center
+				const forceY = 0.0005 * (minY - y)
+				Matter.Body.applyForce(body, body.position, { x: 0, y: forceY })
+			} else if (y > maxY) {
+				clampedY = maxY
+				needsClamping = true
+				// Apply containment force toward center
+				const forceY = -0.0005 * (y - maxY)
+				Matter.Body.applyForce(body, body.position, { x: 0, y: forceY })
+			}
+
+			// Clamp position if outside boundaries
+			if (needsClamping) {
+				Matter.Body.setPosition(body, { x: clampedX, y: clampedY })
+				// Reduce velocity if bubble was outside bounds to prevent further escape
+				const velocity = body.velocity
+				const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y)
+				if (speed > 1 && speed > 0) {
+					// Cap velocity to prevent escaping
+					Matter.Body.setVelocity(body, {
+						x: (velocity.x * 0.8) / speed,
+						y: (velocity.y * 0.8) / speed,
+					})
+				}
+			}
+		})
+	}
+
+	/**
+	 * Immediately clamp all bubbles to container boundaries
+	 * Used on resize and tab visibility change
+	 */
+	private clampAllBubblesToBoundaries() {
+		const container = this.container().nativeElement
+		const width = container.clientWidth || container.offsetWidth || 0
+		const height = container.clientHeight || container.offsetHeight || 0
+
+		if (width === 0 || height === 0) {
+			return // Container not ready
+		}
+
+		this.entities.forEach((entity) => {
+			const { body, halfWidth, halfHeight } = entity
+			const radius = Math.max(halfWidth, halfHeight)
+			const { x, y } = body.position
+
+			// Calculate boundary limits accounting for bubble radius
+			const minX = radius
+			const maxX = width - radius
+			const minY = radius
+			const maxY = height - radius
+
+			// Skip if position is invalid
+			if (!isFinite(x) || !isFinite(y)) {
+				// Reset to center if invalid
+				Matter.Body.setPosition(body, {
+					x: Math.max(minX, Math.min(maxX, width / 2)),
+					y: Math.max(minY, Math.min(maxY, height / 2)),
+				})
+				Matter.Body.setVelocity(body, { x: 0, y: 0 })
+				return
+			}
+
+			let clampedX = x
+			let clampedY = y
+			let needsClamping = false
+
+			// Clamp X position
+			if (x < minX) {
+				clampedX = minX
+				needsClamping = true
+			} else if (x > maxX) {
+				clampedX = maxX
+				needsClamping = true
+			}
+
+			// Clamp Y position
+			if (y < minY) {
+				clampedY = minY
+				needsClamping = true
+			} else if (y > maxY) {
+				clampedY = maxY
+				needsClamping = true
+			}
+
+			// Apply clamping if needed
+			if (needsClamping) {
+				Matter.Body.setPosition(body, { x: clampedX, y: clampedY })
+				// Reset velocity to prevent further escape
+				Matter.Body.setVelocity(body, { x: 0, y: 0 })
 			}
 		})
 	}
