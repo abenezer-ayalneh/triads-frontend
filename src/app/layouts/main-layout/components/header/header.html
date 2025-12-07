@@ -35,8 +35,9 @@
 			</button>
 			@if (showUsernameDropdown()) {
 				<div class="absolute top-full right-0 mt-2 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 p-4 z-50 flex flex-col gap-3">
-					<label class="text-sm font-medium text-base-content">Username</label>
+					<label for="edit-username" class="text-sm font-medium text-base-content">Username</label>
 					<input
+						id="edit-username"
 						type="text"
 						[(ngModel)]="editedUsername"
 						placeholder="Enter username"
