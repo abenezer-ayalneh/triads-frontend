@@ -5,77 +5,85 @@
 	<!-- Triads Display -->
 	<div class="flex flex-col md:flex-row gap-2 md:gap-0 mb-4">
 		<!-- Triad 1 -->
-		<div class="flex-1 flex flex-col">
-			<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad1.keyword }}</p>
-			<div class="flex flex-col gap-1">
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad1.fullPhrases[0] | highlightKey: triadGroup().triad1.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad1.fullPhrases[1] | highlightKey: triadGroup().triad1.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad1.fullPhrases[2] | highlightKey: triadGroup().triad1.keyword : 'text-gray-700'"></p>
+		@if (triadGroup().triad1) {
+			<div class="flex-1 flex flex-col">
+				<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad1.keyword }}</p>
+				<div class="flex flex-col gap-1">
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad1.fullPhrases[0] | highlightKey: triadGroup().triad1.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad1.fullPhrases[1] | highlightKey: triadGroup().triad1.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad1.fullPhrases[2] | highlightKey: triadGroup().triad1.keyword : 'text-gray-700'"></p>
+				</div>
 			</div>
-		</div>
+		}
 
 		<!-- Vertical Divider (Solid) -->
 		<div class="hidden md:block w-px bg-gray-400 mx-2"></div>
 
 		<!-- Triad 2 -->
-		<div class="flex-1 flex flex-col">
-			<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad2.keyword }}</p>
-			<div class="flex flex-col gap-1">
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad2.fullPhrases[0] | highlightKey: triadGroup().triad2.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad2.fullPhrases[1] | highlightKey: triadGroup().triad2.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad2.fullPhrases[2] | highlightKey: triadGroup().triad2.keyword : 'text-gray-700'"></p>
+		@if (triadGroup().triad2) {
+			<div class="flex-1 flex flex-col">
+				<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad2.keyword }}</p>
+				<div class="flex flex-col gap-1">
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad2.fullPhrases[0] | highlightKey: triadGroup().triad2.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad2.fullPhrases[1] | highlightKey: triadGroup().triad2.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad2.fullPhrases[2] | highlightKey: triadGroup().triad2.keyword : 'text-gray-700'"></p>
+				</div>
 			</div>
-		</div>
+		}
 
 		<!-- Vertical Divider (Solid) -->
 		<div class="hidden md:block w-px bg-gray-400 mx-2"></div>
 
 		<!-- Triad 3 -->
-		<div class="flex-1 flex flex-col">
-			<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad3.keyword }}</p>
-			<div class="flex flex-col gap-1">
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad3.fullPhrases[0] | highlightKey: triadGroup().triad3.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad3.fullPhrases[1] | highlightKey: triadGroup().triad3.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad3.fullPhrases[2] | highlightKey: triadGroup().triad3.keyword : 'text-gray-700'"></p>
+		@if (triadGroup().triad3) {
+			<div class="flex-1 flex flex-col">
+				<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad3.keyword }}</p>
+				<div class="flex flex-col gap-1">
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad3.fullPhrases[0] | highlightKey: triadGroup().triad3.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad3.fullPhrases[1] | highlightKey: triadGroup().triad3.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad3.fullPhrases[2] | highlightKey: triadGroup().triad3.keyword : 'text-gray-700'"></p>
+				</div>
 			</div>
-		</div>
+		}
 
 		<!-- Vertical Divider (Dashed) -->
 		<div class="hidden md:block w-px border-l-2 border-dashed border-gray-400 mx-2"></div>
 
 		<!-- Triad 4 -->
-		<div class="flex-1 flex flex-col">
-			<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad4.keyword }}</p>
-			<div class="flex flex-col gap-1">
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad4.fullPhrases[0] | highlightKey: triadGroup().triad4.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad4.fullPhrases[1] | highlightKey: triadGroup().triad4.keyword : 'text-gray-700'"></p>
-				<p
-					class="text-gray-700 text-xs md:text-sm ml-2"
-					[innerHTML]="triadGroup().triad4.fullPhrases[2] | highlightKey: triadGroup().triad4.keyword : 'text-gray-700'"></p>
+		@if (triadGroup().triad4) {
+			<div class="flex-1 flex flex-col">
+				<p class="text-gray-700 font-bold text-sm md:text-base mb-2">{{ triadGroup().triad4.keyword }}</p>
+				<div class="flex flex-col gap-1">
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad4.fullPhrases[0] | highlightKey: triadGroup().triad4.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad4.fullPhrases[1] | highlightKey: triadGroup().triad4.keyword : 'text-gray-700'"></p>
+					<p
+						class="text-gray-700 text-xs md:text-sm ml-2"
+						[innerHTML]="triadGroup().triad4.fullPhrases[2] | highlightKey: triadGroup().triad4.keyword : 'text-gray-700'"></p>
+				</div>
 			</div>
-		</div>
+		}
 	</div>
 
 	<!-- Action Buttons -->

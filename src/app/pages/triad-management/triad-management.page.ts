@@ -154,11 +154,12 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 		}
 
 		this.api.updateTriadGroup(group.id, data).subscribe({
-			next: () => {
+			next: (updatedGroup) => {
 				this.snackbar.showSnackbar('Triad group updated successfully')
 				this.showEditDialog.set(false)
 				this.selectedTriadGroup.set(null)
-				this.loadTriadGroups(true)
+				// Update the local state instead of refetching to preserve pagination
+				this.triadGroups.update((groups) => groups.map((g) => (g.id === group.id ? updatedGroup : g)))
 			},
 			error: () => {
 				this.snackbar.showSnackbar('Failed to update triad group')
@@ -187,7 +188,8 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 				this.snackbar.showSnackbar('Triad group deleted successfully')
 				this.showDeleteConfirm.set(false)
 				this.deleteTargetId.set(null)
-				this.loadTriadGroups(true)
+				// Remove the deleted group from local state instead of refetching to preserve pagination
+				this.triadGroups.update((groups) => groups.filter((g) => g.id !== id))
 			},
 			error: () => {
 				this.snackbar.showSnackbar('Failed to delete triad group')
@@ -202,9 +204,10 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 
 	onToggleStatus(id: number, active: boolean) {
 		this.api.toggleTriadGroupStatus(id, active).subscribe({
-			next: () => {
+			next: (updatedGroup) => {
 				this.snackbar.showSnackbar(`Triad group ${active ? 'activated' : 'deactivated'} successfully`)
-				this.loadTriadGroups(true)
+				// Update only the active property to preserve all existing data and pagination
+				this.triadGroups.update((groups) => groups.map((group) => (group.id === id ? { ...group, active: updatedGroup.active } : group)))
 			},
 			error: () => {
 				this.snackbar.showSnackbar('Failed to update triad group status')
