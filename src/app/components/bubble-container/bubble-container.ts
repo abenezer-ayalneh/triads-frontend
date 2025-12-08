@@ -516,8 +516,11 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	private animateFinalTriadCues() {
-		// First animate the 3 solved bubbles floating up to center
-		this.animateSolvedBubblesFloatUp()
+		// Skip animation - keep solved bubbles visible
+		// Hide final triad bubbles immediately to prevent glitch
+		this.hideFinalTriadBubblesImmediately()
+		// Start the final triad bubble creation directly
+		this.startFinalTriadSequentialCreation(this.finalTriadCuesBubbleComponents())
 	}
 
 	private async animateSolvedBubblesFloatUp() {
