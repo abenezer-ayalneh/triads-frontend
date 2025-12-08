@@ -22,7 +22,7 @@
 		</header>
 
 		<!-- Dialog Body -->
-		<div id="dialog-description" class="bg-base-100 p-4 md:p-6 lg:p-8 overflow-y-auto flex-1">
+		<div #dialogBody id="dialog-description" class="bg-base-100 p-4 md:p-6 lg:p-8 overflow-y-auto flex-1">
 			<form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="space-y-6">
 				<!-- Validation Errors -->
 				@if (validationErrors().length > 0) {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, output, signal } from '@angular/core'
+import { ChangeDetectionStrategy, Component, ElementRef, output, signal, ViewChild } from '@angular/core'
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
@@ -19,6 +19,8 @@ export class AddTriadGroupDialog {
 	whenCanceled = output<void>()
 
 	validationErrors = signal<string[]>([])
+
+	@ViewChild('dialogBody', { static: false }) dialogBodyRef?: ElementRef<HTMLDivElement>
 
 	formGroup = new FormGroup({
 		triad1: new FormGroup({
@@ -49,6 +51,15 @@ export class AddTriadGroupDialog {
 
 	private readonly validationService = new TriadValidationService()
 
+	constructor() {
+		// Clear validation errors when form becomes valid after user fixes issues
+		this.formGroup.valueChanges.subscribe(() => {
+			if (this.formGroup.valid && this.validationErrors().length > 0) {
+				this.validationErrors.set([])
+			}
+		})
+	}
+
 	onClose() {
 		this.whenCanceled.emit()
 	}
@@ -62,6 +73,7 @@ export class AddTriadGroupDialog {
 	onSubmit() {
 		if (this.formGroup.invalid) {
 			this.validationErrors.set(['Please fill in all required fields'])
+			this.scrollToTop()
 			return
 		}
 
@@ -104,11 +116,19 @@ export class AddTriadGroupDialog {
 		const validation = this.validationService.validateTriadGroup(formData)
 		if (!validation.valid) {
 			this.validationErrors.set(validation.errors)
+			this.scrollToTop()
 			return
 		}
 
 		this.validationErrors.set([])
 		this.whenCreated.emit(formData)
+	}
+
+	private scrollToTop() {
+		// Use setTimeout to ensure the DOM has updated with the error messages
+		setTimeout(() => {
+			this.dialogBodyRef?.nativeElement.scrollTo({ top: 0, behavior: 'smooth' })
+		}, 0)
 	}
 
 	get triad1Group() {
