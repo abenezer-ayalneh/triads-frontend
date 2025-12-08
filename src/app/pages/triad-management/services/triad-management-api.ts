@@ -25,7 +25,7 @@ export class TriadManagementApi {
 	}
 
 	updateTriadGroup(id: number, data: TriadGroupFormData): Observable<TriadGroupResponse> {
-		return this.httpClient.patch<TriadGroupResponse>(`triads/groups/${id}`, data)
+		return this.httpClient.put<TriadGroupResponse>(`triads/groups/${id}`, data)
 	}
 
 	deleteTriadGroup(id: number): Observable<void> {

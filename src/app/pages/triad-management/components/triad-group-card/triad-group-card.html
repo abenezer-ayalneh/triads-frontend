@@ -1,7 +1,7 @@
 <div
-	class="w-full bg-neutral-100 rounded-lg px-4 py-2 md:px-6 md:py-4 shadow-md transition-all"
-	[class.opacity-50]="!triadGroup().active"
-	[class.bg-gray-300]="!triadGroup().active">
+	class="w-full rounded-lg px-4 py-2 md:px-6 md:py-4 shadow-md transition-all"
+	[class.bg-neutral-400]="!triadGroup().active"
+	[class.bg-neutral-100]="triadGroup().active">
 	<!-- Triads Display -->
 	<div class="flex flex-col md:flex-row gap-2 md:gap-0 mb-4">
 		<!-- Triad 1 -->
@@ -89,10 +89,10 @@
 		<button
 			type="button"
 			(click)="onToggleStatus()"
-			[class.bg-green-500]="triadGroup().active"
-			[class.hover:bg-green-600]="triadGroup().active"
-			[class.bg-gray-500]="!triadGroup().active"
-			[class.hover:bg-gray-600]="!triadGroup().active"
+			[class.bg-gray-500]="triadGroup().active"
+			[class.hover:bg-gray-600]="triadGroup().active"
+			[class.bg-green-500]="!triadGroup().active"
+			[class.hover:bg-green-600]="!triadGroup().active"
 			class="px-3 md:px-4 py-2 text-white rounded-lg transition-colors text-xs md:text-sm font-medium">
 			{{ triadGroup().active ? 'Deactivate' : 'Activate' }}
 		</button>

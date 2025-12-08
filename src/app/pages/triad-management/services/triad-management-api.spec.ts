@@ -84,7 +84,7 @@ describe('TriadManagementApi', () => {
 		})
 
 		const req = httpMock.expectOne('triads/groups/1')
-		expect(req.request.method).toBe('PATCH')
+		expect(req.request.method).toBe('PUT')
 		expect(req.request.body).toEqual(mockData)
 		req.flush(mockResponse)
 	})

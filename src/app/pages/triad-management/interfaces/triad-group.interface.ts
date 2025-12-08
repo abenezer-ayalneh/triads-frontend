@@ -26,18 +26,18 @@ export interface TriadGroupResponse {
 export interface TriadGroupFormData {
 	triad1: {
 		keyword: string
-		cues: [string, string, string]
+		fullPhrases: [string, string, string]
 	}
 	triad2: {
 		keyword: string
-		cues: [string, string, string]
+		fullPhrases: [string, string, string]
 	}
 	triad3: {
 		keyword: string
-		cues: [string, string, string]
+		fullPhrases: [string, string, string]
 	}
 	triad4: {
 		keyword: string
-		cues: [string, string, string]
+		fullPhrases: [string, string, string]
 	}
 }

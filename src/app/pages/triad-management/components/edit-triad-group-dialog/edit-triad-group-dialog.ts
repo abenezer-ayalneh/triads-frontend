@@ -25,27 +25,27 @@ export class EditTriadGroupDialog {
 	formGroup = new FormGroup({
 		triad1: new FormGroup({
 			keyword: new FormControl<string>('', [Validators.required]),
-			cue1: new FormControl<string>('', [Validators.required]),
-			cue2: new FormControl<string>('', [Validators.required]),
-			cue3: new FormControl<string>('', [Validators.required]),
+			fullPhrase1: new FormControl<string>('', [Validators.required]),
+			fullPhrase2: new FormControl<string>('', [Validators.required]),
+			fullPhrase3: new FormControl<string>('', [Validators.required]),
 		}),
 		triad2: new FormGroup({
 			keyword: new FormControl<string>('', [Validators.required]),
-			cue1: new FormControl<string>('', [Validators.required]),
-			cue2: new FormControl<string>('', [Validators.required]),
-			cue3: new FormControl<string>('', [Validators.required]),
+			fullPhrase1: new FormControl<string>('', [Validators.required]),
+			fullPhrase2: new FormControl<string>('', [Validators.required]),
+			fullPhrase3: new FormControl<string>('', [Validators.required]),
 		}),
 		triad3: new FormGroup({
 			keyword: new FormControl<string>('', [Validators.required]),
-			cue1: new FormControl<string>('', [Validators.required]),
-			cue2: new FormControl<string>('', [Validators.required]),
-			cue3: new FormControl<string>('', [Validators.required]),
+			fullPhrase1: new FormControl<string>('', [Validators.required]),
+			fullPhrase2: new FormControl<string>('', [Validators.required]),
+			fullPhrase3: new FormControl<string>('', [Validators.required]),
 		}),
 		triad4: new FormGroup({
 			keyword: new FormControl<string>('', [Validators.required]),
-			cue1: new FormControl<string>('', [Validators.required]),
-			cue2: new FormControl<string>('', [Validators.required]),
-			cue3: new FormControl<string>('', [Validators.required]),
+			fullPhrase1: new FormControl<string>('', [Validators.required]),
+			fullPhrase2: new FormControl<string>('', [Validators.required]),
+			fullPhrase3: new FormControl<string>('', [Validators.required]),
 		}),
 	})
 
@@ -64,27 +64,27 @@ export class EditTriadGroupDialog {
 		this.formGroup.patchValue({
 			triad1: {
 				keyword: group.triad1.keyword,
-				cue1: group.triad1.cues[0],
-				cue2: group.triad1.cues[1],
-				cue3: group.triad1.cues[2],
+				fullPhrase1: group.triad1.fullPhrases[0],
+				fullPhrase2: group.triad1.fullPhrases[1],
+				fullPhrase3: group.triad1.fullPhrases[2],
 			},
 			triad2: {
 				keyword: group.triad2.keyword,
-				cue1: group.triad2.cues[0],
-				cue2: group.triad2.cues[1],
-				cue3: group.triad2.cues[2],
+				fullPhrase1: group.triad2.fullPhrases[0],
+				fullPhrase2: group.triad2.fullPhrases[1],
+				fullPhrase3: group.triad2.fullPhrases[2],
 			},
 			triad3: {
 				keyword: group.triad3.keyword,
-				cue1: group.triad3.cues[0],
-				cue2: group.triad3.cues[1],
-				cue3: group.triad3.cues[2],
+				fullPhrase1: group.triad3.fullPhrases[0],
+				fullPhrase2: group.triad3.fullPhrases[1],
+				fullPhrase3: group.triad3.fullPhrases[2],
 			},
 			triad4: {
 				keyword: group.triad4.keyword,
-				cue1: group.triad4.cues[0],
-				cue2: group.triad4.cues[1],
-				cue3: group.triad4.cues[2],
+				fullPhrase1: group.triad4.fullPhrases[0],
+				fullPhrase2: group.triad4.fullPhrases[1],
+				fullPhrase3: group.triad4.fullPhrases[2],
 			},
 		})
 	}
@@ -109,19 +109,35 @@ export class EditTriadGroupDialog {
 		const formData: TriadGroupFormData = {
 			triad1: {
 				keyword: formValue.triad1?.keyword?.trim() || '',
-				cues: [formValue.triad1?.cue1?.trim() || '', formValue.triad1?.cue2?.trim() || '', formValue.triad1?.cue3?.trim() || ''],
+				fullPhrases: [
+					formValue.triad1?.fullPhrase1?.trim() || '',
+					formValue.triad1?.fullPhrase2?.trim() || '',
+					formValue.triad1?.fullPhrase3?.trim() || '',
+				],
 			},
 			triad2: {
 				keyword: formValue.triad2?.keyword?.trim() || '',
-				cues: [formValue.triad2?.cue1?.trim() || '', formValue.triad2?.cue2?.trim() || '', formValue.triad2?.cue3?.trim() || ''],
+				fullPhrases: [
+					formValue.triad2?.fullPhrase1?.trim() || '',
+					formValue.triad2?.fullPhrase2?.trim() || '',
+					formValue.triad2?.fullPhrase3?.trim() || '',
+				],
 			},
 			triad3: {
 				keyword: formValue.triad3?.keyword?.trim() || '',
-				cues: [formValue.triad3?.cue1?.trim() || '', formValue.triad3?.cue2?.trim() || '', formValue.triad3?.cue3?.trim() || ''],
+				fullPhrases: [
+					formValue.triad3?.fullPhrase1?.trim() || '',
+					formValue.triad3?.fullPhrase2?.trim() || '',
+					formValue.triad3?.fullPhrase3?.trim() || '',
+				],
 			},
 			triad4: {
 				keyword: formValue.triad4?.keyword?.trim() || '',
-				cues: [formValue.triad4?.cue1?.trim() || '', formValue.triad4?.cue2?.trim() || '', formValue.triad4?.cue3?.trim() || ''],
+				fullPhrases: [
+					formValue.triad4?.fullPhrase1?.trim() || '',
+					formValue.triad4?.fullPhrase2?.trim() || '',
+					formValue.triad4?.fullPhrase3?.trim() || '',
+				],
 			},
 		}
 
