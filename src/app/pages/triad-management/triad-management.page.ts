@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
+import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { Subject, takeUntil } from 'rxjs'
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators'
 
@@ -18,7 +18,7 @@ import { TriadManagementApi } from './services/triad-management-api'
 	styleUrl: './triad-management.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class TriadManagementPage implements OnInit, AfterViewInit, OnDestroy {
+export class TriadManagementPage implements OnInit, OnDestroy {
 	triadGroups = signal<TriadGroup[]>([])
 
 	isLoading = signal<boolean>(false)
@@ -51,45 +51,15 @@ export class TriadManagementPage implements OnInit, AfterViewInit, OnDestroy {
 
 	private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer')
 
-	private scrollHandler: (() => void) | null = null
-
 	ngOnInit() {
 		this.setupSearchDebounce()
 		this.loadTriadGroups(true)
 	}
 
-	ngAfterViewInit() {
-		this.setupScrollListener()
-	}
-
 	ngOnDestroy() {
-		const container = this.scrollContainer()?.nativeElement
-		if (container && this.scrollHandler) {
-			container.removeEventListener('scroll', this.scrollHandler)
-		}
 		this.destroy$.next()
 		this.destroy$.complete()
 		this.searchSubject.complete()
-	}
-
-	private setupScrollListener() {
-		const container = this.scrollContainer()?.nativeElement
-		if (!container) {
-			return
-		}
-
-		this.scrollHandler = () => {
-			this.onScroll()
-		}
-
-		container.addEventListener('scroll', this.scrollHandler)
-	}
-
-	private setupSearchDebounce() {
-		this.searchSubject.pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe((query) => {
-			this.searchQuery.set(query)
-			this.loadTriadGroups(true)
-		})
 	}
 
 	onSearchInput(event: Event) {
@@ -239,6 +209,13 @@ export class TriadManagementPage implements OnInit, AfterViewInit, OnDestroy {
 			error: () => {
 				this.snackbar.showSnackbar('Failed to update triad group status')
 			},
+		})
+	}
+
+	private setupSearchDebounce() {
+		this.searchSubject.pipe(debounceTime(300), distinctUntilChanged(), takeUntil(this.destroy$)).subscribe((query) => {
+			this.searchQuery.set(query)
+			this.loadTriadGroups(true)
 		})
 	}
 }
