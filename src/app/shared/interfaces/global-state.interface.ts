@@ -26,4 +26,6 @@ export interface GlobalState {
 	hintUsedWithOneTurnRemaining: boolean
 	gameScore: number
 	cuesToExplode: string[]
+	triadGroupId: string | number | null
+	unsolvedTriads: SolvedTriad[] | null
 }

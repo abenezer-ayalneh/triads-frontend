@@ -1,0 +1,27 @@
+@if (hasUnsolvedTriads()) {
+	<div class="solution-reveal-container">
+		@for (triad of unsolvedTriads(); track triad.id) {
+			<div class="solution-box">
+				<div class="solution-header">
+					<h3 class="solution-title">Solution</h3>
+				</div>
+				<div class="solution-content">
+					<div class="cues-section">
+						@for (cue of triad.cues; track cue) {
+							<span class="cue-badge">{{ cue }}</span>
+						}
+					</div>
+					<div class="keyword-section">
+						<span class="keyword-label">Keyword:</span>
+						<span class="keyword-value">{{ triad.keyword }}</span>
+					</div>
+					<div class="phrases-section">
+						@for (phrase of triad.fullPhrases; track phrase) {
+							<div class="phrase-item">{{ phrase }}</div>
+						}
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}

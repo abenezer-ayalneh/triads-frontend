@@ -83,9 +83,10 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.cueFetchingState.set(RequestState.LOADING)
 		this.subscriptions$.add(
 			this.gamePlayApi.getCues().subscribe({
-				next: (cues) => {
+				next: (response) => {
 					// this.store.setTriadsGroup({ id: cues.id, triads: cues.triads.map((triad) => ({ ...triad, available: true })) })
-					this.store.setCues(cues)
+					this.store.setCues(response.cues)
+					this.store.setTriadGroupId(response.triadGroupId)
 					this.cueFetchingState.set(RequestState.READY)
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},

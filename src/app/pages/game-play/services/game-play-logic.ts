@@ -1,9 +1,11 @@
 import { inject, Injectable } from '@angular/core'
-import { BehaviorSubject } from 'rxjs'
+import { BehaviorSubject, firstValueFrom } from 'rxjs'
 
 import { UserService } from '../../../shared/services/user.service'
 import { GlobalStore } from '../../../state/global.store'
 import { GamePlayState } from '../enums/game-play.enum'
+import { SolvedTriad } from '../interfaces/triad.interface'
+import { GamePlayApi } from './game-play-api'
 import { HintService } from './hint-service'
 import { TurnService } from './turn-service'
 
@@ -18,6 +20,8 @@ export class GamePlayLogic {
 	private readonly hintService = inject(HintService)
 
 	private readonly turnService = inject(TurnService)
+
+	private readonly gamePlayApi = inject(GamePlayApi)
 
 	answerFieldFocus$ = new BehaviorSubject<boolean>(false)
 
@@ -57,7 +61,7 @@ export class GamePlayLogic {
 		}
 	}
 
-	handleGameLost() {
+	async handleGameLost() {
 		// Score updates
 		const score = this.calculateScore()
 
@@ -72,6 +76,49 @@ export class GamePlayLogic {
 			const newUser = { ...user, scores: newScores, firstGameDate: user.firstGameDate ?? new Date().toISOString() }
 			this.store.setUser(newUser)
 			this.userService.setUser(newUser)
+		}
+
+		// Fetch and display solutions for unsolved triads
+		await this.fetchAndSetUnsolvedTriads()
+	}
+
+	private async fetchAndSetUnsolvedTriads() {
+		const triadGroupId = this.store.triadGroupId()
+		if (!triadGroupId) {
+			return
+		}
+
+		try {
+			const allTriads = await firstValueFrom(this.gamePlayApi.getTriadGroupSolutions(triadGroupId))
+			const triadsStep = this.store.triadsStep()
+			const solvedTriads = this.store.solvedTriads()
+			const finalTriadCues = this.store.finalTriadCues()
+
+			let unsolvedTriads: SolvedTriad[] = []
+
+			if (triadsStep === 'INITIAL') {
+				// Failed during initial 3 triads - show solutions for all 3 initial triads (excluding bonus)
+				// Filter to get only first 3 triads (triads 1-3), exclude the 4th/bonus triad
+				const initialTriads = allTriads.slice(0, 3)
+				// Filter out already solved triads
+				const solvedTriadIds = solvedTriads.map((triad) => triad.id)
+				unsolvedTriads = initialTriads.filter((triad) => !solvedTriadIds.includes(triad.id))
+			} else if (triadsStep === 'FINAL' && finalTriadCues && finalTriadCues.length === 3) {
+				// Failed during bonus round - show only the bonus triad solution (4th triad)
+				// The 4th triad should be at index 3 (0-indexed)
+				if (allTriads.length > 3) {
+					const bonusTriad = allTriads[3]
+					if (bonusTriad) {
+						unsolvedTriads = [bonusTriad]
+					}
+				}
+			}
+
+			this.store.setUnsolvedTriads(unsolvedTriads.length > 0 ? unsolvedTriads : null)
+		} catch (error) {
+			// Silently fail - don't show solutions if API call fails
+			console.error('Failed to fetch unsolved triads:', error)
+			this.store.setUnsolvedTriads(null)
 		}
 	}
 

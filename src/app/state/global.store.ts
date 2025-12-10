@@ -38,6 +38,8 @@ const initialState: GlobalState = {
 	isFetchingHint: false,
 	gameScore: 0,
 	cuesToExplode: [],
+	triadGroupId: null,
+	unsolvedTriads: null,
 }
 
 export const GlobalStore = signalStore(
@@ -130,6 +132,12 @@ export const GlobalStore = signalStore(
 		addCueToExplode: (cueToExplode: string) => {
 			patchState(store, (state) => ({ ...state, cuesToExplode: [...state.cuesToExplode, cueToExplode] }))
 		},
+		setTriadGroupId: (triadGroupId: string | number | null) => {
+			patchState(store, (state) => ({ ...state, triadGroupId }))
+		},
+		setUnsolvedTriads: (unsolvedTriads: SolvedTriad[] | null) => {
+			patchState(store, (state) => ({ ...state, unsolvedTriads }))
+		},
 		resetGameState: () => {
 			patchState(store, (state) => ({
 				...state,
@@ -160,6 +168,8 @@ export const GlobalStore = signalStore(
 				isFetchingHint: false,
 				gameScore: 0,
 				cuesToExplode: [],
+				triadGroupId: null,
+				unsolvedTriads: null,
 			}))
 		},
 	})),

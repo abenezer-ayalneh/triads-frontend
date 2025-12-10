@@ -10,7 +10,7 @@ export class GamePlayApi {
 	private readonly httpClient = inject(HttpClient)
 
 	getCues() {
-		return this.httpClient.get<string[]>('triads/cues')
+		return this.httpClient.get<{ triadGroupId: string | number; cues: string[] }>('triads/cues')
 	}
 
 	checkTriad(cues: string[]) {
@@ -23,5 +23,9 @@ export class GamePlayApi {
 
 	fetchFinalTriadCues(triadsIds: number[]) {
 		return this.httpClient.get<string[]>('triads/fourth-triad-cues', { params: { triadsIds } })
+	}
+
+	getTriadGroupSolutions(triadGroupId: string | number) {
+		return this.httpClient.get<SolvedTriad[]>(`triads/groups/${triadGroupId}/triads`)
 	}
 }

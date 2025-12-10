@@ -4,3 +4,19 @@
 	position: absolute;
 	z-index: 10;
 }
+
+.solution-reveal-wrapper {
+	width: 100%;
+	flex-shrink: 0;
+	margin-bottom: 1.5rem;
+	z-index: 12;
+	max-height: 40vh;
+	overflow: visible;
+}
+
+.dialog-content {
+	pointer-events: auto;
+	flex-shrink: 0;
+	position: relative;
+	z-index: 20;
+}

@@ -1,14 +1,24 @@
-<div class="w-full h-full flex justify-center items-center absolute z-10">
-	<div class="w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-success/50">
+<div class="w-full h-full flex flex-col justify-center items-center absolute z-10">
+	<!-- Solution Reveal Overlay - positioned above dialog -->
+	@if (result() === 'LOST') {
+		<div class="solution-reveal-wrapper">
+			<app-solution-reveal />
+		</div>
+	}
+
+	<div
+		class="dialog-content w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-success/50 relative z-20">
 		<div class="w-40 h-40 rounded-2xl">
 			<ng-lottie [options]="result() === 'WON' ? wonAnimationOptions : lostAnimationOptions" />
 		</div>
 		<div class="text-center space-y-2">
 			<ng-content />
 		</div>
-		<div class="flex gap-3">
-			<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
-			<button (click)="quitGame()" class="btn btn-outline btn-lg text-base-100 hover:bg-error">Quit Now</button>
-		</div>
+		@if (showPlayAgainButton()) {
+			<div class="flex gap-3">
+				<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
+				<button (click)="quitGame()" class="btn btn-outline btn-lg text-base-100 hover:bg-error">Quit Now</button>
+			</div>
+		}
 	</div>
 </div>
