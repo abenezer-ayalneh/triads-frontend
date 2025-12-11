@@ -1,18 +1,19 @@
-import { Component, computed, inject, model, OnDestroy, signal } from '@angular/core'
-import { FormsModule } from '@angular/forms'
+import { Component, computed, inject, OnDestroy, signal } from '@angular/core'
 import { MatTooltip } from '@angular/material/tooltip'
 import { NavigationEnd, Router } from '@angular/router'
 import { filter, Subscription } from 'rxjs'
 
+import { AdminPasswordDialog } from '../../../../shared/components/admin-password-dialog/admin-password-dialog'
+import { NewIdentityDialog } from '../../../../shared/components/new-identity-dialog/new-identity-dialog'
 import { QuitConfirmationDialog } from '../../../../shared/components/quit-confirmation-dialog/quit-confirmation-dialog'
 import { ClickOutsideDirective } from '../../../../shared/directives/click-outside'
-import { UserService } from '../../../../shared/services/user.service'
+import { AdminAuthService } from '../../../../shared/services/admin-auth.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { Stats } from '../stats/stats'
 
 @Component({
 	selector: 'app-header',
-	imports: [Stats, MatTooltip, FormsModule, ClickOutsideDirective, QuitConfirmationDialog],
+	imports: [Stats, MatTooltip, ClickOutsideDirective, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog],
 	templateUrl: './header.html',
 	styleUrl: './header.scss',
 })
@@ -21,7 +22,7 @@ export class Header implements OnDestroy {
 
 	private readonly router = inject(Router)
 
-	private readonly userService = inject(UserService)
+	private readonly adminAuthService = inject(AdminAuthService)
 
 	showStats = signal<boolean>(false)
 
@@ -29,9 +30,15 @@ export class Header implements OnDestroy {
 
 	showQuitConfirmation = signal<boolean>(false)
 
-	editedUsername = model<string>('')
+	showNewIdentityDialog = signal<boolean>(false)
+
+	showAdminPasswordDialog = signal<boolean>(false)
+
+	showAdminOption = signal<boolean>(false)
 
 	currentUrl = signal<string>(this.router.url)
+
+	isAdminAuthenticated = computed(() => this.adminAuthService.isAuthenticated())
 
 	private readonly routerSubscription: Subscription
 
@@ -39,6 +46,18 @@ export class Header implements OnDestroy {
 	isHomePage = computed(() => {
 		const url = this.currentUrl()
 		return url === '/home' || url === '/'
+	})
+
+	// Check if on gameplay page
+	isGameplayPage = computed(() => {
+		const url = this.currentUrl()
+		return url === '/play'
+	})
+
+	// Check if on manage triads page
+	isManageTriadsPage = computed(() => {
+		const url = this.currentUrl()
+		return url === '/manage-triads'
 	})
 
 	constructor() {
@@ -80,34 +99,56 @@ export class Header implements OnDestroy {
 		this.store.setShowHowToPlay(true)
 	}
 
-	toggleUsernameDropdown() {
-		if (!this.showUsernameDropdown()) {
-			this.editedUsername.set(this.store.user()?.username ?? '')
-		}
+	toggleUsernameDropdown(event?: MouseEvent) {
+		// Check if Ctrl (Windows/Linux) or Cmd (Mac) key is held
+		const isModifierPressed = event ? event.ctrlKey || event.metaKey : false
+		this.showAdminOption.set(isModifierPressed)
 		this.showUsernameDropdown.update((value) => !value)
 	}
 
 	closeUsernameDropdown() {
 		this.showUsernameDropdown.set(false)
-		this.editedUsername.set('')
+		this.showAdminOption.set(false)
 	}
 
-	updateUsername() {
-		const newUsername = this.editedUsername()?.trim() ?? ''
-		const currentUser = this.store.user()
+	openStats() {
+		this.showStats.set(true)
+		this.closeUsernameDropdown()
+	}
 
-		if (newUsername && newUsername.length >= 3 && currentUser) {
-			const updatedUser = {
-				...currentUser,
-				username: newUsername,
-			}
-			this.userService.setUser(updatedUser)
-			this.store.setUser(updatedUser)
+	openNewIdentity() {
+		this.showNewIdentityDialog.set(true)
+		this.closeUsernameDropdown()
+	}
+
+	closeNewIdentityDialog() {
+		this.showNewIdentityDialog.set(false)
+	}
+
+	navigateToHome() {
+		this.router.navigate(['/home'])
+	}
+
+	openAdminPasswordDialog() {
+		if (this.adminAuthService.isAuthenticated()) {
+			this.navigateToManageTriads()
+		} else {
+			this.showAdminPasswordDialog.set(true)
 			this.closeUsernameDropdown()
 		}
 	}
 
-	cancelUsernameUpdate() {
+	navigateToManageTriads() {
+		this.router.navigate(['/manage-triads'])
 		this.closeUsernameDropdown()
+	}
+
+	onAdminAuthenticated() {
+		this.showAdminPasswordDialog.set(false)
+		this.navigateToManageTriads()
+	}
+
+	closeAdminPasswordDialog() {
+		this.showAdminPasswordDialog.set(false)
 	}
 }

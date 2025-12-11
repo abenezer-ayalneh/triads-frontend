@@ -1,11 +1,13 @@
 <header class="w-full h-full xl:h-10 flex justify-between items-center px-2 relative">
 	<div class="w-fit flex justify-start items-center gap-2">
-		<button
-			(click)="toggleStatusWindow()"
-			class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 shadow-sm triad-gradient text-xs md:text-base xl:text-lg text-primary-content font-semibold rounded-2xl">
-			Stats
-		</button>
-		@if (!isHomePage()) {
+		@if (isManageTriadsPage()) {
+			<button
+				(click)="navigateToHome()"
+				class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 shadow-sm triad-gradient text-xs md:text-base xl:text-lg text-primary-content font-semibold rounded-2xl hover:opacity-80 transition-opacity cursor-pointer">
+				Back to home
+			</button>
+		}
+		@if (isGameplayPage()) {
 			<button
 				(click)="quitGame()"
 				[matTooltip]="'Quit'"
@@ -26,34 +28,52 @@
 		<app-quit-confirmation-dialog (whenConfirmed)="confirmQuit()" (whenCanceled)="cancelQuit()" />
 	}
 
+	@if (showNewIdentityDialog()) {
+		<app-new-identity-dialog (whenClosingDialog)="closeNewIdentityDialog()" />
+	}
+
+	@if (showAdminPasswordDialog()) {
+		<app-admin-password-dialog (whenAuthenticated)="onAdminAuthenticated()" (whenCanceled)="closeAdminPasswordDialog()" />
+	}
+
 	<div class="w-fit flex justify-end items-center gap-4">
 		<div class="relative" appClickOutside (appClickOutside)="closeUsernameDropdown()">
 			<button
-				(click)="toggleUsernameDropdown()"
+				(click)="toggleUsernameDropdown($event)"
 				class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
 				<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
 			</button>
 			@if (showUsernameDropdown()) {
-				<div class="absolute top-full right-0 mt-2 w-64 bg-base-100 rounded-lg shadow-lg border border-base-300 p-4 z-50 flex flex-col gap-3">
-					<label for="edit-username" class="text-sm font-medium text-base-content">Username</label>
-					<input
-						id="edit-username"
-						type="text"
-						[(ngModel)]="editedUsername"
-						placeholder="Enter username"
-						class="input input-bordered w-full text-sm"
-						minlength="3"
-						required />
-					<div class="flex gap-2 justify-end">
-						<button type="button" (click)="cancelUsernameUpdate()" class="btn btn-sm btn-ghost">Cancel</button>
-						<button
-							type="button"
-							(click)="updateUsername()"
-							[disabled]="editedUsername().trim().length === 0"
-							class="btn btn-sm btn-primary disabled:opacity-50">
-							Update
-						</button>
-					</div>
+				<div class="absolute top-full right-0 mt-2 w-48 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 z-50 flex flex-col gap-1">
+					<button
+						type="button"
+						(click)="openStats()"
+						class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+						Check your stats
+					</button>
+					<button
+						type="button"
+						(click)="openNewIdentity()"
+						class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+						New identity
+					</button>
+					@if (showAdminOption()) {
+						@if (isAdminAuthenticated()) {
+							<button
+								type="button"
+								(click)="navigateToManageTriads()"
+								class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+								Manage Triads
+							</button>
+						} @else {
+							<button
+								type="button"
+								(click)="openAdminPasswordDialog()"
+								class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+								Admin
+							</button>
+						}
+					}
 				</div>
 			}
 		</div>

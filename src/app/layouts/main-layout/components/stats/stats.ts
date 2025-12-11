@@ -1,10 +1,9 @@
 import { DatePipe } from '@angular/common'
 import { DecimalPipe } from '@angular/common'
-import { Component, computed, inject, output, signal } from '@angular/core'
+import { Component, computed, inject, output } from '@angular/core'
 import { AgCharts } from 'ag-charts-angular'
 import { AgChartOptions } from 'ag-charts-community'
 
-import { UserService } from '../../../../shared/services/user.service'
 import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
@@ -16,8 +15,6 @@ import { GlobalStore } from '../../../../state/global.store'
 })
 export class Stats {
 	whenClosingStatsWindow = output()
-
-	showDataClearingConfirmation = signal<boolean>(false)
 
 	protected readonly store = inject(GlobalStore)
 
@@ -76,18 +73,7 @@ export class Stats {
 		},
 	}))
 
-	private readonly userService = inject(UserService)
-
 	private readonly decimalPipe = inject(DecimalPipe)
-
-	resetData() {
-		this.userService.clearUserData()
-		window.location.reload()
-	}
-
-	toggleDataClearingConfirmation() {
-		this.showDataClearingConfirmation.update((currentValue) => !currentValue)
-	}
 
 	onClose() {
 		this.whenClosingStatsWindow.emit()

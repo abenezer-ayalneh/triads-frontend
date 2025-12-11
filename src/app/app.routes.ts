@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router'
 
+import { adminGuard } from './layouts/main-layout/guards/admin-guard'
 import { usernameGuard } from './layouts/main-layout/guards/username-guard'
 import { MainLayout } from './layouts/main-layout/main-layout'
 import { GamePlay } from './pages/game-play/game-play'
@@ -23,6 +24,7 @@ export const routes: Routes = [
 			{
 				path: 'manage-triads',
 				component: TriadManagementPage,
+				canActivate: [adminGuard],
 			},
 			{ path: '', redirectTo: 'home', pathMatch: 'full' },
 		],
