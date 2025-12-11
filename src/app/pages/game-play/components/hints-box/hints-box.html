@@ -3,11 +3,13 @@
 	<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Hints</p>
 	<div class="w-full flex justify-center items-center gap-2">
 		@let isLoading = store.isFetchingHint() || store.isCheckingTriad();
+		@let hintsDisabledDueToTurns = areHintsDisabledDueToTurns();
 		@for (hint of store.hints(); track hint.id) {
 			<button
 				class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16 circle relative disabled:opacity-50 disabled:cursor-not-allowed"
+				[class.grayscale]="hintsDisabledDueToTurns"
 				(click)="onHintClick()"
-				[disabled]="!hint.available || isLoading"
+				[disabled]="!hint.available || isLoading || hintsDisabledDueToTurns"
 				aria-label="Use a hint">
 				@if (hint.available && isLoading) {
 					<span class="loading loading-spinner loading-xs absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></span>
@@ -28,7 +30,7 @@
 			<button
 				type="button"
 				class="btn btn-info text-base-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-				[disabled]="store.usedHintTypes().includes('KEYWORD_LENGTH') || store.isFetchingHint()"
+				[disabled]="store.usedHintTypes().includes('KEYWORD_LENGTH') || store.isFetchingHint() || areHintsDisabledDueToTurns()"
 				(click)="useHint('KEYWORD_LENGTH')">
 				@if (store.isFetchingHint()) {
 					<span class="loading loading-spinner loading-sm"></span>
@@ -38,7 +40,7 @@
 			<button
 				type="button"
 				class="btn btn-primary text-base-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-				[disabled]="store.usedHintTypes().includes('FIRST_LETTER') || store.isFetchingHint()"
+				[disabled]="store.usedHintTypes().includes('FIRST_LETTER') || store.isFetchingHint() || areHintsDisabledDueToTurns()"
 				(click)="useHint('FIRST_LETTER')">
 				@if (store.isFetchingHint()) {
 					<span class="loading loading-spinner loading-sm"></span>

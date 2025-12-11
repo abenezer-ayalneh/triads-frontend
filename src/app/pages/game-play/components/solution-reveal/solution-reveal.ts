@@ -1,10 +1,11 @@
 import { Component, computed, inject } from '@angular/core'
 
+import { HighlightKeyPipe } from '../../../../shared/pipes/highlight-key.pipe'
 import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
 	selector: 'app-solution-reveal',
-	imports: [],
+	imports: [HighlightKeyPipe],
 	templateUrl: './solution-reveal.html',
 	styleUrl: './solution-reveal.scss',
 })

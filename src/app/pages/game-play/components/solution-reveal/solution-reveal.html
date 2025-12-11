@@ -17,7 +17,7 @@
 					</div>
 					<div class="phrases-section">
 						@for (phrase of triad.fullPhrases; track phrase) {
-							<div class="phrase-item">{{ phrase }}</div>
+							<div class="phrase-item" [innerHTML]="phrase | highlightKey: triad.keyword : 'text-green-500'"></div>
 						}
 					</div>
 				</div>

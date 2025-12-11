@@ -37,7 +37,21 @@ export class HintsBox implements OnDestroy {
 		this.subscriptions$.unsubscribe()
 	}
 
+	/**
+	 * Checks if hints should be disabled due to turns being used up.
+	 * Hints are disabled when 2 or more turns have been used (i.e., when only 1 or 0 turns remain).
+	 */
+	areHintsDisabledDueToTurns(): boolean {
+		const availableTurns = this.turnService.numberOfAvailableTurns(this.store.turns())
+		return availableTurns <= 1
+	}
+
 	onHintClick() {
+		// Prevent hint usage if hints are disabled due to turns being used up
+		if (this.areHintsDisabledDueToTurns()) {
+			return
+		}
+
 		const availableHints = this.store.hints().filter((hint) => hint.available).length
 		const selectedCues = this.store.selectedCues()
 		const cues = this.store.cues()
@@ -59,6 +73,11 @@ export class HintsBox implements OnDestroy {
 	}
 
 	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
+		// Prevent hint usage if hints are disabled due to turns being used up
+		if (this.areHintsDisabledDueToTurns()) {
+			return
+		}
+
 		this.store.setHintUsage(true)
 
 		// Check if user has 3 cues selected - if so, use those for the hint
