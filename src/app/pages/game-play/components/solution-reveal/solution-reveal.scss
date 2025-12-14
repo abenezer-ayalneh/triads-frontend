@@ -49,14 +49,12 @@
 }
 
 .solution-box {
-	background: rgba(17, 24, 39, 0.9);
-	backdrop-filter: blur(12px);
-	border: 2px solid rgba(255, 255, 255, 0.25);
+	background: rgba(33, 53, 76, 0.5);
+	backdrop-filter: blur(8px);
 	border-radius: 0.75rem;
 	padding: 1rem;
 	width: 280px;
 	flex-shrink: 0;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 	pointer-events: auto;
 }
 
