@@ -1,42 +1,218 @@
-# Triads
+# 🎯 Triads
 
-Triads is a word puzzle game where you identify a single keyword that links three different cue words to form a Triad, and then use those keywords to solve a final Triad.
+<div align="center">
 
-## How to Play
+**A word puzzle game where you identify keywords that link three cue words to form a Triad**
 
-You’re given 9 bubbles that contain words or phrases called cues. Find 3 that share a common key word to form a 3-word Triad. A key is a stand-alone word uniquely shared by the 3 cues.
+[![Angular](https://img.shields.io/badge/Angular-20.1.6-red.svg)](https://angular.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.1-38bdf8.svg)](https://tailwindcss.com/)
+[![License](https://img.shields.io/badge/license-Private-lightgrey.svg)]()
 
-Here’s an example: `SECOND-`, `POKER`, `SHAKE`. The key word is “HAND,” completing SECOND-HAND, POKER HAND, and HANDSHAKE.
+</div>
 
-Once you've solved all 3 Triads, or "cleared the board," the 3 key words become your final Triad to solve. That's your goal: figure out all four of the Triads, and win the game.
+---
 
-Cues can be compound or hyphenated words or phrases, and sometimes even famous names, places, or everyday phrases. Keys (solutions) are always one word. Some are easy, some not. Take your time.
+## 📖 About
 
-### Hints and Misses
+Triads is a single-player, untimed word puzzle game where you identify a single keyword that links three different cue words to form a **Triad**. Once you solve three initial Triads, the three keywords become your final challenge—solve all four Triads to win!
 
-You have three guesses and two hints, any combination. Miss a guess, lose a turn. Take a hint, lose a turn. When 9 or 6 cues are showing, a hint highlights a Triad for you and shows how many letters are in the key. When only 3 cues remain, a hint also shows the key’s first letter.
+The game features beautiful physics-based bubble animations, smooth gameplay, and comprehensive statistics tracking—all without requiring any login or personal information.
 
-## Scoring
+---
 
-Every game is scored, tallied, and averaged for you, using this scoring system.
+## 🎮 How to Play
 
-| Outcome                                                    | Points |
-| ---------------------------------------------------------- | ------ |
-| A perfect score! Got all 4 Triads with no misses, no hints | 15     |
-| Success (all 4 solved) but with either 1 miss or 1 hint    | 12     |
-| Success (all 4), but with 2 misses and/or hints            | 10     |
-| Got 3 Triads, but just couldn’t solve the bonus            | 8      |
-| Got 2 Triad but couldn’t get the other 3rd, no bonus round | 6      |
-| Got 1 Triad before using up turns                          | 3      |
-| Went down in flames. Tough round, but wait’ll next game    | 0      |
+### The Basics
 
-## Your Account
+You're given **9 bubbles** containing words or phrases called **cues**. Your goal is to find **3 cues** that share a common **key word** to form a **3-word Triad**. A key is a stand-alone word uniquely shared by the 3 cues.
 
-Triads has no enrollment, so you never need to login or reveal anything about yourself. You’re given a silly name on your first visit (you can change it), and that ‘cookie’ tracks your wins and losses. You can see your overall, ongoing success rate by clicking your name.
+**Example:** `SECOND-`, `POKER`, `SHAKE` → The key word is **"HAND"**, completing:
 
-## Contributing & Feedback
+- SECOND-**HAND**
+- POKER **HAND**
+- **HAND**SHAKE
 
-Be a part of Triads! We welcome your contributions to add to our database, so get creative. Send to:
-ideas@gametrix.org/triads
+### Game Flow
 
-We also appreciate your suggestions for improving the game. This includes your thoughts about Triads you found too easy, too difficult, or too wacko. We’re listening. Let’s make Triads fun for everyone!
+1. **Initial State**: Start with 9 cue words in floating bubbles
+2. **Find a Triad**: Select three cues that share a common keyword
+3. **Solve the Triad**: Enter your guess for the keyword
+4. **Repeat**: Solve a second and third Triad
+5. **Final Challenge**: The three keywords from the first three Triads become new cues for the final, fourth Triad
+6. **Win**: Solve all four Triads to win the game!
+
+### Hints and Turns
+
+- **3 turns** and **2 hints** available (any combination)
+- **Miss a guess** = lose a turn
+- **Take a hint** = lose a turn
+
+**Hint Types:**
+
+- **When 9 or 6 cues remain**: Highlights a Triad and shows the keyword length
+- **When 3 cues remain**: Also shows the keyword's first letter
+
+---
+
+## 🏆 Scoring System
+
+Every game is scored, tallied, and averaged. Your performance is tracked in your stats!
+
+| Outcome           | Points | Description                                  |
+| ----------------- | ------ | -------------------------------------------- |
+| 🎯 **Perfect!**   | **15** | All 4 Triads solved with no misses, no hints |
+| 😊 **Prideful**   | **12** | All 4 solved with either 1 miss or 1 hint    |
+| 👍 **Proficient** | **10** | All 4 solved with 2 misses and/or hints      |
+| ✅ **Passable**   | **8**  | Got 3 Triads, but couldn't solve the bonus   |
+| 😕 **Piss-poor**  | **6**  | Got 2 Triads, no bonus round                 |
+| 😢 **Pitiable**   | **3**  | Got 1 Triad before using up turns            |
+| 💀 **Painful**    | **0**  | Went down in flames                          |
+
+---
+
+## 👤 Your Account
+
+Triads has **no enrollment**—you never need to login or reveal anything about yourself!
+
+- **First Visit**: You're given a randomly generated silly name (e.g., `HappyPenguin42`)
+- **Change Your Name**: Click your name anytime to change it
+- **View Stats**: Click your name to see your overall success rate, score distribution, and game history
+- **New Identity**: Start fresh with a new username anytime
+- **Local Storage**: Your progress is saved locally in your browser
+
+---
+
+## 🛠️ Tech Stack
+
+### Core Framework
+
+- **[Angular](https://angular.io/)** 20.1.6 - Modern web framework
+- **[TypeScript](https://www.typescriptlang.org/)** 5.8 - Type-safe JavaScript
+- **[NgRx Signals](https://ngrx.io/)** - Reactive state management
+
+### Styling & UI
+
+- **[Tailwind CSS](https://tailwindcss.com/)** 4.1 - Utility-first CSS framework
+- **[DaisyUI](https://daisyui.com/)** - Component library for Tailwind
+- **[Angular Material](https://material.angular.io/)** - Material Design components
+
+### Animations & Effects
+
+- **[GSAP](https://greensock.com/gsap/)** - High-performance animations
+- **[Lottie](https://lottiefiles.com/)** - JSON-based animations
+- **[Matter.js](https://brm.io/matter-js/)** - Physics engine for bubble interactions
+
+### Charts & Visualization
+
+- **[AG Charts](https://www.ag-grid.com/charts/)** - Data visualization for statistics
+
+### Development Tools
+
+- **[ESLint](https://eslint.org/)** - Code linting
+- **[Prettier](https://prettier.io/)** - Code formatting
+- **[Husky](https://typicode.github.io/husky/)** - Git hooks
+- **[Commitlint](https://commitlint.js.org/)** - Commit message linting
+- **[MSW](https://mswjs.io/)** - API mocking for development
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** 18+
+- **pnpm** (recommended) or npm/yarn
+
+### Installation
+
+1. **Clone the repository**
+
+    ```bash
+    git clone <repository-url>
+    cd triads-frontend
+    ```
+
+2. **Install dependencies**
+
+    ```bash
+    pnpm install
+    ```
+
+3. **Configure environment**
+
+    Update `src/environments/environment.ts` with your API URL:
+
+    ```typescript
+    export const environment = {
+    	production: false,
+    	apiUrl: 'http://localhost:3000/api',
+    	timeout: 10000,
+    }
+    ```
+
+4. **Start development server**
+
+    ```bash
+    pnpm start
+    ```
+
+    Navigate to `http://localhost:4200/`
+
+### Available Scripts
+
+| Command       | Description               |
+| ------------- | ------------------------- |
+| `pnpm start`  | Start development server  |
+| `pnpm build`  | Build for production      |
+| `pnpm test`   | Run unit tests            |
+| `pnpm lint`   | Lint and fix code         |
+| `pnpm format` | Format code with Prettier |
+
+---
+
+## 🎨 Features
+
+### Game Features
+
+- ✨ **Physics-based animations** - Bubbles float and interact using Matter.js
+- 🎬 **Smooth transitions** - GSAP-powered animations for game state changes
+- 🎭 **Lottie animations** - Beautiful JSON animations for loading, success, and more
+- 💡 **Smart hints** - Context-aware hints that adapt to game state
+- 📊 **Statistics tracking** - Comprehensive stats with visual charts
+- 🎯 **Solution reveal** - See solutions for unsolved triads when you lose
+
+### User Experience
+
+- 📱 **Responsive design** - Works seamlessly on desktop, tablet, and mobile
+- 🎨 **Modern UI** - Clean, intuitive interface built with Tailwind CSS
+- ⚡ **Fast performance** - Optimized with Angular's standalone components
+- 💾 **Local storage** - Progress saved automatically in your browser
+- 🔄 **State management** - Reactive state with NgRx Signals
+
+---
+
+## 🧪 Development
+
+### Code Quality
+
+This project follows strict code quality standards:
+
+- **ESLint** - Configured via `eslint.config.mjs`
+- **Prettier** - Automatic code formatting
+- **Husky** - Pre-commit hooks for linting and formatting
+- **Commitlint** - Enforces conventional commit messages
+
+### Best Practices
+
+- ✅ **Standalone Components** - All components are standalone
+- ✅ **Signals** - Reactive state management with Angular Signals
+- ✅ **Tailwind CSS** - Styling done exclusively with Tailwind classes
+- ✅ **TypeScript** - Strict type checking enabled
+- ✅ **OnPush Change Detection** - Optimized performance
+
+<div align="center">
+
+**Happy Triad Solving! 🎯**
+
+</div>
