@@ -366,13 +366,13 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		const angleVariation = side === 'left' ? 0.2 : -0.2 // Slight angle variation based on side
 		const speed = 2.0 + Math.random() * 1.0 // 2.0-3.0 pixels per frame
 		const velocityX = (dx / distance) * speed * 0.8 + angleVariation // 80% toward center horizontally with side-based angle
-		const velocityY = (dy / distance) * speed * 0.6 - 0.5 // 60% toward center vertically, with slight upward bias
+		const velocityY = (dy / distance) * speed * 0.1 - 1.5 // 10% toward center vertically, with very strong upward bias for vertical trajectory
 		Matter.Body.setVelocity(body, { x: velocityX, y: velocityY })
 
 		// Apply initial impulse toward center
 		const initialImpulse = 0.0075 // 1.5x stronger impulse
 		const impulseX = (dx / distance) * initialImpulse * 0.8 + angleVariation * 0.1 // 80% toward center horizontally with side-based angle
-		const impulseY = (dy / distance) * initialImpulse * 0.6 - initialImpulse * 0.2 // 60% toward center, 20% upward
+		const impulseY = (dy / distance) * initialImpulse * 0.1 - initialImpulse * 0.6 // 10% toward center, 60% upward for vertical trajectory
 		Matter.Body.applyForce(body, body.position, { x: impulseX, y: impulseY })
 
 		// Shimmy parameters per bubble
