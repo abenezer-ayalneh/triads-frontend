@@ -57,6 +57,19 @@
 						class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
 						New identity
 					</button>
+					<div class="px-4 py-2">
+						<label for="difficulty-dropdown" class="block text-xs text-base-content/70 mb-1">Select Difficulty</label>
+						<select
+							id="difficulty-dropdown"
+							[ngModel]="selectedDifficulty()"
+							(ngModelChange)="onDifficultyChange($event)"
+							class="w-full px-3 py-2 text-sm text-base-content bg-base-200 border border-base-300 rounded-md hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+							<option [value]="Difficulty.EASY">Soft</option>
+							<option [value]="Difficulty.MEDIUM">Firm</option>
+							<option [value]="Difficulty.HARD">Hard</option>
+							<option [value]="Difficulty.RANDOM">Mixed (complete)</option>
+						</select>
+					</div>
 					@if (showAdminOption()) {
 						@if (isAdminAuthenticated()) {
 							<button

@@ -1,4 +1,5 @@
-import { Component, computed, inject, OnDestroy, signal } from '@angular/core'
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core'
+import { FormsModule } from '@angular/forms'
 import { MatTooltip } from '@angular/material/tooltip'
 import { NavigationEnd, Router } from '@angular/router'
 import { filter, Subscription } from 'rxjs'
@@ -7,22 +8,26 @@ import { AdminPasswordDialog } from '../../../../shared/components/admin-passwor
 import { NewIdentityDialog } from '../../../../shared/components/new-identity-dialog/new-identity-dialog'
 import { QuitConfirmationDialog } from '../../../../shared/components/quit-confirmation-dialog/quit-confirmation-dialog'
 import { ClickOutsideDirective } from '../../../../shared/directives/click-outside'
+import { Difficulty } from '../../../../shared/enums/difficulty.enum'
 import { AdminAuthService } from '../../../../shared/services/admin-auth.service'
+import { DifficultyService } from '../../../../shared/services/difficulty.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { Stats } from '../stats/stats'
 
 @Component({
 	selector: 'app-header',
-	imports: [Stats, MatTooltip, ClickOutsideDirective, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog],
+	imports: [Stats, MatTooltip, ClickOutsideDirective, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog, FormsModule],
 	templateUrl: './header.html',
 	styleUrl: './header.scss',
 })
-export class Header implements OnDestroy {
+export class Header implements OnInit, OnDestroy {
 	readonly store = inject(GlobalStore)
 
 	private readonly router = inject(Router)
 
 	private readonly adminAuthService = inject(AdminAuthService)
+
+	private readonly difficultyService = inject(DifficultyService)
 
 	showStats = signal<boolean>(false)
 
@@ -37,6 +42,10 @@ export class Header implements OnDestroy {
 	showAdminOption = signal<boolean>(false)
 
 	currentUrl = signal<string>(this.router.url)
+
+	selectedDifficulty = signal<Difficulty>(this.difficultyService.getDifficulty())
+
+	readonly Difficulty = Difficulty
 
 	isAdminAuthenticated = computed(() => this.adminAuthService.isAuthenticated())
 
@@ -67,6 +76,11 @@ export class Header implements OnDestroy {
 				this.currentUrl.set(event.urlAfterRedirects)
 			}
 		})
+	}
+
+	ngOnInit() {
+		// Load difficulty from localStorage on component initialization
+		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
 	}
 
 	ngOnDestroy() {
@@ -103,7 +117,12 @@ export class Header implements OnDestroy {
 		// Check if Ctrl (Windows/Linux) or Cmd (Mac) key is held
 		const isModifierPressed = event ? event.ctrlKey || event.metaKey : false
 		this.showAdminOption.set(isModifierPressed)
+		const willOpen = !this.showUsernameDropdown()
 		this.showUsernameDropdown.update((value) => !value)
+		// Refresh difficulty from localStorage when opening the dropdown
+		if (willOpen) {
+			this.selectedDifficulty.set(this.difficultyService.getDifficulty())
+		}
 	}
 
 	closeUsernameDropdown() {
@@ -150,5 +169,10 @@ export class Header implements OnDestroy {
 
 	closeAdminPasswordDialog() {
 		this.showAdminPasswordDialog.set(false)
+	}
+
+	onDifficultyChange(difficulty: Difficulty) {
+		this.selectedDifficulty.set(difficulty)
+		this.difficultyService.setDifficulty(difficulty)
 	}
 }

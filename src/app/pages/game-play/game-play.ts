@@ -1,11 +1,14 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core'
-import { ReactiveFormsModule } from '@angular/forms'
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'
+import { Router } from '@angular/router'
 import { gsap } from 'gsap'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 import { Subscription } from 'rxjs'
 
 import { BubbleContainer } from '../../components/bubble-container/bubble-container'
+import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
+import { DifficultyService } from '../../shared/services/difficulty.service'
 import { GlobalStore } from '../../state/global.store'
 import { AnswerDialog } from './components/answer-dialog/answer-dialog'
 import { BackgroundBubbles } from './components/background-bubbles/background-bubbles'
@@ -24,6 +27,7 @@ import { GamePlayApi } from './services/game-play-api'
 	imports: [
 		LottieComponent,
 		ReactiveFormsModule,
+		FormsModule,
 		BackgroundBubbles,
 		SolutionSection,
 		TurnsBox,
@@ -67,11 +71,23 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	protected readonly GamePlayState = GamePlayState
 
+	protected readonly Difficulty = Difficulty
+
 	private readonly gamePlayApi = inject(GamePlayApi)
+
+	private readonly difficultyService = inject(DifficultyService)
+
+	private readonly router = inject(Router)
 
 	private subscriptions$ = new Subscription()
 
+	noTriadsMessage = signal<string>('')
+
+	selectedDifficulty = signal<Difficulty>(Difficulty.RANDOM)
+
 	ngOnInit() {
+		// Initialize selected difficulty with current setting
+		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
 		this.initializeGame()
 	}
 
@@ -81,17 +97,65 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	initializeGame() {
 		this.cueFetchingState.set(RequestState.LOADING)
+		this.noTriadsMessage.set('')
+		const difficulty = this.difficultyService.getDifficulty()
 		this.subscriptions$.add(
-			this.gamePlayApi.getCues().subscribe({
+			this.gamePlayApi.getCues(difficulty).subscribe({
 				next: (response) => {
+					// Check if cues is null or empty array (backend returns null when no triads found)
+					if (!response.cues || response.cues.length === 0) {
+						// Use backend message if available, otherwise generate a default message
+						const message =
+							response.message ||
+							`No triads available for ${this.getDifficultyLabel(difficulty)} difficulty. Please try a different difficulty level.`
+						this.noTriadsMessage.set(message)
+						this.selectedDifficulty.set(difficulty)
+						this.cueFetchingState.set(RequestState.EMPTY)
+						return
+					}
 					// this.store.setTriadsGroup({ id: cues.id, triads: cues.triads.map((triad) => ({ ...triad, available: true })) })
 					this.store.setCues(response.cues)
 					this.store.setTriadGroupId(response.triadGroupId)
 					this.cueFetchingState.set(RequestState.READY)
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
+				error: () => {
+					const difficultyLabel = this.getDifficultyLabel(difficulty)
+					this.noTriadsMessage.set(
+						`Unable to load triads for ${difficultyLabel} difficulty. Please try again or select a different difficulty level.`,
+					)
+					this.selectedDifficulty.set(difficulty)
+					this.cueFetchingState.set(RequestState.ERROR)
+				},
 			}),
 		)
+	}
+
+	private getDifficultyLabel(difficulty: string): string {
+		const labels: Record<string, string> = {
+			EASY: 'Soft',
+			MEDIUM: 'Firm',
+			HARD: 'Hard',
+			RANDOM: 'Mixed (complete)',
+		}
+		return labels[difficulty] || difficulty
+	}
+
+	retryGame() {
+		// Use the selected difficulty from the dropdown and save it
+		const selectedDifficulty = this.selectedDifficulty()
+		this.difficultyService.setDifficulty(selectedDifficulty)
+		this.initializeGame()
+	}
+
+	onDifficultyChange(difficulty: Difficulty) {
+		this.selectedDifficulty.set(difficulty)
+		// Update global difficulty value in localStorage immediately
+		this.difficultyService.setDifficulty(difficulty)
+	}
+
+	goToHome() {
+		this.router.navigate(['/home'])
 	}
 
 	restartGame() {

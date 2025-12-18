@@ -7,8 +7,10 @@ const API_URL = environment.apiUrl
 
 export const handlers = [
 	http.get(`${API_URL}/triads/cues`, () => {
-		return HttpResponse.json<{ id: string | number; cues: string[] }>({
-			id: 1,
+		// Difficulty parameter is accepted but doesn't affect mock response
+		// For testing empty state, you can return null cues with a message
+		return HttpResponse.json<{ triadGroupId: string | number | null; cues: string[] | null; message?: string }>({
+			triadGroupId: 1,
 			cues: ['SLUSH', 'TRUST', 'HEDGE', 'FIRST', 'KITCHEN', 'PREP', 'CLOSE', 'SHIP', 'IMAGINARY'],
 		})
 	}),

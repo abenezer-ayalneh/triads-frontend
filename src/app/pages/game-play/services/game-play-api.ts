@@ -1,6 +1,7 @@
-import { HttpClient } from '@angular/common/http'
+import { HttpClient, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 
+import { Difficulty } from '../../../shared/enums/difficulty.enum'
 import { SolvedTriad } from '../interfaces/triad.interface'
 
 @Injectable({
@@ -9,8 +10,9 @@ import { SolvedTriad } from '../interfaces/triad.interface'
 export class GamePlayApi {
 	private readonly httpClient = inject(HttpClient)
 
-	getCues() {
-		return this.httpClient.get<{ triadGroupId: string | number; cues: string[] }>('triads/cues')
+	getCues(difficulty: Difficulty) {
+		const params = new HttpParams().set('difficulty', difficulty)
+		return this.httpClient.get<{ triadGroupId: string | number | null; cues: string[] | null; message?: string }>('triads/cues', { params })
 	}
 
 	checkTriad(cues: string[]) {
