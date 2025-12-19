@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core'
+import { Component, computed, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { Router } from '@angular/router'
 import { gsap } from 'gsap'
@@ -21,6 +21,7 @@ import { GAME_END_MESSAGES, WRONG_MESSAGES } from './constants/game-play.constan
 import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad as SolvedTriadInterface } from './interfaces/triad.interface'
 import { GamePlayApi } from './services/game-play-api'
+import { GamePlayLogic } from './services/game-play-logic'
 
 @Component({
 	selector: 'app-game-play',
@@ -75,11 +76,15 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private readonly gamePlayApi = inject(GamePlayApi)
 
+	private readonly gamePlayLogic = inject(GamePlayLogic)
+
 	private readonly difficultyService = inject(DifficultyService)
 
 	private readonly router = inject(Router)
 
 	private subscriptions$ = new Subscription()
+
+	private readonly solutionSectionRef = viewChild<SolutionSection>('solutionSection')
 
 	noTriadsMessage = signal<string>('')
 
@@ -166,6 +171,13 @@ export class GamePlay implements OnInit, OnDestroy {
 		// Reset local component state
 		this.cueFetchingState.set(RequestState.LOADING)
 		this.explodingBubbles.set([])
+		// Reset GamePlayLogic BehaviorSubjects
+		this.gamePlayLogic.resetAnswerFieldState()
+		// Reset SolutionSection component state
+		const solutionSection = this.solutionSectionRef()
+		if (solutionSection) {
+			solutionSection.resetComponentState()
+		}
 		// Reinitialize the game (game state was already reset by GameResultDialog)
 		this.initializeGame()
 	}

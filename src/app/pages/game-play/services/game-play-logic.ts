@@ -27,6 +27,11 @@ export class GamePlayLogic {
 
 	answerFieldValue$ = new BehaviorSubject<string | null>(null)
 
+	resetAnswerFieldState() {
+		this.answerFieldFocus$.next(false)
+		this.answerFieldValue$.next(null)
+	}
+
 	decideGameResult() {
 		if (
 			this.store.cues() !== null &&

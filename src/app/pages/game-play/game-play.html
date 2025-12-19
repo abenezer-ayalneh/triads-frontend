@@ -59,7 +59,7 @@
 	<!--Solution Input Section-->
 	@if (cueFetchingState() === RequestState.READY) {
 		<div class="w-full h-20 md:h-24 lg:h-28">
-			<app-solution-section (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
+			<app-solution-section #solutionSection (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
 		</div>
 	}
 

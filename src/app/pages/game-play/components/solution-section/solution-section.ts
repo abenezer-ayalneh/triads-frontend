@@ -70,6 +70,16 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		this.timeoutIds = []
 	}
 
+	resetComponentState() {
+		// Reset form control
+		this.answerFormControl.reset()
+		// Reset focus flag
+		this.shouldFocusAnswerField = false
+		// Clear all pending timeouts
+		this.timeoutIds.forEach((id) => clearTimeout(id))
+		this.timeoutIds = []
+	}
+
 	ngAfterViewChecked() {
 		// Focus the answer field if needed
 		if (this.shouldFocusAnswerField) {
