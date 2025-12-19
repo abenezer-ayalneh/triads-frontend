@@ -23,8 +23,8 @@ export class GamePlayApi {
 		return this.httpClient.get<boolean | SolvedTriad>('triads/check-answer', { params: { cues, answer } })
 	}
 
-	fetchFinalTriadCues(triadsIds: number[]) {
-		return this.httpClient.get<string[]>('triads/fourth-triad-cues', { params: { triadsIds } })
+	fetchFinalTriadCues(triadGroupId: number | string) {
+		return this.httpClient.get<string[]>('triads/fourth-triad-cues', { params: { triadGroupId } })
 	}
 
 	getTriadGroupSolutions(triadGroupId: string | number) {

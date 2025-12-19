@@ -289,8 +289,13 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	private async getFinalTriadCuesCues() {
-		const solvedTriads = this.store.solvedTriads()
-		return await firstValueFrom(this.gamePlayApi.fetchFinalTriadCues(solvedTriads.map((triad) => triad.id)))
+		const triadGroupId = this.store.triadGroupId()
+
+		if (triadGroupId) {
+			return await firstValueFrom(this.gamePlayApi.fetchFinalTriadCues(triadGroupId))
+		}
+
+		return Promise.reject()
 	}
 
 	private subscribeToAnswerFieldChanges() {
