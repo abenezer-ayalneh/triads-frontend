@@ -8,6 +8,7 @@ export interface TriadItem {
 export interface TriadGroup {
 	id: number
 	active: boolean
+	difficulty: string
 	triad1: TriadItem
 	triad2: TriadItem
 	triad3: TriadItem
@@ -17,6 +18,7 @@ export interface TriadGroup {
 export interface TriadGroupResponse {
 	id: number
 	active: boolean
+	difficulty: string
 	triad1: TriadItem
 	triad2: TriadItem
 	triad3: TriadItem
@@ -24,6 +26,7 @@ export interface TriadGroupResponse {
 }
 
 export interface TriadGroupFormData {
+	difficulty: string
 	triad1: {
 		keyword: string
 		fullPhrases: [string, string, string]

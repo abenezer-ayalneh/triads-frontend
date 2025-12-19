@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, effect, ElementRef, input, output, 
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
+import { Difficulty } from '../../../../shared/enums/difficulty.enum'
 import { TriadGroup, TriadGroupFormData } from '../../interfaces/triad-group.interface'
 import { TriadValidationService } from '../../services/triad-validation.service'
 
@@ -22,9 +23,12 @@ export class EditTriadGroupDialog {
 
 	validationErrors = signal<string[]>([])
 
+	readonly Difficulty = Difficulty
+
 	@ViewChild('dialogBody', { static: false }) dialogBodyRef?: ElementRef<HTMLDivElement>
 
 	formGroup = new FormGroup({
+		difficulty: new FormControl<string>('', [Validators.required]),
 		triad1: new FormGroup({
 			keyword: new FormControl<string>('', [Validators.required]),
 			fullPhrase1: new FormControl<string>('', [Validators.required]),
@@ -71,6 +75,7 @@ export class EditTriadGroupDialog {
 
 	private populateForm(group: TriadGroup) {
 		this.formGroup.patchValue({
+			difficulty: group.difficulty,
 			triad1: {
 				keyword: group.triad1.keyword,
 				fullPhrase1: group.triad1.fullPhrases[0],
@@ -117,6 +122,7 @@ export class EditTriadGroupDialog {
 
 		const formValue = this.formGroup.value
 		const formData: TriadGroupFormData = {
+			difficulty: formValue.difficulty?.trim() || '',
 			triad1: {
 				keyword: formValue.triad1?.keyword?.trim() || '',
 				fullPhrases: [
