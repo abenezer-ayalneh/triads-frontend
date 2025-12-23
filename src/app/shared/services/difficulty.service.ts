@@ -13,7 +13,7 @@ export class DifficultyService {
 		if (stored && Object.values(Difficulty).includes(stored as Difficulty)) {
 			return stored as Difficulty
 		}
-		return Difficulty.RANDOM
+		return Difficulty.EASY
 	}
 
 	setDifficulty(difficulty: Difficulty): void {

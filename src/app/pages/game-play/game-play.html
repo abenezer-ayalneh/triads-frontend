@@ -113,4 +113,9 @@
 			</app-game-result-dialog>
 		}
 	}
+
+	<!--Welcome Dialog-->
+	@if (showWelcomeDialog()) {
+		<app-welcome-dialog [totalPoints]="welcomeDialogTotalPoints()" (whenClosed)="onWelcomeDialogClosed()" />
+	}
 </div>

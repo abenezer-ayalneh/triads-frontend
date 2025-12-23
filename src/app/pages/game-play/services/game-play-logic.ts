@@ -60,7 +60,22 @@ export class GamePlayLogic {
 			this.store.setGamePlayState(GamePlayState.WON)
 
 			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
-			const newUser = { ...user, scores: newScores, firstGameDate: user.firstGameDate ?? new Date().toISOString() }
+
+			// Track first 5 games
+			const totalGamesPlayed = Object.values(newScores).reduce((sum, count) => sum + count, 0)
+			const firstFiveGameScores = user.firstFiveGameScores ?? []
+
+			const updatedFirstFiveGameScores = [...firstFiveGameScores]
+			if (totalGamesPlayed <= 5) {
+				updatedFirstFiveGameScores.push(score)
+			}
+
+			const newUser = {
+				...user,
+				scores: newScores,
+				firstGameDate: user.firstGameDate ?? new Date().toISOString(),
+				firstFiveGameScores: updatedFirstFiveGameScores,
+			}
 			this.store.setUser(newUser)
 			this.userService.setUser(newUser)
 		}
@@ -78,7 +93,22 @@ export class GamePlayLogic {
 			this.store.setGamePlayState(GamePlayState.LOST)
 
 			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
-			const newUser = { ...user, scores: newScores, firstGameDate: user.firstGameDate ?? new Date().toISOString() }
+
+			// Track first 5 games
+			const totalGamesPlayed = Object.values(newScores).reduce((sum, count) => sum + count, 0)
+			const firstFiveGameScores = user.firstFiveGameScores ?? []
+
+			const updatedFirstFiveGameScores = [...firstFiveGameScores]
+			if (totalGamesPlayed <= 5) {
+				updatedFirstFiveGameScores.push(score)
+			}
+
+			const newUser = {
+				...user,
+				scores: newScores,
+				firstGameDate: user.firstGameDate ?? new Date().toISOString(),
+				firstFiveGameScores: updatedFirstFiveGameScores,
+			}
 			this.store.setUser(newUser)
 			this.userService.setUser(newUser)
 		}

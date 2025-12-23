@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
+import { Component, computed, effect, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { Router } from '@angular/router'
 import { gsap } from 'gsap'
@@ -17,6 +17,7 @@ import { HintsBox } from './components/hints-box/hints-box'
 import { SolutionSection } from './components/solution-section/solution-section'
 import { SolvedTriad } from './components/solved-triad/solved-triad'
 import { TurnsBox } from './components/turns-box/turns-box'
+import { WelcomeDialog } from './components/welcome-dialog/welcome-dialog'
 import { GAME_END_MESSAGES, WRONG_MESSAGES } from './constants/game-play.constant'
 import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad as SolvedTriadInterface } from './interfaces/triad.interface'
@@ -37,6 +38,7 @@ import { GamePlayLogic } from './services/game-play-logic'
 		GameResultDialog,
 		SolvedTriad,
 		BubbleContainer,
+		WelcomeDialog,
 	],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
@@ -89,6 +91,20 @@ export class GamePlay implements OnInit, OnDestroy {
 	noTriadsMessage = signal<string>('')
 
 	selectedDifficulty = signal<Difficulty>(Difficulty.RANDOM)
+
+	showWelcomeDialog = signal<boolean>(false)
+
+	welcomeDialogTotalPoints = signal<number>(0)
+
+	constructor() {
+		// Watch for game completion to check if welcome dialog should be shown
+		effect(() => {
+			const gameState = this.store.gamePlayState()
+			if (gameState === GamePlayState.WON || gameState === GamePlayState.LOST) {
+				this.checkAndShowWelcomeDialog()
+			}
+		})
+	}
 
 	ngOnInit() {
 		// Initialize selected difficulty with current setting
@@ -264,5 +280,33 @@ export class GamePlay implements OnInit, OnDestroy {
 			opacity: 0.65,
 			ease: 'back.out(1.7)',
 		})
+	}
+
+	checkAndShowWelcomeDialog() {
+		const user = this.store.user()
+		if (!user || !user.firstFiveGameScores || user.welcomeMessageShown) {
+			return
+		}
+
+		// Check if user has completed exactly 5 games
+		const totalGamesPlayed = Object.values(user.scores).reduce((sum, count) => sum + count, 0)
+
+		if (totalGamesPlayed === 5 && user.firstFiveGameScores.length === 5) {
+			// Calculate total points from first 5 games
+			const totalPoints = user.firstFiveGameScores.reduce((sum, score) => sum + score, 0)
+
+			// Show welcome dialog
+			this.welcomeDialogTotalPoints.set(totalPoints)
+			this.showWelcomeDialog.set(true)
+
+			// Mark welcome message as shown
+			const updatedUser = { ...user, welcomeMessageShown: true }
+			this.store.setUser(updatedUser)
+			this.store.userService.setUser(updatedUser)
+		}
+	}
+
+	onWelcomeDialogClosed() {
+		this.showWelcomeDialog.set(false)
 	}
 }
