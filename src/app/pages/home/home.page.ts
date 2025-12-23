@@ -2,7 +2,6 @@ import { Component, inject, OnInit } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { RouterLink } from '@angular/router'
 
-import { UserService } from '../../shared/services/user.service'
 import { GlobalStore } from '../../state/global.store'
 import { UserInfoDialog } from './components/user-info-dialog/user-info-dialog'
 
@@ -14,8 +13,6 @@ import { UserInfoDialog } from './components/user-info-dialog/user-info-dialog'
 })
 export class HomePage implements OnInit {
 	readonly store = inject(GlobalStore)
-
-	private readonly userInfoDialogService = inject(UserService)
 
 	ngOnInit() {
 		this.prepareUser()

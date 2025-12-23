@@ -22,11 +22,19 @@ export class GameResultDialog {
 
 	showPlayAgainButton = signal(false)
 
+	showConfetti = signal(false)
+
+	private readonly taDahAudio = new Audio()
+
 	constructor() {
+		this.taDahAudio.src = 'sounds/ta-dah.mp3'
+		this.taDahAudio.volume = 0.7
+
 		// Watch for game state and unsolved triads to show button
 		effect(() => {
 			const result = this.result()
 			const unsolvedTriads = this.store.unsolvedTriads()
+			const gameScore = this.store.gameScore()
 
 			if (result === 'LOST') {
 				// For LOST state, show button after solutions appear (or after max 2 seconds)
@@ -44,6 +52,18 @@ export class GameResultDialog {
 			} else if (result === 'WON') {
 				// For WON state, show button immediately
 				this.showPlayAgainButton.set(true)
+
+				// Check if perfect score (15) - trigger celebration
+				if (gameScore === 15) {
+					// Play ta-dah sound effect
+					this.taDahAudio.play().catch((error) => {
+						// Silently fail if audio can't play (e.g., user interaction required)
+						console.warn('Could not play celebration sound:', error)
+					})
+
+					// Show confetti for 2 seconds
+					this.showConfetti.set(true)
+				}
 			}
 		})
 	}
@@ -54,6 +74,11 @@ export class GameResultDialog {
 
 	lostAnimationOptions: AnimationOptions = {
 		path: 'lotties/wrong-answer-lottie.json',
+	}
+
+	confettiAnimationOptions: AnimationOptions = {
+		path: 'lotties/bubble-burst-confetti.json',
+		loop: true,
 	}
 
 	restartGame() {

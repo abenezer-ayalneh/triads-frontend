@@ -6,6 +6,15 @@
 		</div>
 	}
 
+	<!-- Confetti Overlay - appears when perfect score (15) is achieved -->
+	@if (showConfetti()) {
+		<div class="fixed inset-0 w-full h-full pointer-events-none z-15 flex justify-center items-center">
+			<div class="w-full h-full">
+				<ng-lottie [options]="confettiAnimationOptions" />
+			</div>
+		</div>
+	}
+
 	<div
 		class="dialog-content w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-success/50 relative z-20">
 		<div class="w-40 h-40 rounded-2xl">

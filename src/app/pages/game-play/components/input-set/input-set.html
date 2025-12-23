@@ -6,7 +6,6 @@
 				[attr.id]="'inputBox' + i"
 				[tabindex]="i + 1"
 				[formControlName]="i"
-				[disabled]="isLoading()"
 				(input)="onInput(i)"
 				(keydown)="onKeydown($event, i)"
 				(focus)="onFocus(i)"

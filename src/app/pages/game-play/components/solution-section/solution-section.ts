@@ -57,6 +57,19 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 				this.shouldFocusAnswerField = true
 			}
 		})
+
+		// Watch loading signals and disable/enable answerFormControl
+		effect(() => {
+			const isCheckingAnswer = this.store.isCheckingAnswer()
+			const isCheckingTriad = this.store.isCheckingTriad()
+			const isLoading = isCheckingAnswer || isCheckingTriad
+
+			if (isLoading) {
+				this.answerFormControl.disable()
+			} else {
+				this.answerFormControl.enable()
+			}
+		})
 	}
 
 	ngOnInit() {

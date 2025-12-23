@@ -57,6 +57,20 @@ export class InputSet implements AfterViewInit, OnDestroy {
 				element.focus()
 			}
 		})
+
+		// Watch isLoading signal and disable/enable all FormControls in the FormArray
+		effect(() => {
+			const loading = this.isLoading()
+			const controls = this.inputBoxes.controls
+
+			controls.forEach((control) => {
+				if (loading) {
+					control.disable()
+				} else {
+					control.enable()
+				}
+			})
+		})
 	}
 
 	get inputBoxes() {
