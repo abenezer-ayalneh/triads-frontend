@@ -70,7 +70,7 @@
 			<app-turns-box />
 
 			<!--Solved Triads Section-->
-			<div #solvedArea class="h-full flex justify-center items-center gap-2">
+			<div #solvedArea class="h-full grid grid-cols-2 grid-rows-2 place-items-center md:flex md:justify-center md:items-center gap-x-2 gap-y-1">
 				@for (solvedTriad of store.solvedTriads(); track solvedTriad.id) {
 					<app-solved-triad id="solved-{{ solvedTriad.id }}" [solvedTriad]="solvedTriad" />
 				}
