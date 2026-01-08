@@ -113,7 +113,31 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy() {
+		// Reset game state when navigating away from the gameplay page
+		this.resetGameState()
+	}
+
+	private resetGameState() {
+		// Clear existing subscriptions to avoid memory leaks
 		this.subscriptions$.unsubscribe()
+		// Create a new subscription object
+		this.subscriptions$ = new Subscription()
+		// Reset local component state
+		this.cueFetchingState.set(RequestState.LOADING)
+		this.explodingBubbles.set([])
+		this.noTriadsMessage.set('')
+		this.showWelcomeDialog.set(false)
+		this.welcomeDialogTotalPoints.set(0)
+		// Reset GamePlayLogic BehaviorSubjects
+		this.gamePlayLogic.resetAnswerFieldState()
+		// Reset SolutionSection component state
+		const solutionSection = this.solutionSectionRef()
+		if (solutionSection) {
+			solutionSection.resetComponentState()
+		}
+		// Reset global store game state
+		this.store.setUnsolvedTriads(null)
+		this.store.resetGameState()
 	}
 
 	initializeGame() {
@@ -180,21 +204,9 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	restartGame() {
-		// Clear existing subscriptions to avoid memory leaks
-		this.subscriptions$.unsubscribe()
-		// Create a new subscription object for the restarted game
-		this.subscriptions$ = new Subscription()
-		// Reset local component state
-		this.cueFetchingState.set(RequestState.LOADING)
-		this.explodingBubbles.set([])
-		// Reset GamePlayLogic BehaviorSubjects
-		this.gamePlayLogic.resetAnswerFieldState()
-		// Reset SolutionSection component state
-		const solutionSection = this.solutionSectionRef()
-		if (solutionSection) {
-			solutionSection.resetComponentState()
-		}
-		// Reinitialize the game (game state was already reset by GameResultDialog)
+		// Reset all game state
+		this.resetGameState()
+		// Reinitialize the game
 		this.initializeGame()
 	}
 

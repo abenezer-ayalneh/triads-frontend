@@ -8,7 +8,7 @@ import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
 	selector: 'app-stats',
-	imports: [AgCharts, DatePipe],
+	imports: [AgCharts, DatePipe, DecimalPipe],
 	templateUrl: './stats.html',
 	styleUrl: './stats.scss',
 	providers: [DecimalPipe],
@@ -24,6 +24,12 @@ export class Stats {
 
 	chartData = computed(() => {
 		return this.generateChartData(this.store.user()?.scores ?? ({} as Record<number, number>))
+	})
+
+	averageScore = computed(() => {
+		const scores = this.store.user()?.scores ?? {}
+		const sum = Object.entries(scores).reduce((acc, [key, value]) => acc + Number(key) * value, 0)
+		return sum / 7
 	})
 
 	chartOptions = computed<AgChartOptions>(() => ({
