@@ -35,9 +35,9 @@
 
 			<!-- Hints and Misses Section -->
 			<div class="w-full flex flex-col justify-center items-center py-4">
-				<div class="w-full flex items-center justify-between gap-4">
-					<ag-charts class="w-4/6 h-full flex-1" [options]="chartOptions()"> </ag-charts>
-					<div class="w-2/6 h-full text-left">
+				<div class="w-full flex flex-col md:flex-row items-center md:justify-between gap-4">
+					<ag-charts class="w-full md:w-4/6 h-full flex-1" [options]="chartOptions()"> </ag-charts>
+					<div class="w-full md:w-2/6 h-full text-center md:text-left">
 						<p class="text-lg md:text-2xl text-gray-900">
 							Average: <span class="font-medium">{{ averageScore() | number: '1.1-2' }}</span>
 						</p>

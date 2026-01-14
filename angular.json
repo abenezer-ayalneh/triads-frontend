@@ -64,6 +64,7 @@
 				},
 				"serve": {
 					"builder": "@angular-devkit/build-angular:dev-server",
+					"options": { "allowedHosts": ["localhost", "dogfish-together-locust.ngrok-free.app"] },
 					"configurations": {
 						"production": {
 							"buildTarget": "triads:build:production"

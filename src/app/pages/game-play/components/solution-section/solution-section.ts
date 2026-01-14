@@ -46,6 +46,15 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 
 	private readonly bubblePopAudio = new Audio()
 
+	/**
+	 * Detects if the current device is a mobile device
+	 */
+	private isMobileDevice(): boolean {
+		return (
+			/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768 && 'ontouchstart' in window)
+		)
+	}
+
 	constructor() {
 		this.bubblePopAudio.src = 'sounds/three-pops.mp3'
 
@@ -101,6 +110,10 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 				// Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
 				const timeoutId = setTimeout(() => {
 					answerField.focus()
+					// On mobile devices, also trigger click to ensure keyboard appears
+					if (this.isMobileDevice()) {
+						answerField.click()
+					}
 					this.shouldFocusAnswerField = false
 				}, 0)
 				this.timeoutIds.push(timeoutId)
@@ -122,6 +135,19 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 							if (success) {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.shouldFocusAnswerField = true
+								// Trigger keyboard on mobile devices after state change
+								if (this.isMobileDevice()) {
+									// Use a small delay to ensure the input field is rendered
+									const timeoutId = setTimeout(() => {
+										const answerField = this.answerFieldRef()?.nativeElement
+										if (answerField) {
+											answerField.focus()
+											// On some mobile browsers, we need to click to trigger keyboard
+											answerField.click()
+										}
+									}, 100)
+									this.timeoutIds.push(timeoutId)
+								}
 							} else {
 								this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
 								this.useTurn()
