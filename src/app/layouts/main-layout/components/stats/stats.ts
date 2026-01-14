@@ -29,7 +29,8 @@ export class Stats {
 	averageScore = computed(() => {
 		const scores = this.store.user()?.scores ?? {}
 		const sum = Object.entries(scores).reduce((acc, [key, value]) => acc + Number(key) * value, 0)
-		return sum / 7
+		const totalGamesPlayed = Object.values(scores).reduce((acc, curr) => acc + curr, 0)
+		return totalGamesPlayed > 0 ? sum / totalGamesPlayed : 0
 	})
 
 	chartOptions = computed<AgChartOptions>(() => ({
