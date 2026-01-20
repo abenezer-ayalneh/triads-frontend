@@ -1,12 +1,12 @@
 <div
-	class="w-fit h-fit flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-4 py-1 md:px-6 md:py-2 lg:px-8 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
-	<p class="text-base-300 text-lg md:text-xl lg:text-2xl font-semibold">Hints</p>
+	class="w-full h-full flex flex-col justify-center items-center gap-2 border border-base-100/20 shadow-2xl px-2 py-0.5 md:py-2 lg:py-3 rounded-lg bg-neutral/30 backdrop-blur-sm">
+	<p class="text-base-300 text-sm landscape:max-lg:text-sm md:text-xl lg:text-2xl font-medium">Hints</p>
 	<div class="w-full flex justify-center items-center gap-2">
 		@let isLoading = store.isFetchingHint() || store.isCheckingTriad();
 		@let hintsDisabledDueToTurns = areHintsDisabledDueToTurns();
 		@for (hint of store.hints(); track hint.id) {
 			<button
-				class="w-6 h-6 md:w-12 md:h-12 lg:w-16 lg:h-16 circle relative disabled:opacity-50 disabled:cursor-not-allowed"
+				class="w-6 h-6 md:w-12 md:h-12 landscape:md:w-6 landscape:md:h-6 lg:w-16 lg:h-16 landscape:lg:w-12 landscape:lg:h-12 circle relative disabled:opacity-50 disabled:cursor-not-allowed"
 				[class.grayscale]="hintsDisabledDueToTurns"
 				(click)="onHintClick()"
 				[disabled]="!hint.available || isLoading || hintsDisabledDueToTurns"

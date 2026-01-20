@@ -1,6 +1,6 @@
 <div
 	id="bubble-{{ cue() }}"
-	class="w-32 h-32 md:w-48 md:h-48 xl:w-60 xl:h-60 p-0 m-0 aspect-square circle contain-content relative animated-color bubble-container transition-opacity"
+	class="w-32 landscape:max-md:w-24 landscape:max-lg:w-32 md:w-48 xl:w-60 h-32 landscape:max-md:h-24 landscape:max-lg:h-32 md:h-48 xl:h-60 p-0 m-0 aspect-square circle contain-content relative animated-color bubble-container transition-opacity"
 	[class.bubble]="!pop()"
 	[class.backdrop-blur-xs]="!pop()"
 	[class.cursor-pointer]="!isDisabled()"
@@ -15,7 +15,7 @@
 	}
 	<p
 		id="cue-{{ cue() }}"
-		class="text-primary-content text-sm md:text-xl xl:text-2xl text-center font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">
+		class="text-primary-content text-sm landscape:max-lg:text-xs md:text-xl xl:text-2xl text-center font-bold absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 whitespace-nowrap">
 		{{ cue() }}
 	</p>
 </div>

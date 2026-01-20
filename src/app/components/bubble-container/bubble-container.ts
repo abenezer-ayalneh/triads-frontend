@@ -38,6 +38,12 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 	private visibilityChangeListener?: () => void
 
+	private orientationChangeListener?: () => void
+
+	private orientationMediaQuery?: MediaQueryList
+
+	private orientationChangeHandler?: (event?: MediaQueryListEvent) => void
+
 	// Properties for sequential bubble creation
 	private bubbleCreationQueue: Bubble[] = []
 
@@ -128,6 +134,22 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		if (this.visibilityChangeListener) {
 			document.removeEventListener('visibilitychange', this.visibilityChangeListener)
 			this.visibilityChangeListener = undefined
+		}
+
+		if (this.orientationChangeHandler && this.orientationMediaQuery) {
+			if (this.orientationMediaQuery.removeEventListener) {
+				this.orientationMediaQuery.removeEventListener('change', this.orientationChangeHandler)
+			} else {
+				// Fallback for older browsers
+				this.orientationMediaQuery.removeListener(this.orientationChangeHandler)
+			}
+			this.orientationChangeHandler = undefined
+			this.orientationMediaQuery = undefined
+		}
+
+		if (this.orientationChangeListener) {
+			window.removeEventListener('orientationchange', this.orientationChangeListener)
+			this.orientationChangeListener = undefined
 		}
 
 		if (this.resizeObserver) {
@@ -317,6 +339,14 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	/**
+	 * Check if the current device is a small screen (mobile device)
+	 * @returns true if screen width is less than 768px
+	 */
+	private isSmallScreen(): boolean {
+		return window.innerWidth < 768
+	}
+
+	/**
 	 * Create a single bubble with animation
 	 * @param bubbleComponent The bubble component to create
 	 * @param remainingBubbles The number of bubbles remaining in the queue
@@ -330,19 +360,30 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		const height = container.clientHeight || container.offsetHeight || 0
 
 		const element = bubbleComponent.element.nativeElement
+		// Force a reflow to ensure CSS responsive classes have been applied
+		void element.offsetHeight
 		const halfWidth = (element.offsetWidth || 60) / 2
 		const halfHeight = (element.offsetHeight || 60) / 2
 		const radius = Math.max(halfWidth, halfHeight)
+
+		// Detect orientation for better positioning
+		const isLandscape = width > height
+		const aspectRatio = width / height
 
 		// Calculate position - alternate between bottom-left and bottom-right
 		const side = this.nextBubbleSide
 		this.nextBubbleSide = side === 'left' ? 'right' : 'left' // Toggle for next bubble
 
-		// Position at bottom corners with some padding from edges
-		const padding = radius + 20 // Add padding to prevent touching edges
-		const startX = side === 'left' ? padding : width - padding
-		// Start at the bottom wall of the container (visible inside the container)
-		const startY = height - radius // Position at the bottom wall, fully visible
+		// Adjust padding based on orientation
+		// In landscape mode, use more horizontal spacing to prevent jamming
+		const basePadding = radius + 20
+		const horizontalPadding = isLandscape && aspectRatio > 1.5 ? basePadding * 1.5 : basePadding
+		const verticalPadding = basePadding
+
+		// Position at bottom corners with orientation-aware padding
+		const startX = side === 'left' ? horizontalPadding : width - horizontalPadding
+		// In landscape mode, start bubbles slightly higher to give more vertical space
+		const startY = isLandscape && aspectRatio > 1.5 ? height - radius - verticalPadding * 0.5 : height - radius // Position at the bottom wall, fully visible
 
 		// Create the physics body
 		const body = Bodies.circle(startX, startY, radius, {
@@ -364,14 +405,19 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Calculate velocity toward center with some upward bias
 		// For bubbles from left, angle slightly right; from right, angle slightly left
 		const angleVariation = side === 'left' ? 0.2 : -0.2 // Slight angle variation based on side
-		const speed = 2.0 + Math.random() * 1.0 // 2.0-3.0 pixels per frame
-		const velocityX = (dx / distance) * speed * 0.8 + angleVariation // 80% toward center horizontally with side-based angle
-		const velocityY = (dy / distance) * speed * 0.1 - 1.5 // 10% toward center vertically, with very strong upward bias for vertical trajectory
+
+		// Reduce speed by 75% on small screens (25% of original speed)
+		const isSmallScreenDevice = this.isSmallScreen()
+		const speedMultiplier = isSmallScreenDevice ? 0.25 : 1.0
+		const speed = (2.0 + Math.random() * 1.0) * speedMultiplier // 2.0-3.0 pixels per frame (or 25% on small screens)
+		const upwardBias = 1.5 * speedMultiplier // Reduce upward bias by 75% on small screens
+		const velocityX = (dx / distance) * speed * 0.8 + angleVariation * speedMultiplier // 80% toward center horizontally with side-based angle
+		const velocityY = (dy / distance) * speed * 0.1 - upwardBias // 10% toward center vertically, with very strong upward bias for vertical trajectory
 		Matter.Body.setVelocity(body, { x: velocityX, y: velocityY })
 
-		// Apply initial impulse toward center
-		const initialImpulse = 0.0075 // 1.5x stronger impulse
-		const impulseX = (dx / distance) * initialImpulse * 0.8 + angleVariation * 0.1 // 80% toward center horizontally with side-based angle
+		// Apply initial impulse toward center (reduced by 75% on small screens)
+		const initialImpulse = 0.0075 * speedMultiplier // 1.5x stronger impulse (or 25% on small screens)
+		const impulseX = (dx / distance) * initialImpulse * 0.8 + angleVariation * 0.1 * speedMultiplier // 80% toward center horizontally with side-based angle
 		const impulseY = (dy / distance) * initialImpulse * 0.1 - initialImpulse * 0.6 // 10% toward center, 60% upward for vertical trajectory
 		Matter.Body.applyForce(body, body.position, { x: impulseX, y: impulseY })
 
@@ -463,6 +509,10 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		// Handler function that updates everything on resize
 		const handleResize = () => {
+			// Force a reflow to ensure CSS responsive classes have been applied
+			// This is especially important for orientation changes
+			void container.offsetHeight
+
 			// Keep the render canvas in sync with container size
 			if (this.render) {
 				const width = container.offsetWidth
@@ -478,8 +528,15 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			const height = container.clientHeight || container.offsetHeight || 0
 			this.gravitationalCenter = { x: width / 2, y: height / 2 }
 
+			// Update boundaries first
 			this.createOrUpdateBoundaries()
+
+			// Then update bubble body sizes (this reads the new CSS sizes)
+			// This is critical for orientation changes where bubble sizes change via CSS
 			this.updateBubbleBodySizes()
+
+			// Finally clamp all bubbles to ensure they're within boundaries
+			this.clampAllBubblesToBoundaries()
 		}
 
 		// Debounced resize handler
@@ -513,6 +570,64 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			}
 		}
 		document.addEventListener('visibilitychange', this.visibilityChangeListener)
+
+		// Handle orientation changes - update physics when device rotates
+		this.setupOrientationChangeHandling(debouncedResize)
+	}
+
+	/**
+	 * Setup orientation change detection and handling
+	 * @param resizeHandler The resize handler to call when orientation changes
+	 */
+	private setupOrientationChangeHandling(resizeHandler: () => void) {
+		// Use matchMedia to detect orientation changes
+		const orientationQuery = window.matchMedia('(orientation: landscape)')
+		this.orientationMediaQuery = orientationQuery
+
+		// Handler for orientation changes
+		const handleOrientationChange = () => {
+			// Force immediate update on orientation change
+			const container = this.container().nativeElement
+			const width = container.clientWidth || container.offsetWidth || 0
+			const height = container.clientHeight || container.offsetHeight || 0
+
+			// Update gravitational center immediately
+			this.gravitationalCenter = { x: width / 2, y: height / 2 }
+
+			// Force a reflow to ensure CSS has applied
+			void container.offsetHeight
+
+			// Update boundaries immediately
+			this.createOrUpdateBoundaries()
+
+			// Update bubble body sizes to match new CSS sizes
+			this.updateBubbleBodySizes()
+
+			// Clamp all bubbles to new boundaries
+			this.clampAllBubblesToBoundaries()
+
+			// Also trigger the debounced resize handler for any additional updates
+			resizeHandler()
+		}
+
+		this.orientationChangeHandler = handleOrientationChange
+
+		// Listen for orientation changes
+		if (this.orientationMediaQuery.addEventListener) {
+			this.orientationMediaQuery.addEventListener('change', this.orientationChangeHandler)
+		} else {
+			// Fallback for older browsers
+			this.orientationMediaQuery.addListener(this.orientationChangeHandler)
+		}
+
+		// Also listen to window orientationchange event as a fallback
+		this.orientationChangeListener = () => {
+			// Small delay to allow CSS to update
+			setTimeout(() => {
+				handleOrientationChange()
+			}, 100)
+		}
+		window.addEventListener('orientationchange', this.orientationChangeListener)
 	}
 
 	private animateFinalTriadCues() {

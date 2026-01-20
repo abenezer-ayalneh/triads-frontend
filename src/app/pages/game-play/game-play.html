@@ -3,10 +3,10 @@
 	<app-background-bubbles />
 
 	<!--Ballons Section-->
-	<div class="w-full h-[calc(100%-208px)] p-2 md:p-4 lg:p-6 overflow-visible">
+	<div class="w-full flex-1 py-1 px-2 md:px-4 lg:px-6 overflow-visible">
 		@if (cueFetchingState() === RequestState.LOADING || store.isFetchingFinalTriadCues()) {
 			<div class="w-full h-full flex justify-center items-center">
-				<span class="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
+				<span class="w-40 h-40 landscape:w-20 landscape md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
 					<ng-lottie [options]="loadingAnimationOptions" />
 				</span>
 			</div>
@@ -57,15 +57,15 @@
 	</div>
 
 	<!--Solution Input Section-->
-	@if (cueFetchingState() === RequestState.READY) {
-		<div class="w-full h-20 md:h-24 lg:h-28">
+	<div class="w-full h-16 landscape:max-lg:h-10 md:h-20 lg:h-24">
+		@if (cueFetchingState() === RequestState.READY) {
 			<app-solution-section #solutionSection (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
-		</div>
-	}
+		}
+	</div>
 
 	<!--Turn & Hint Section-->
-	@if (cueFetchingState() === RequestState.READY) {
-		<div class="w-full h-32 md:h-36 lg:h-40 flex justify-between items-center px-4 md:px-6 lg:px-8">
+	<div class="w-full h-20 landscape:max-lg:h-20 md:h-28 lg:h-32 flex justify-between items-center px-4 md:px-6 lg:px-8 py-1">
+		@if (cueFetchingState() === RequestState.READY) {
 			<!--Turn Section-->
 			<app-turns-box />
 
@@ -78,8 +78,8 @@
 
 			<!--Hint Section-->
 			<app-hints-box />
-		</div>
-	}
+		}
+	</div>
 
 	<!--Popup Section-->
 	@switch (store.gamePlayState()) {
