@@ -1,9 +1,10 @@
 <div class="w-full h-full flex justify-center items-center">
-	<div class="w-fit h-fit flex flex-col justify-center items-center gap-2 backdrop-blur-xl px-6 py-4 rounded-3xl bg-neutral/30">
-		<div class="w-40 h-40 rounded-2xl">
+	<div
+		class="w-fit h-fit flex flex-col justify-center items-center gap-1.5 landscape:max-md:gap-1.5 md:gap-2 backdrop-blur-xl px-4 landscape:max-md:px-4 md:px-6 py-3 landscape:max-md:py-3 md:py-4 rounded-3xl bg-neutral/30 max-w-[95vw] landscape:max-md:max-w-[98vw]">
+		<div class="w-24 h-24 landscape:max-md:w-24 landscape:max-md:h-24 md:w-40 md:h-40 rounded-2xl">
 			<ng-lottie [options]="type() === 'CORRECT' ? correctAnswerAnimationOptions : wrongAnswerAnimationOptions" />
 		</div>
-		<p class="text-base-100 text-2xl font-semibold text-pretty text-center">
+		<p class="text-base-100 text-sm landscape:max-md:text-sm md:text-2xl font-semibold text-pretty text-center px-2 landscape:max-md:px-2">
 			<ng-content />
 		</p>
 	</div>

@@ -44,26 +44,31 @@
 				<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
 			</button>
 			@if (showUsernameDropdown()) {
-				<div class="absolute top-full right-0 mt-2 w-48 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 z-50 flex flex-col gap-1">
+				<div
+					class="absolute top-full right-0 mt-2 w-48 landscape:max-md:w-40 md:w-48 bg-base-100 rounded-lg shadow-lg border border-base-300 p-1.5 landscape:max-md:p-1.5 md:p-2 z-50 flex flex-col gap-0.5 landscape:max-md:gap-0.5 md:gap-1">
 					<button
 						type="button"
 						(click)="openStats()"
-						class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+						class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
 						Check your stats
 					</button>
 					<button
 						type="button"
 						(click)="openNewIdentity()"
-						class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+						class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
 						New identity
 					</button>
-					<div class="px-4 py-2">
-						<label for="difficulty-dropdown" class="block text-xs text-base-content/70 mb-1">Select Difficulty</label>
+					<div class="px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2">
+						<label
+							for="difficulty-dropdown"
+							class="block text-[10px] landscape:max-md:text-[10px] md:text-xs text-base-content/70 mb-0.5 landscape:max-md:mb-0.5 md:mb-1"
+							>Select Difficulty</label
+						>
 						<select
 							id="difficulty-dropdown"
 							[ngModel]="selectedDifficulty()"
 							(ngModelChange)="onDifficultyChange($event)"
-							class="w-full px-3 py-2 text-sm text-base-content bg-base-200 border border-base-300 rounded-md hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content bg-base-200 border border-base-300 rounded-md hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
 							<option [value]="Difficulty.EASY">Soft</option>
 							<option [value]="Difficulty.MEDIUM">Firm</option>
 							<option [value]="Difficulty.HARD">Hard</option>
@@ -75,14 +80,14 @@
 							<button
 								type="button"
 								(click)="navigateToManageTriads()"
-								class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+								class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
 								Manage Triads
 							</button>
 						} @else {
 							<button
 								type="button"
 								(click)="openAdminPasswordDialog()"
-								class="w-full text-left px-4 py-2 text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+								class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
 								Admin
 							</button>
 						}

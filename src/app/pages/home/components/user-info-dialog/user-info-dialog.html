@@ -1,11 +1,12 @@
-<div class="w-screen h-screen bg-neutral-900/50 backdrop-blur-sm flex justify-center items-center px-4 fixed z-50 inset-0 overflow-y-auto">
+<div
+	class="w-screen h-screen bg-neutral-900/50 backdrop-blur-sm flex justify-center items-center px-2 landscape:max-md:px-2 md:px-4 fixed z-50 inset-0 overflow-y-auto">
 	<form
 		#usernameForm="ngForm"
 		(ngSubmit)="onSubmit()"
-		class="w-full md:w-fit h-fit flex flex-col justify-start items-center gap-2 py-6 md:px-32 lg:px-48 bg-base-100 rounded-lg relative">
+		class="w-full landscape:max-md:w-[95%] md:w-fit h-fit flex flex-col justify-start items-center gap-1.5 landscape:max-md:gap-1.5 md:gap-2 py-4 landscape:max-md:py-4 md:py-6 px-4 landscape:max-md:px-4 md:px-32 lg:px-48 bg-base-100 rounded-lg relative max-h-[95vh] landscape:max-md:max-h-[98vh] overflow-y-auto">
 		<!--    <h3 class="text-3xl text-center font-bold">Welcome to <span class="text-error italic">Triads!</span></h3>-->
 
-		<h1 class="text-7xl font-black text-center triads-logo-text">
+		<h1 class="text-4xl landscape:max-md:text-4xl md:text-7xl font-black text-center triads-logo-text">
 			<span class="inline-block transform -rotate-6 text-[#f87171]">T</span>
 			<span class="inline-block transform rotate-6 text-[#facc15]">r</span>
 			<span class="inline-block transform -rotate-3 text-[#22c55e]">i</span>
@@ -14,11 +15,11 @@
 			<span class="inline-block transform rotate-6 text-[#facc15]">s</span>
 			<span class="inline-block exclamation">!</span>
 		</h1>
-		<p class="text-xl text-center font-medium">Easy to learn, hard to quit.</p>
+		<p class="text-sm landscape:max-md:text-sm md:text-xl text-center font-medium">Easy to learn, hard to quit.</p>
 
-		<br />
+		<br class="landscape:max-md:hidden md:block" />
 
-		<p class="text-base text-center">First, give yourself a game name</p>
+		<p class="text-xs landscape:max-md:text-xs md:text-base text-center">First, give yourself a game name</p>
 		<input
 			#usernameInput
 			type="text"
@@ -27,16 +28,16 @@
 			minlength="3"
 			[(ngModel)]="usernameModel"
 			placeholder="Username"
-			class="input text-center text-xl font-medium" />
+			class="input text-center text-sm landscape:max-md:text-sm md:text-xl font-medium input-sm landscape:max-md:input-sm md:input-md w-full landscape:max-md:w-full md:w-auto" />
 
 		<button type="submit" [matTooltip]="'Got it! Let’s get going'" [disabled]="usernameForm.form.invalid" class="disabled:opacity-20">
-			<div class="w-24 h-24">
+			<div class="w-16 h-16 landscape:max-md:w-16 landscape:max-md:h-16 md:w-24 md:h-24">
 				<ng-lottie [options]="playButtonLottieAnimationOptions" />
 			</div>
 		</button>
 
 		<button type="button" (click)="toggleHowToPlay()" [matTooltip]="'Quickstart Directions'" class="absolute left-0 bottom-0">
-			<div class="w-16 h-16">
+			<div class="w-12 h-12 landscape:max-md:w-12 landscape:max-md:h-12 md:w-16 md:h-16">
 				<ng-lottie [options]="infoButtonLottieAnimationOptions" />
 			</div>
 		</button>

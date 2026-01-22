@@ -1,20 +1,27 @@
 <div
-	class="w-full h-full fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 lg:p-8 bg-black/50 backdrop-blur-xs"
+	class="w-full h-full fixed inset-0 z-50 flex items-center justify-center p-2 landscape:max-md:p-2 md:p-6 lg:p-8 bg-black/50 backdrop-blur-xs"
 	(click)="onBackdropClick($event)"
 	aria-modal="true"
 	aria-labelledby="dialog-title"
 	aria-describedby="dialog-description">
 	<div
-		class="w-full md:w-[90%] lg:w-[80%] max-w-full md:max-w-3xl lg:max-w-5xl max-h-[85%] md:max-h-[90%] rounded-xl lg:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
+		class="w-full landscape:max-md:w-[98%] md:w-[90%] lg:w-[80%] max-w-full md:max-w-3xl lg:max-w-5xl max-h-[95vh] landscape:max-md:max-h-[98vh] md:max-h-[90%] rounded-xl lg:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
 		<!-- Dialog Header -->
-		<header class="flex items-center justify-between px-4 md:px-6 lg:px-8 py-2 md:py-3 lg:py-4 bg-gradient-to-r triad-gradient text-white">
-			<h2 id="dialog-title" class="text-lg md:text-2xl lg:text-3xl font-bold leading-tight">How to Play Triads</h2>
+		<header
+			class="flex items-center justify-between px-3 landscape:max-md:px-3 md:px-6 lg:px-8 py-2 landscape:max-md:py-2 md:py-3 lg:py-4 bg-gradient-to-r triad-gradient text-white">
+			<h2 id="dialog-title" class="text-sm landscape:max-md:text-sm md:text-2xl lg:text-3xl font-bold leading-tight">How to Play Triads</h2>
 			<button
-				class="p-2 md:p-3 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors cursor-pointer"
+				class="p-1.5 landscape:max-md:p-1.5 md:p-3 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors cursor-pointer"
 				(click)="onClose()"
 				aria-label="Close dialog"
 				type="button">
-				<svg class="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+				<svg
+					class="w-4 h-4 landscape:max-md:w-4 landscape:max-md:h-4 md:w-6 md:h-6 lg:w-7 lg:h-7"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					aria-hidden="true">
 					<line x1="18" y1="6" x2="6" y2="18"></line>
 					<line x1="6" y1="6" x2="18" y2="18"></line>
 				</svg>
@@ -22,12 +29,15 @@
 		</header>
 
 		<!-- Dialog Body -->
-		<div class="flex-1 leading-relaxed overflow-y-auto bg-base-100 flex flex-col md:flex-row md:gap-6 lg:gap-8 p-4 md:p-6 lg:p-8">
-			<div class="flex flex-col gap-4 md:gap-6 lg:gap-8">
+		<div class="flex-1 leading-relaxed overflow-y-auto bg-base-100 flex flex-col md:flex-row md:gap-6 lg:gap-8 p-3 landscape:max-md:p-3 md:p-6 lg:p-8">
+			<div class="flex flex-col gap-3 landscape:max-md:gap-3 md:gap-6 lg:gap-8">
 				<!-- Triads Play Section -->
 				<div>
-					<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Triads Play</h3>
-					<div class="space-y-3 text-sm md:text-base">
+					<h3
+						class="text-xs landscape:max-md:text-xs md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-1.5 landscape:max-md:pb-1.5 md:pb-2">
+						Triads Play
+					</h3>
+					<div class="space-y-2 landscape:max-md:space-y-2 md:space-y-3 text-xs landscape:max-md:text-xs md:text-base">
 						<p>
 							You’re given 9 bubbles that contain words or phrases called <b>Cues</b>. Find 3 Cues that share a common <b>Key</b> word, to form a
 							3-word Triad. A Key is a single, common, stand-alone word.
@@ -53,8 +63,11 @@
 
 				<!-- Hints and Misses Section -->
 				<div>
-					<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Hints and Misses</h3>
-					<div class="space-y-3 text-sm md:text-base">
+					<h3
+						class="text-xs landscape:max-md:text-xs md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-1.5 landscape:max-md:pb-1.5 md:pb-2">
+						Hints and Misses
+					</h3>
+					<div class="space-y-2 landscape:max-md:space-y-2 md:space-y-3 text-xs landscape:max-md:text-xs md:text-base">
 						<p>
 							You have three guesses and two hints, any combination. Miss a guess, lose a turn. Take a hint, lose a turn. When 9 or 6 Cues remain,
 							a hint highlights a Triad to help you. When only 3 Cues remain, a hint gives you options: show number of letters in the Key, or show
@@ -112,8 +125,12 @@
 
 				<!-- Submissions Section -->
 				<div>
-					<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Submissions</h3>
-					<div class="space-y-3 mb-8 text-sm md:text-base">
+					<h3
+						class="text-xs landscape:max-md:text-xs md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-1.5 landscape:max-md:pb-1.5 md:pb-2">
+						Submissions
+					</h3>
+					<div
+						class="space-y-2 landscape:max-md:space-y-2 md:space-y-3 mb-4 landscape:max-md:mb-4 md:mb-8 text-xs landscape:max-md:text-xs md:text-base">
 						<p>
 							Be a part of Triads! We welcome your contributions, so get creative. We also appreciate your suggestions for improving the game.
 							This includes thoughts about Triads you found too easy, too difficult, or too wacko.. We’re listening. Let’s make Triads fun for
@@ -128,11 +145,14 @@
 				</div>
 			</div>
 
-			<div class="flex flex-col gap-4 md:gap-6 lg:gap-8">
+			<div class="flex flex-col gap-3 landscape:max-md:gap-3 md:gap-6 lg:gap-8">
 				<!-- Scoring Section -->
 				<div>
-					<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Scoring</h3>
-					<div class="space-y-3 text-sm md:text-base">
+					<h3
+						class="text-xs landscape:max-md:text-xs md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-1.5 landscape:max-md:pb-1.5 md:pb-2">
+						Scoring
+					</h3>
+					<div class="space-y-2 landscape:max-md:space-y-2 md:space-y-3 text-xs landscape:max-md:text-xs md:text-base">
 						<p>Every game is scored, tallied, and averaged for you, using this scoring system.</p>
 						<div class="overflow-x-auto border border-gray-200 rounded-lg">
 							<table class="w-full text-sm md:text-base">
@@ -157,8 +177,11 @@
 
 				<!-- Your Account Section -->
 				<div>
-					<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">Your Account</h3>
-					<div class="space-y-3 text-sm md:text-base">
+					<h3
+						class="text-xs landscape:max-md:text-xs md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-1.5 landscape:max-md:pb-1.5 md:pb-2">
+						Your Account
+					</h3>
+					<div class="space-y-2 landscape:max-md:space-y-2 md:space-y-3 text-xs landscape:max-md:text-xs md:text-base">
 						<p>
 							Triads has no enrollment, so you never need to login or reveal anything about yourself. If you want to change your player name (top
 							right) you can click it to do so. Your name is the "cookie" that tracks your wins and losses, which will follow you even after a

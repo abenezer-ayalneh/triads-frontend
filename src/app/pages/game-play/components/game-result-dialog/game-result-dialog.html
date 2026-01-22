@@ -1,7 +1,7 @@
 <div class="w-full h-full flex flex-col justify-center items-center absolute z-10">
 	<!-- Solution Reveal Overlay - positioned above dialog -->
 	@if (result() === 'LOST') {
-		<div class="solution-reveal-wrapper">
+		<div class="w-full flex-shrink-0 mb-3 landscape:max-md:mb-2 md:mb-6 z-[12] max-h-[30vh] landscape:max-md:max-h-[25vh] md:max-h-[40vh] overflow-visible">
 			<app-solution-reveal />
 		</div>
 	}
@@ -16,27 +16,42 @@
 	}
 
 	<div
-		class="dialog-content w-fit h-fit flex flex-col justify-center items-center gap-4 backdrop-blur-xl px-8 py-6 rounded-3xl bg-neutral-900/60 border border-success/50 relative z-20">
-		<div class="w-40 h-40 rounded-2xl">
+		class="pointer-events-auto flex-shrink-0 relative z-20 w-fit h-fit flex flex-col justify-center items-center gap-2 landscape:max-md:gap-2 md:gap-4 backdrop-blur-xl px-4 landscape:max-md:px-4 md:px-8 py-3 landscape:max-md:py-3 md:py-6 rounded-3xl bg-neutral-900/60 border border-success/50 max-w-[95vw] landscape:max-md:max-w-[98vw]">
+		<div class="w-24 h-24 landscape:max-md:w-24 landscape:max-md:h-24 md:w-40 md:h-40 rounded-2xl">
 			<ng-lottie [options]="result() === 'WON' ? wonAnimationOptions : lostAnimationOptions" />
 		</div>
-		<div class="text-center space-y-2">
+		<div class="text-center space-y-1 landscape:max-md:space-y-1 md:space-y-2">
 			<ng-content />
 		</div>
 		@if (showPlayAgainButton()) {
-			<div class="flex flex-wrap gap-3 justify-center">
-				<button (click)="shareGameResult()" class="btn btn-outline btn-lg text-base-100 hover:bg-success flex items-center gap-2">
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<div class="flex flex-wrap gap-2 landscape:max-md:gap-2 md:gap-3 justify-center">
+				<button
+					(click)="shareGameResult()"
+					class="btn btn-outline btn-xs landscape:max-md:btn-xs md:btn-lg text-base-100 hover:bg-success flex items-center gap-1 landscape:max-md:gap-1 md:gap-2">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-3 w-3 landscape:max-md:h-3 landscape:max-md:w-3 md:h-5 md:w-5"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor">
 						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
 							stroke-width="2"
 							d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
 					</svg>
-					Share
+					<span class="text-xs landscape:max-md:text-xs md:text-base">Share</span>
 				</button>
-				<button (click)="restartGame()" class="btn btn-info btn-lg text-base-100">Play Again</button>
-				<button (click)="quitGame()" class="btn btn-outline btn-lg text-base-100 hover:bg-error">Quit Now</button>
+				<button
+					(click)="restartGame()"
+					class="btn btn-info btn-xs landscape:max-md:btn-xs md:btn-lg text-base-100 text-xs landscape:max-md:text-xs md:text-base">
+					Play Again
+				</button>
+				<button
+					(click)="quitGame()"
+					class="btn btn-outline btn-xs landscape:max-md:btn-xs md:btn-lg text-base-100 hover:bg-error text-xs landscape:max-md:text-xs md:text-base">
+					Quit Now
+				</button>
 			</div>
 		}
 	</div>
