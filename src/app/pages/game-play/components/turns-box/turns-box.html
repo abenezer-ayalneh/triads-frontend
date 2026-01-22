@@ -4,7 +4,7 @@
 	<div class="w-full flex justify-center items-center gap-1">
 		@for (turn of store.turns(); track turn.id) {
 			<span
-				class="w-6 h-6 md:w-12 md:h-12 landscape:md:w-6 landscape:md:h-6 lg:w-16 lg:h-16 landscape:lg:w-12 landscape:lg:h-12"
+				class="w-6 h-6 md:w-12 md:h-12 landscape:md:w-6 landscape:md:h-6 lg:w-12 lg:h-12 landscape:lg:w-12 landscape:lg:h-12"
 				[ngClass]="turn.available ? 'opacity-100' : 'opacity-0'">
 				<img [src]="turn.icon" alt="turn" class="w-full h-full" />
 			</span>

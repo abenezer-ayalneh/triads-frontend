@@ -6,7 +6,7 @@
 		@let hintsDisabledDueToTurns = areHintsDisabledDueToTurns();
 		@for (hint of store.hints(); track hint.id) {
 			<button
-				class="w-6 h-6 md:w-12 md:h-12 landscape:md:w-6 landscape:md:h-6 lg:w-16 lg:h-16 landscape:lg:w-12 landscape:lg:h-12 circle relative disabled:opacity-50 disabled:cursor-not-allowed"
+				class="w-6 h-6 md:w-12 md:h-12 landscape:md:w-6 landscape:md:h-6 lg:w-12 lg:h-12 landscape:lg:w-12 landscape:lg:h-12 circle relative disabled:opacity-50 disabled:cursor-not-allowed"
 				[class.grayscale]="hintsDisabledDueToTurns"
 				(click)="onHintClick()"
 				[disabled]="!hint.available || isLoading || hintsDisabledDueToTurns"

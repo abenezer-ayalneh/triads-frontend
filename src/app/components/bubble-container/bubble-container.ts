@@ -339,14 +339,6 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	/**
-	 * Check if the current device is a small screen (mobile device)
-	 * @returns true if screen width is less than 768px
-	 */
-	private isSmallScreen(): boolean {
-		return window.innerWidth < 768
-	}
-
-	/**
 	 * Create a single bubble with animation
 	 * @param bubbleComponent The bubble component to create
 	 * @param remainingBubbles The number of bubbles remaining in the queue
@@ -405,19 +397,14 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		// Calculate velocity toward center with some upward bias
 		// For bubbles from left, angle slightly right; from right, angle slightly left
 		const angleVariation = side === 'left' ? 0.2 : -0.2 // Slight angle variation based on side
-
-		// Reduce speed by 75% on small screens (25% of original speed)
-		const isSmallScreenDevice = this.isSmallScreen()
-		const speedMultiplier = isSmallScreenDevice ? 0.25 : 1.0
-		const speed = (2.0 + Math.random() * 1.0) * speedMultiplier // 2.0-3.0 pixels per frame (or 25% on small screens)
-		const upwardBias = 1.5 * speedMultiplier // Reduce upward bias by 75% on small screens
-		const velocityX = (dx / distance) * speed * 0.8 + angleVariation * speedMultiplier // 80% toward center horizontally with side-based angle
-		const velocityY = (dy / distance) * speed * 0.1 - upwardBias // 10% toward center vertically, with very strong upward bias for vertical trajectory
+		const speed = 2.0 + Math.random() * 1.0 // 2.0-3.0 pixels per frame
+		const velocityX = (dx / distance) * speed * 0.8 + angleVariation // 80% toward center horizontally with side-based angle
+		const velocityY = (dy / distance) * speed * 0.1 - 1.5 // 10% toward center vertically, with very strong upward bias for vertical trajectory
 		Matter.Body.setVelocity(body, { x: velocityX, y: velocityY })
 
-		// Apply initial impulse toward center (reduced by 75% on small screens)
-		const initialImpulse = 0.0075 * speedMultiplier // 1.5x stronger impulse (or 25% on small screens)
-		const impulseX = (dx / distance) * initialImpulse * 0.8 + angleVariation * 0.1 * speedMultiplier // 80% toward center horizontally with side-based angle
+		// Apply initial impulse toward center
+		const initialImpulse = 0.0075 // 1.5x stronger impulse
+		const impulseX = (dx / distance) * initialImpulse * 0.8 + angleVariation * 0.1 // 80% toward center horizontally with side-based angle
 		const impulseY = (dy / distance) * initialImpulse * 0.1 - initialImpulse * 0.6 // 10% toward center, 60% upward for vertical trajectory
 		Matter.Body.applyForce(body, body.position, { x: impulseX, y: impulseY })
 

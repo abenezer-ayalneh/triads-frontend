@@ -1,5 +1,5 @@
-<form [formGroup]="inputSetFormGroup" class="w-full h-fit flex justify-center items-center gap-2">
-	<div class="w-fit h-fit flex justify-center items-center text-xl gap-3" formArrayName="inputBoxes">
+<form [formGroup]="inputSetFormGroup" class="w-full h-full flex justify-center items-center gap-2 md:gap-4">
+	<div class="w-fit h-full flex justify-center items-center gap-3" formArrayName="inputBoxes">
 		@for (inputBox of inputBoxes.controls; track $index; let i = $index) {
 			<input
 				#inputBoxRef
@@ -14,7 +14,7 @@
 				minlength="1"
 				autocomplete="off"
 				appAutoCapitalize
-				class="w-14 bg-base-100 aspect-square text-center rounded-lg focus:outline-2 focus:outline-primary disabled:opacity-50 disabled:cursor-not-allowed" />
+				class="w-10 max-lg:w-8 md:w-14 bg-base-100 aspect-square text-center rounded-lg focus:outline-2 focus:outline-primary disabled:opacity-50 disabled:cursor-not-allowed" />
 		}
 	</div>
 
@@ -23,7 +23,7 @@
 		(click)="submitAnswer()"
 		[disabled]="inputSetFormGroup.invalid || isLoading()"
 		aria-label="Submit answer"
-		class="h-10 md:h-12 px-4 md:px-6 rounded-full triad-gradient text-primary-content font-semibold shadow-lg hover:shadow-xl active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+		class="h-10 max-lg:h-8 md:h-12 px-4 md:px-6 rounded-full triad-gradient text-primary-content font-semibold shadow-lg hover:shadow-xl active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
 		@if (isLoading()) {
 			<span class="loading loading-spinner loading-sm"></span>
 			<span class="hidden sm:inline">Checking...</span>
@@ -31,7 +31,7 @@
 			<svg class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5-5 5M19 12H5" />
 			</svg>
-			<span class="hidden sm:inline">Submit</span>
+			<span class="hidden sm:inline text-sm md:text-base">Submit</span>
 		}
 	</button>
 </form>

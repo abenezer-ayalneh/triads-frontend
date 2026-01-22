@@ -57,7 +57,7 @@
 	</div>
 
 	<!--Solution Input Section-->
-	<div class="w-full h-16 landscape:max-lg:h-10 md:h-20 lg:h-24">
+	<div class="w-full h-11 landscape:max-lg:h-10 md:h-14 px-10 md:px-28 xl:px-60">
 		@if (cueFetchingState() === RequestState.READY) {
 			<app-solution-section #solutionSection (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
 		}
@@ -70,7 +70,9 @@
 			<app-turns-box />
 
 			<!--Solved Triads Section-->
-			<div #solvedArea class="h-full grid grid-cols-2 grid-rows-2 place-items-center md:flex md:justify-center md:items-center gap-x-2 gap-y-1">
+			<div
+				#solvedArea
+				class="h-full grid grid-cols-2 landscape:max-lg:grid-cols-4 grid-rows-2 landscape:max-lg:grid-rows-1 place-items-center md:flex md:justify-center md:items-center gap-x-2 gap-y-1">
 				@for (solvedTriad of store.solvedTriads(); track solvedTriad.id) {
 					<app-solved-triad id="solved-{{ solvedTriad.id }}" [solvedTriad]="solvedTriad" />
 				}
