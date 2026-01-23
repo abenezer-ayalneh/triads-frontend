@@ -6,7 +6,7 @@
 	<div class="w-full flex-1 py-1 px-2 md:px-4 lg:px-6 overflow-visible">
 		@if (cueFetchingState() === RequestState.LOADING || store.isFetchingFinalTriadCues()) {
 			<div class="w-full h-full flex justify-center items-center">
-				<span class="w-40 h-40 landscape:w-20 landscape md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
+				<span class="w-40 h-40 landscape:max-lg:w-20 landscape:max-lg:h-20 md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
 					<ng-lottie [options]="loadingAnimationOptions" />
 				</span>
 			</div>
@@ -57,9 +57,11 @@
 	</div>
 
 	<!--Solution Input Section-->
-	<div class="w-full h-11 landscape:max-lg:h-10 md:h-14 px-10 md:px-28 xl:px-60">
+	<div class="w-full h-11 flex justify-center items-center landscape:max-lg:h-10 md:h-14">
 		@if (cueFetchingState() === RequestState.READY) {
-			<app-solution-section #solutionSection (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
+			<div class="w-[80%] landscape:max-lg:w-[60%] md:w-[60%] landscape:lg:w-[40%] h-full">
+				<app-solution-section #solutionSection (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
+			</div>
 		}
 	</div>
 

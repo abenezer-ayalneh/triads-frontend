@@ -3,7 +3,7 @@
 	@if (isTooltipVisible()) {
 		<div
 			(appClickOutside)="hideTooltip()"
-			class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-base-100 text-base-content p-3 rounded-lg shadow-lg border border-base-300 z-50 min-w-max max-w-xs">
+			class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-base-100 text-base-content p-3 rounded-lg shadow-lg border border-base-300 z-[9999] min-w-max max-w-xs">
 			<div class="text-xs space-y-1">
 				@for (phrase of solvedTriad().fullPhrases; track phrase) {
 					<p [innerHTML]="phrase | highlightKey: solvedTriad().keyword : 'text-base-content/80'"></p>
