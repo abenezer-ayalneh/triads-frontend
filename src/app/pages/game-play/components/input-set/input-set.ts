@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, effect, ElementRef, input, OnDestroy, output, viewChildren } from '@angular/core'
+import { AfterViewChecked, AfterViewInit, Component, effect, ElementRef, input, OnDestroy, output, viewChildren } from '@angular/core'
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 import { Subscription } from 'rxjs'
 
@@ -12,10 +12,12 @@ import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 	standalone: true,
 	imports: [ReactiveFormsModule, AutoCapitalize],
 })
-export class InputSet implements AfterViewInit, OnDestroy {
+export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	subscriptions$ = new Subscription()
 
 	private timeoutIds: ReturnType<typeof setTimeout>[] = []
+
+	private hasAttemptedFocus = false
 
 	quantity = input.required<number>()
 
@@ -46,7 +48,14 @@ export class InputSet implements AfterViewInit, OnDestroy {
 						// Focus on the second box if it exists
 						if (this.inputRefs().length > 1) {
 							const timeoutId = setTimeout(() => {
-								this.inputRefs()[1]?.nativeElement.focus()
+								const secondInput = this.inputRefs()[1]?.nativeElement
+								if (secondInput) {
+									secondInput.focus()
+									// Trigger keyboard on mobile devices
+									if (this.isMobileDevice()) {
+										secondInput.click()
+									}
+								}
 							}, 0)
 							this.timeoutIds.push(timeoutId)
 						}
@@ -54,7 +63,14 @@ export class InputSet implements AfterViewInit, OnDestroy {
 				}
 			} else if (element && !firstLetterValue) {
 				// After all input fields are initialized, focus on the first one if no first letter
-				element.focus()
+				const timeoutId = setTimeout(() => {
+					element.focus()
+					// Trigger keyboard on mobile devices
+					if (this.isMobileDevice()) {
+						element.click()
+					}
+				}, 0)
+				this.timeoutIds.push(timeoutId)
 			}
 		})
 
@@ -85,12 +101,14 @@ export class InputSet implements AfterViewInit, OnDestroy {
 			})
 			this.inputBoxes.push(newControl)
 		}
-		// If first letter is set, focus on the second box (index 1) instead of the first
-		if (this.firstLetter() && this.inputRefs().length > 1) {
-			const timeoutId = setTimeout(() => {
-				this.inputRefs()[1]?.nativeElement.focus()
-			}, 0)
-			this.timeoutIds.push(timeoutId)
+		// Try to focus immediately, but if component is hidden, AfterViewChecked will handle it
+		this.attemptFocus()
+	}
+
+	ngAfterViewChecked(): void {
+		// If we haven't successfully focused yet and the component is now visible, try again
+		if (!this.hasAttemptedFocus && this.isElementVisible()) {
+			this.attemptFocus()
 		}
 	}
 
@@ -145,5 +163,103 @@ export class InputSet implements AfterViewInit, OnDestroy {
 		if (this.inputSetFormGroup.valid) {
 			this.whenSubmitClicked.emit(this.inputBoxes.value.join(''))
 		}
+	}
+
+	/**
+	 * Attempts to focus the appropriate input field based on whether first letter hint exists
+	 */
+	private attemptFocus(): void {
+		if (this.inputRefs().length === 0) {
+			return
+		}
+
+		const firstInput = this.inputRefs()[0]?.nativeElement
+		if (!firstInput) {
+			return
+		}
+
+		// Check if element is visible before attempting to focus
+		if (!this.isElementVisible()) {
+			return
+		}
+
+		// If first letter is set, focus on the second box if it exists
+		if (this.firstLetter() && this.inputRefs().length > 1) {
+			const secondInput = this.inputRefs()[1]?.nativeElement
+			if (secondInput && document.activeElement !== secondInput) {
+				const timeoutId = setTimeout(() => {
+					if (this.isElementVisible()) {
+						secondInput.focus()
+						// Trigger keyboard on mobile devices
+						if (this.isMobileDevice()) {
+							secondInput.click()
+						}
+						// Verify focus was successful after a short delay
+						const verifyTimeoutId = setTimeout(() => {
+							if (document.activeElement === secondInput) {
+								this.hasAttemptedFocus = true
+							}
+						}, 50)
+						this.timeoutIds.push(verifyTimeoutId)
+					}
+				}, 0)
+				this.timeoutIds.push(timeoutId)
+			} else if (document.activeElement === secondInput) {
+				this.hasAttemptedFocus = true
+			}
+		} else if (document.activeElement !== firstInput) {
+			// Focus on the first input when "number of letters" hint is used (no first letter)
+			const timeoutId = setTimeout(() => {
+				if (this.isElementVisible()) {
+					firstInput.focus()
+					// Trigger keyboard on mobile devices
+					if (this.isMobileDevice()) {
+						firstInput.click()
+					}
+					// Verify focus was successful after a short delay
+					const verifyTimeoutId = setTimeout(() => {
+						if (document.activeElement === firstInput) {
+							this.hasAttemptedFocus = true
+						}
+					}, 50)
+					this.timeoutIds.push(verifyTimeoutId)
+				}
+			}, 0)
+			this.timeoutIds.push(timeoutId)
+		} else {
+			// Already focused, mark as attempted
+			this.hasAttemptedFocus = true
+		}
+	}
+
+	/**
+	 * Checks if the first input element is visible in the DOM
+	 */
+	private isElementVisible(): boolean {
+		const firstInput = this.inputRefs()[0]?.nativeElement
+		if (!firstInput) {
+			return false
+		}
+
+		// Check if element has offsetParent (means it's visible and not hidden)
+		// offsetParent is null when element or its parent has display:none, visibility:hidden, or position:fixed with no positioned ancestor
+		const hasOffsetParent = firstInput.offsetParent !== null
+
+		// Check if element has dimensions (means it's rendered)
+		const rect = firstInput.getBoundingClientRect()
+		const hasDimensions = rect.width > 0 && rect.height > 0
+
+		// Element is visible if it has an offsetParent and dimensions
+		// We don't check viewport position because the element might be in a scrollable container
+		return hasOffsetParent && hasDimensions
+	}
+
+	/**
+	 * Detects if the current device is a mobile device
+	 */
+	private isMobileDevice(): boolean {
+		return (
+			/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768 && 'ontouchstart' in window)
+		)
 	}
 }
