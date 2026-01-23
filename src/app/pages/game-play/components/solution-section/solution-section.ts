@@ -1,6 +1,6 @@
 import { AfterViewChecked, Component, effect, ElementRef, inject, OnDestroy, OnInit, output, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
-import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
+import { filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
@@ -45,15 +45,6 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
 
 	private readonly bubblePopAudio = new Audio()
-
-	/**
-	 * Detects if the current device is a mobile device
-	 */
-	private isMobileDevice(): boolean {
-		return (
-			/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768 && 'ontouchstart' in window)
-		)
-	}
 
 	constructor() {
 		this.bubblePopAudio.src = 'sounds/three-pops.mp3'
@@ -158,7 +149,6 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 							}
 						}),
 						filter((success) => !success),
-						delay(2000),
 						tap(() => {
 							// Only change state back to PLAYING if not in WON or LOST state and turns are not exhausted
 							if (
@@ -199,6 +189,15 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 				}),
 			)
 		}
+	}
+
+	/**
+	 * Detects if the current device is a mobile device
+	 */
+	private isMobileDevice(): boolean {
+		return (
+			/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768 && 'ontouchstart' in window)
+		)
 	}
 
 	private handleAnswerResponse(response: boolean | SolvedTriad) {

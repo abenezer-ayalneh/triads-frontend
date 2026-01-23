@@ -10,6 +10,7 @@ import { SolutionReveal } from '../solution-reveal/solution-reveal'
 	selector: 'app-game-result-dialog',
 	imports: [LottieComponent, SolutionReveal],
 	templateUrl: './game-result-dialog.html',
+	styleUrl: './game-result-dialog.scss',
 })
 export class GameResultDialog {
 	result = input.required<'WON' | 'LOST'>()
