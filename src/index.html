@@ -8,6 +8,27 @@
 		<link rel="icon" type="image/x-icon" href="favicon.ico" />
 		<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet" />
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+		<!-- Preload only critical assets used immediately on app load -->
+		<link rel="preload" href="images/main-background.jpg" as="image" type="image/jpeg" />
+		<!-- Prefetch non-critical but frequently used assets -->
+		<link rel="prefetch" href="images/bubble.png" as="image" type="image/png" />
+		<link rel="prefetch" href="images/turn-one.png" as="image" type="image/png" />
+		<link rel="prefetch" href="images/turn-two.png" as="image" type="image/png" />
+		<link rel="prefetch" href="images/turn-three.png" as="image" type="image/png" />
+		<link rel="prefetch" href="images/lifesaver.svg" as="image" type="image/svg+xml" />
+		<link rel="prefetch" href="lotties/loading-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/how-to-play-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/play-button-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/correct-answer-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/wrong-answer-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/bubble-burst-confetti.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/bubble-explosion.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/bubble-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/box-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="lotties/pop-lottie.json" as="fetch" type="application/json" crossorigin="anonymous" />
+		<link rel="prefetch" href="sounds/ta-dah.mp3" as="audio" type="audio/mpeg" />
+		<link rel="prefetch" href="sounds/three-pops.mp3" as="audio" type="audio/mpeg" />
+		<link rel="prefetch" href="sounds/pop.mp3" as="audio" type="audio/mpeg" />
 	</head>
 	<body>
 		<app-root></app-root>
