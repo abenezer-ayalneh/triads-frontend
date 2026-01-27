@@ -30,7 +30,7 @@
 			placeholder="Username"
 			class="input text-center text-sm landscape:max-md:text-sm md:text-xl font-medium input-sm landscape:max-md:input-sm md:input-md w-full landscape:max-md:w-full md:w-auto" />
 
-		<button type="submit" [matTooltip]="'Got it! Let’s get going'" [disabled]="usernameForm.form.invalid" class="disabled:opacity-20">
+		<button type="submit" [disabled]="usernameForm.form.invalid" title="Got it! Let's get going" class="disabled:opacity-20">
 			<div class="w-16 h-16 landscape:max-md:w-16 landscape:max-md:h-16 md:w-24 md:h-24">
 				<ng-lottie [options]="playButtonLottieAnimationOptions" />
 			</div>

@@ -1,13 +1,24 @@
 import { inject, Injectable } from '@angular/core'
-import { MatSnackBar } from '@angular/material/snack-bar'
+import { ToastController } from '@ionic/angular/standalone'
 
 @Injectable({
 	providedIn: 'root',
 })
 export class SnackbarService {
-	private readonly snackbar = inject(MatSnackBar)
+	private readonly toastController = inject(ToastController)
 
-	showSnackbar(message: string, duration = 10000) {
-		this.snackbar.open(message, 'Close', { horizontalPosition: 'end', verticalPosition: 'top', duration })
+	async showSnackbar(message: string, duration = 10000) {
+		const toast = await this.toastController.create({
+			message,
+			duration,
+			position: 'top',
+			buttons: [
+				{
+					text: 'Close',
+					role: 'cancel',
+				},
+			],
+		})
+		await toast.present()
 	}
 }

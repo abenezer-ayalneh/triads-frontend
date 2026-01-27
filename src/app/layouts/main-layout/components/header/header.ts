@@ -1,6 +1,5 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core'
 import { FormsModule } from '@angular/forms'
-import { MatTooltip } from '@angular/material/tooltip'
 import { NavigationEnd, Router } from '@angular/router'
 import { filter, Subscription } from 'rxjs'
 
@@ -16,7 +15,7 @@ import { Stats } from '../stats/stats'
 
 @Component({
 	selector: 'app-header',
-	imports: [Stats, MatTooltip, ClickOutsideDirective, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog, FormsModule],
+	imports: [Stats, ClickOutsideDirective, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog, FormsModule],
 	templateUrl: './header.html',
 	styleUrl: './header.scss',
 })
