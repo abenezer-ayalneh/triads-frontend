@@ -1,8 +1,9 @@
-import { Component, input, output } from '@angular/core'
+import { afterNextRender, Component, input, output, signal } from '@angular/core'
+import { IonButton, IonContent, IonHeader, IonModal, IonTitle, IonToolbar } from '@ionic/angular/standalone'
 
 @Component({
 	selector: 'app-welcome-dialog',
-	imports: [],
+	imports: [IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton],
 	templateUrl: './welcome-dialog.html',
 	styleUrl: './welcome-dialog.scss',
 })
@@ -10,6 +11,14 @@ export class WelcomeDialog {
 	totalPoints = input.required<number>()
 
 	whenClosed = output<void>()
+
+	isOpen = signal(true)
+
+	constructor() {
+		afterNextRender(() => {
+			this.isOpen.set(true)
+		})
+	}
 
 	getMessage(): string {
 		const points = this.totalPoints()

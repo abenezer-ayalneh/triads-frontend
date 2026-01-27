@@ -1,6 +1,5 @@
 import { Component, ElementRef, inject, model, OnInit, viewChild } from '@angular/core'
 import { FormsModule } from '@angular/forms'
-import { MatTooltip } from '@angular/material/tooltip'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
 import { UserService } from '../../../../shared/services/user.service'
@@ -8,7 +7,7 @@ import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
 	selector: 'app-user-info-dialog',
-	imports: [FormsModule, LottieComponent, MatTooltip],
+	imports: [FormsModule, LottieComponent],
 	templateUrl: './user-info-dialog.html',
 	styleUrl: './user-info-dialog.scss',
 })
