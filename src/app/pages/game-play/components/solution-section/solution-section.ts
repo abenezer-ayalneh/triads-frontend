@@ -1,6 +1,6 @@
 import { AfterViewChecked, Component, effect, ElementRef, inject, OnDestroy, OnInit, output, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
-import { filter, firstValueFrom, Subscription, tap } from 'rxjs'
+import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
@@ -149,6 +149,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 							}
 						}),
 						filter((success) => !success),
+						delay(2000),
 						tap(() => {
 							// Only change state back to PLAYING if not in WON or LOST state and turns are not exhausted
 							if (
