@@ -19,7 +19,8 @@
 		"cap:android": "cap open android",
 		"cap:add:ios": "cap add ios",
 		"cap:add:android": "cap add android",
-		"cap:dev:ios": "ng build --configuration development && cap sync && cap run ios"
+		"cap:dev:ios": "ng build --configuration development && cap sync && cap run ios",
+		"cap:dev:android": "ng build --configuration development && cap sync && cap run android"
 	},
 	"private": true,
 	"dependencies": {
