@@ -1,12 +1,11 @@
-<div class="w-full h-full flex flex-col">
-	<div class="w-full h-8 flex-shrink-0">
+<ion-header class="ion-no-border">
+	<ion-toolbar>
 		<app-header />
-	</div>
-
-	<div class="w-full flex-1 relative overflow-hidden">
-		@if (store.showHowToPlay()) {
-			<app-how-to-play />
-		}
-		<router-outlet />
-	</div>
-</div>
+	</ion-toolbar>
+</ion-header>
+<ion-content [fullscreen]="true">
+	@if (store.showHowToPlay()) {
+		<app-how-to-play />
+	}
+	<ion-router-outlet />
+</ion-content>

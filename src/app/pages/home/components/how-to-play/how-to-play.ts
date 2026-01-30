@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common'
-import { Component, ElementRef, inject, OnInit } from '@angular/core'
+import { Component, ElementRef, inject } from '@angular/core'
 
 import { GlobalStore } from '../../../../state/global.store'
 
@@ -9,7 +9,7 @@ import { GlobalStore } from '../../../../state/global.store'
 	templateUrl: './how-to-play.html',
 	styleUrl: './how-to-play.scss',
 })
-export class HowToPlay implements OnInit {
+export class HowToPlay {
 	readonly store = inject(GlobalStore)
 
 	readonly elementRef = inject(ElementRef)
@@ -22,10 +22,6 @@ export class HowToPlay implements OnInit {
 		{ outcome: 'Got 2 Triads but couldn’t get the 3rd, no bonus round', points: 6 },
 		{ outcome: 'Got 1 Triad before using up all 3 turns', points: 3 },
 	]
-
-	ngOnInit() {
-		document.body.appendChild(this.elementRef.nativeElement)
-	}
 
 	onClose() {
 		this.store.setShowHowToPlay(false)

@@ -1,12 +1,12 @@
-import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core'
+import { Component, computed, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { NavigationEnd, Router } from '@angular/router'
+import { IonPopover } from '@ionic/angular/standalone'
 import { filter, Subscription } from 'rxjs'
 
 import { AdminPasswordDialog } from '../../../../shared/components/admin-password-dialog/admin-password-dialog'
 import { NewIdentityDialog } from '../../../../shared/components/new-identity-dialog/new-identity-dialog'
 import { QuitConfirmationDialog } from '../../../../shared/components/quit-confirmation-dialog/quit-confirmation-dialog'
-import { ClickOutsideDirective } from '../../../../shared/directives/click-outside'
 import { Difficulty } from '../../../../shared/enums/difficulty.enum'
 import { AdminAuthService } from '../../../../shared/services/admin-auth.service'
 import { DifficultyService } from '../../../../shared/services/difficulty.service'
@@ -15,7 +15,7 @@ import { Stats } from '../stats/stats'
 
 @Component({
 	selector: 'app-header',
-	imports: [Stats, ClickOutsideDirective, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog, FormsModule],
+	imports: [Stats, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog, FormsModule, IonPopover],
 	templateUrl: './header.html',
 	styleUrl: './header.scss',
 })
@@ -29,8 +29,6 @@ export class Header implements OnInit, OnDestroy {
 	private readonly difficultyService = inject(DifficultyService)
 
 	showStats = signal<boolean>(false)
-
-	showUsernameDropdown = signal<boolean>(false)
 
 	showQuitConfirmation = signal<boolean>(false)
 
@@ -47,6 +45,9 @@ export class Header implements OnInit, OnDestroy {
 	readonly Difficulty = Difficulty
 
 	isAdminAuthenticated = computed(() => this.adminAuthService.isAuthenticated())
+
+	@ViewChild(IonPopover)
+	private usernamePopover?: IonPopover
 
 	private readonly routerSubscription: Subscription
 
@@ -116,27 +117,32 @@ export class Header implements OnInit, OnDestroy {
 		// Check if Ctrl (Windows/Linux) or Cmd (Mac) key is held
 		const isModifierPressed = event ? event.ctrlKey || event.metaKey : false
 		this.showAdminOption.set(isModifierPressed)
-		const willOpen = !this.showUsernameDropdown()
-		this.showUsernameDropdown.update((value) => !value)
-		// Refresh difficulty from localStorage when opening the dropdown
-		if (willOpen) {
-			this.selectedDifficulty.set(this.difficultyService.getDifficulty())
-		}
 	}
 
 	closeUsernameDropdown() {
-		this.showUsernameDropdown.set(false)
 		this.showAdminOption.set(false)
+	}
+
+	dismissUsernamePopover() {
+		this.usernamePopover?.dismiss()
+	}
+
+	onUsernamePopoverWillPresent() {
+		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
+	}
+
+	onUsernamePopoverDidDismiss() {
+		this.closeUsernameDropdown()
 	}
 
 	openStats() {
 		this.showStats.set(true)
-		this.closeUsernameDropdown()
+		this.dismissUsernamePopover()
 	}
 
 	openNewIdentity() {
 		this.showNewIdentityDialog.set(true)
-		this.closeUsernameDropdown()
+		this.dismissUsernamePopover()
 	}
 
 	closeNewIdentityDialog() {
@@ -152,13 +158,13 @@ export class Header implements OnInit, OnDestroy {
 			this.navigateToManageTriads()
 		} else {
 			this.showAdminPasswordDialog.set(true)
-			this.closeUsernameDropdown()
+			this.dismissUsernamePopover()
 		}
 	}
 
 	navigateToManageTriads() {
 		this.router.navigate(['/manage-triads'])
-		this.closeUsernameDropdown()
+		this.dismissUsernamePopover()
 	}
 
 	onAdminAuthenticated() {
