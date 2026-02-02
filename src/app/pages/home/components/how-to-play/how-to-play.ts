@@ -1,11 +1,14 @@
 import { CommonModule } from '@angular/common'
-import { Component, ElementRef, inject } from '@angular/core'
+import { Component, ElementRef, inject, ViewChild } from '@angular/core'
+import { FormsModule } from '@angular/forms'
+import { IonModal } from '@ionic/angular/standalone'
+import { OverlayEventDetail } from '@ionic/core/components'
 
 import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
 	selector: 'app-how-to-play',
-	imports: [CommonModule],
+	imports: [CommonModule, IonModal, FormsModule],
 	templateUrl: './how-to-play.html',
 	styleUrl: './how-to-play.scss',
 })
@@ -23,6 +26,12 @@ export class HowToPlay {
 		{ outcome: 'Got 1 Triad before using up all 3 turns', points: 3 },
 	]
 
+	@ViewChild(IonModal) modal!: IonModal
+
+	message = 'This modal example uses triggers to automatically open a modal when the button is clicked.'
+
+	name!: string
+
 	onClose() {
 		this.store.setShowHowToPlay(false)
 	}
@@ -30,6 +39,20 @@ export class HowToPlay {
 	onBackdropClick(event: Event) {
 		if (event.target === event.currentTarget) {
 			this.onClose()
+		}
+	}
+
+	cancel() {
+		this.modal.dismiss(null, 'cancel')
+	}
+
+	confirm() {
+		this.modal.dismiss(this.name, 'confirm')
+	}
+
+	onWillDismiss(event: CustomEvent<OverlayEventDetail>) {
+		if (event.detail.role === 'confirm') {
+			this.message = `Hello, ${event.detail.data}!`
 		}
 	}
 }
