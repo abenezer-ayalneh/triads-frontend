@@ -52,6 +52,9 @@ importers:
             '@ionic/angular':
                 specifier: ^8.7.17
                 version: 8.7.17(9406b28e4ee64d81c38ec9ef59c5278b)
+            '@ionic/core':
+                specifier: ^8.7.17
+                version: 8.7.17
             '@ngrx/signals':
                 specifier: ^20.0.0
                 version: 20.0.0(@angular/core@20.1.6(@angular/compiler@20.1.6)(rxjs@7.8.2)(zone.js@0.15.1))(rxjs@7.8.2)

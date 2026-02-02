@@ -39,6 +39,7 @@
 		"@capacitor/core": "^6.2.1",
 		"@capacitor/ios": "^6.2.1",
 		"@ionic/angular": "^8.7.17",
+		"@ionic/core": "^8.7.17",
 		"@ngrx/signals": "^20.0.0",
 		"@tailwindcss/postcss": "^4.1.11",
 		"ag-charts-angular": "^12.2.0",
