@@ -1,0 +1,7 @@
+{
+	"name": "Triads",
+	"integrations": {
+		"capacitor": {}
+	},
+	"type": "angular"
+}

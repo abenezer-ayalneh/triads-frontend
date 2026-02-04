@@ -1,17 +1,17 @@
-import { CapacitorConfig } from '@capacitor/cli'
+import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
-	appId: 'com.triads.app',
+	appId: 'org.gametrix',
 	appName: 'Triads',
-	webDir: 'dist/triads/browser',
-	server: {
-		androidScheme: 'https',
-	},
-	plugins: {
-		App: {
-			launchUrl: 'https://triads.app',
-		},
-	},
+	webDir: './dist/triads/browser',
+	// server: {
+	// 	androidScheme: 'https',
+	// },
+	// plugins: {
+	// 	App: {
+	// 		launchUrl: 'https://triads.gametrix.org',
+	// 	},
+	// },
 }
 
 export default config
