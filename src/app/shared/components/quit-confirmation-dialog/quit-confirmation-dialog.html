@@ -1,16 +1,7 @@
-<ion-modal [isOpen]="isOpen()" [backdropDismiss]="true" (didDismiss)="onClose()">
-	<ion-header>
-		<ion-toolbar class="triad-gradient">
-			<ion-title>Quit Game?</ion-title>
-		</ion-toolbar>
-	</ion-header>
-	<ion-content class="ion-padding">
-		<p class="text-base-content text-xs landscape:max-md:text-xs md:text-base lg:text-lg mb-4 landscape:max-md:mb-4 md:mb-6">
-			Are you sure you want to quit? Your current progress will be lost.
-		</p>
-		<div class="flex gap-2 landscape:max-md:gap-2 md:gap-3 justify-end">
-			<ion-button (click)="onClose()" fill="outline"> Cancel </ion-button>
-			<ion-button (click)="onConfirmClick()"> Quit </ion-button>
-		</div>
-	</ion-content>
-</ion-modal>
+<app-dialog title="Quit Game?" (whenClosed)="onClose()">
+	<p class="text-base md:text-lg">Are you sure you want to quit? Your current progress will be lost.</p>
+	<div class="flex gap-2 landscape:max-md:gap-2 md:gap-3 justify-end">
+		<button class="btn btn-xs landscape:max-md:btn-xs md:btn-md btn-ghost px-3 landscape:max-md:px-3 md:px-6" (click)="onClose()">Cancel</button>
+		<button class="btn btn-sm md:btn-md btn-primary" (click)="onConfirmClick()">Quit</button>
+	</div>
+</app-dialog>

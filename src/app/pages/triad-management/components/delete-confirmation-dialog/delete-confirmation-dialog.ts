@@ -1,9 +1,11 @@
 import { Component, output } from '@angular/core'
 
+import { Dialog } from '../../../../shared/components/dialog/dialog'
+
 @Component({
 	selector: 'app-delete-confirmation-dialog',
 	standalone: true,
-	imports: [],
+	imports: [Dialog],
 	templateUrl: './delete-confirmation-dialog.html',
 	styleUrl: './delete-confirmation-dialog.scss',
 })

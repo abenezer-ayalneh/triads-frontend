@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnDestroy, OnInit, signal, ViewChild } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { NavigationEnd, Router } from '@angular/router'
-import { IonPopover } from '@ionic/angular/standalone'
+import { IonModal, IonPopover } from '@ionic/angular/standalone'
 import { filter, Subscription } from 'rxjs'
 
 import { AdminPasswordDialog } from '../../../../shared/components/admin-password-dialog/admin-password-dialog'
@@ -15,7 +15,7 @@ import { Stats } from '../stats/stats'
 
 @Component({
 	selector: 'app-header',
-	imports: [Stats, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog, FormsModule, IonPopover],
+	imports: [Stats, QuitConfirmationDialog, NewIdentityDialog, AdminPasswordDialog, FormsModule, IonPopover, IonModal],
 	templateUrl: './header.html',
 	styleUrl: './header.scss',
 })

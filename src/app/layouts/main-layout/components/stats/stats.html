@@ -1,52 +1,26 @@
-<div
-	class="w-full h-full fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 lg:p-8 bg-black/50 backdrop-blur-xs"
-	(click)="onBackdropClick($event)"
-	aria-modal="true"
-	aria-labelledby="dialog-title"
-	aria-describedby="dialog-description">
-	<div
-		class="w-full md:w-[90%] lg:w-[80%] max-w-full md:max-w-3xl lg:max-w-5xl max-h-[85%] md:max-h-[90%] rounded-xl lg:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
-		<!-- Dialog Header -->
-		<header class="flex items-center justify-between px-4 md:px-6 lg:px-8 py-2 md:py-3 lg:py-4 bg-gradient-to-r triad-gradient text-white flex-shrink-0">
-			<h2 id="dialog-title" class="text-lg md:text-2xl lg:text-3xl font-bold leading-tight">Check Your Stats!</h2>
-			<button
-				class="p-2 md:p-3 rounded-lg hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/50 transition-colors cursor-pointer flex-shrink-0"
-				(click)="onClose()"
-				aria-label="Close dialog"
-				type="button">
-				<svg class="w-5 h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-					<line x1="18" y1="6" x2="6" y2="18"></line>
-					<line x1="6" y1="6" x2="18" y2="18"></line>
-				</svg>
-			</button>
-		</header>
+<app-dialog title="Check Your Stats!" (whenClosed)="onClose()">
+	<!-- Triads Play Section -->
+	<div class="w-full flex flex-col items-start p-4">
+		<h3 class="text-sm md:text-base lg:text-lg font-semibold text-gray-900 pb-2">
+			Triads Track Record for: <span class="text-base md:text-lg lg:text-xl font-bold">{{ store.user()?.username ?? '-' }}</span>
+		</h3>
+		<h3 class="text-sm md:text-base lg:text-lg font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">
+			Games Played: <span class="text-base md:text-lg lg:text-xl font-bold">{{ totalScore() }}</span>
+		</h3>
+	</div>
 
-		<!-- Dialog Body -->
-		<div id="dialog-description" class="w-full h-full flex flex-col bg-base-100 overflow-y-auto flex-1 min-h-0">
-			<!-- Triads Play Section -->
-			<div class="w-full flex flex-col items-start p-4 md:p-6 lg:p-8">
-				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 pb-2">
-					Triads Track Record for: <span class="font-bold">{{ store.user()?.username ?? '-' }}</span>
-				</h3>
-				<h3 class="text-base md:text-lg lg:text-xl font-semibold text-gray-900 border-b-2 border-gray-200 pb-2">
-					Games Played: <span class="font-bold">{{ totalScore() }}</span>
-				</h3>
-			</div>
-
-			<!-- Hints and Misses Section -->
-			<div class="w-full flex flex-col justify-center items-center py-4">
-				<div class="w-full flex flex-col md:flex-row items-center md:justify-between gap-4">
-					<ag-charts class="w-full md:w-4/6 h-full flex-1" [options]="chartOptions()"> </ag-charts>
-					<div class="w-full md:w-2/6 h-full text-center md:text-left">
-						<p class="text-lg md:text-2xl text-gray-900">
-							Average: <span class="font-medium">{{ averageScore() | number: '1.1-2' }}</span>
-						</p>
-					</div>
-				</div>
-				<p class="text-center text-sm">
-					*since first game, <span class="font-bold">{{ (store.user()?.firstGameDate | date: 'MMMM dd, yyyy') ?? '-' }}</span>
+	<!-- Hints and Misses Section -->
+	<div class="w-full flex flex-col justify-center items-center px-0 md:px-8 lg:px-12 py-4">
+		<div class="w-full flex flex-col md:flex-row items-center md:justify-between gap-4">
+			<ag-charts class="w-full md:w-4/6 h-full flex-1" [options]="chartOptions()"></ag-charts>
+			<div class="w-full md:w-2/6 h-full text-center md:text-left">
+				<p class="text-lg md:text-2xl text-gray-900">
+					Average: <span class="font-medium">{{ averageScore() | number: '1.1-2' }}</span>
 				</p>
 			</div>
 		</div>
+		<p class="text-center text-sm">
+			*since first game, <span class="font-bold">{{ (store.user()?.firstGameDate | date: 'MMMM dd, yyyy') ?? '-' }}</span>
+		</p>
 	</div>
-</div>
+</app-dialog>

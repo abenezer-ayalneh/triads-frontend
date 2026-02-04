@@ -1,37 +1,20 @@
-import { DatePipe } from '@angular/common'
-import { DecimalPipe } from '@angular/common'
+import { DatePipe, DecimalPipe } from '@angular/common'
 import { Component, computed, inject, output } from '@angular/core'
 import { AgCharts } from 'ag-charts-angular'
-import { AgChartOptions } from 'ag-charts-community'
+import { AgChartOptions, AllCommunityModule, ModuleRegistry } from 'ag-charts-community'
 
+import { Dialog } from '../../../../shared/components/dialog/dialog'
 import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
 	selector: 'app-stats',
-	imports: [AgCharts, DatePipe, DecimalPipe],
+	imports: [AgCharts, DatePipe, DecimalPipe, Dialog],
 	templateUrl: './stats.html',
 	styleUrl: './stats.scss',
 	providers: [DecimalPipe],
 })
 export class Stats {
 	whenClosingStatsWindow = output()
-
-	protected readonly store = inject(GlobalStore)
-
-	totalScore = computed(() => {
-		return Object.values(this.store.user()?.scores ?? {}).reduce((acc, curr) => acc + curr, 0)
-	})
-
-	chartData = computed(() => {
-		return this.generateChartData(this.store.user()?.scores ?? ({} as Record<number, number>))
-	})
-
-	averageScore = computed(() => {
-		const scores = this.store.user()?.scores ?? {}
-		const sum = Object.entries(scores).reduce((acc, [key, value]) => acc + Number(key) * value, 0)
-		const totalGamesPlayed = Object.values(scores).reduce((acc, curr) => acc + curr, 0)
-		return totalGamesPlayed > 0 ? sum / totalGamesPlayed : 0
-	})
 
 	chartOptions = computed<AgChartOptions>(() => ({
 		title: {
@@ -59,37 +42,50 @@ export class Stats {
 				},
 			},
 		],
-		axes: [
-			{
+		axes: {
+			y: {
 				type: 'category',
-				position: 'left',
 				line: { enabled: false },
 			},
-			{
+			x: {
 				type: 'number',
-				position: 'bottom',
 				max: 105,
 				gridLine: { enabled: false },
 				label: {
 					enabled: false, // Disable the default y-axis labels as the values are displayed in the bars
 				},
 			},
-		],
+		},
 		legend: {
 			enabled: false,
 		},
 	}))
 
+	protected readonly store = inject(GlobalStore)
+
+	totalScore = computed(() => {
+		return Object.values(this.store.user()?.scores ?? {}).reduce((acc, curr) => acc + curr, 0)
+	})
+
+	chartData = computed(() => {
+		return this.generateChartData(this.store.user()?.scores ?? ({} as Record<number, number>))
+	})
+
+	averageScore = computed(() => {
+		const scores = this.store.user()?.scores ?? {}
+		const sum = Object.entries(scores).reduce((acc, [key, value]) => acc + Number(key) * value, 0)
+		const totalGamesPlayed = Object.values(scores).reduce((acc, curr) => acc + curr, 0)
+		return totalGamesPlayed > 0 ? sum / totalGamesPlayed : 0
+	})
+
 	private readonly decimalPipe = inject(DecimalPipe)
+
+	constructor() {
+		ModuleRegistry.registerModules([AllCommunityModule])
+	}
 
 	onClose() {
 		this.whenClosingStatsWindow.emit()
-	}
-
-	onBackdropClick(event: Event) {
-		if (event.target === event.currentTarget) {
-			this.onClose()
-		}
 	}
 
 	private generateChartData(scores: Record<number, number>): { score: string; frequency: number; percentage: number }[] {

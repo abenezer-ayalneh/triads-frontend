@@ -1,10 +1,11 @@
 import { Component, inject, output, signal } from '@angular/core'
 
 import { UserService } from '../../services/user.service'
+import { Dialog } from '../dialog/dialog'
 
 @Component({
 	selector: 'app-new-identity-dialog',
-	imports: [],
+	imports: [Dialog],
 	templateUrl: './new-identity-dialog.html',
 	styleUrl: './new-identity-dialog.scss',
 })

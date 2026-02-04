@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, ElementRef, output, signal, ViewChild } from '@angular/core'
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 
+import { Dialog } from '../../../../shared/components/dialog/dialog'
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 import { Difficulty } from '../../../../shared/enums/difficulty.enum'
 import { TriadGroupFormData } from '../../interfaces/triad-group.interface'
@@ -9,7 +10,7 @@ import { TriadValidationService } from '../../services/triad-validation.service'
 @Component({
 	selector: 'app-add-triad-group-dialog',
 	standalone: true,
-	imports: [ReactiveFormsModule, AutoCapitalize],
+	imports: [ReactiveFormsModule, AutoCapitalize, Dialog],
 	templateUrl: './add-triad-group-dialog.html',
 	styleUrl: './add-triad-group-dialog.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,

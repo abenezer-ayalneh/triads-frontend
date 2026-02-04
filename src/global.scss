@@ -67,3 +67,22 @@
 //		box-sizing: border-box;
 //	}
 //}
+
+ion-modal {
+	--width: fit-content;
+	--min-width: 250px;
+	--max-width: 90%;
+	--height: fit-content;
+	--max-height: 80%;
+	--border-radius: 6px;
+	--box-shadow: 0 28px 48px rgba(0, 0, 0, 0.4);
+	--overflow: scroll;
+
+	@media (max-width: 768px) {
+		--min-width: 80%;
+	}
+
+	@media (max-width: 420px) {
+		--min-width: 90%;
+	}
+}

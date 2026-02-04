@@ -1,7 +1,7 @@
 import { AfterViewInit, Component, effect, ElementRef, inject, input, OnDestroy, viewChild, viewChildren } from '@angular/core'
 import Matter from 'matter-js'
 
-import { GlobalStore } from '../../state/global.store'
+import { GlobalStore } from '../../../../state/global.store'
 import { Bubble } from '../bubble/bubble'
 import { BubbleMatter } from './interfaces/bubble-matter.interface'
 

@@ -1,4 +1,4 @@
-<header class="w-full h-full xl:h-10 flex justify-between items-center px-2 relative">
+<header class="w-full h-full xl:h-10 flex justify-between items-center px-2">
 	<div class="w-fit flex justify-start items-center gap-2">
 		@if (isManageTriadsPage()) {
 			<button
@@ -20,21 +20,33 @@
 		}
 	</div>
 
-	<div class="absolute top-5 md:top-7 xl:top-8 z-20" [class.hidden]="!showStats()" [class.block]="showStats()">
-		<app-stats (whenClosingStatsWindow)="closeStatsWindow()" />
-	</div>
+	<!--Stats Modal-->
+	<ion-modal [isOpen]="showStats()" (didDismiss)="closeStatsWindow()">
+		<ng-template>
+			<app-stats (whenClosingStatsWindow)="closeStatsWindow()" />
+		</ng-template>
+	</ion-modal>
 
-	@if (showQuitConfirmation()) {
-		<app-quit-confirmation-dialog (whenConfirmed)="confirmQuit()" (whenCanceled)="cancelQuit()" />
-	}
+	<!--Quit Confirmation Modal-->
+	<ion-modal [isOpen]="showQuitConfirmation()" (didDismiss)="cancelQuit()">
+		<ng-template>
+			<app-quit-confirmation-dialog (whenConfirmed)="confirmQuit()" (whenCanceled)="cancelQuit()" />
+		</ng-template>
+	</ion-modal>
 
-	@if (showNewIdentityDialog()) {
-		<app-new-identity-dialog (whenClosingDialog)="closeNewIdentityDialog()" />
-	}
+	<!--New Identity Modal-->
+	<ion-modal [isOpen]="showNewIdentityDialog()" (didDismiss)="closeNewIdentityDialog()">
+		<ng-template>
+			<app-new-identity-dialog (whenClosingDialog)="closeNewIdentityDialog()" />
+		</ng-template>
+	</ion-modal>
 
-	@if (showAdminPasswordDialog()) {
-		<app-admin-password-dialog (whenAuthenticated)="onAdminAuthenticated()" (whenCanceled)="closeAdminPasswordDialog()" />
-	}
+	<!--Admin Password Modal-->
+	<ion-modal [isOpen]="showAdminPasswordDialog()" (didDismiss)="closeAdminPasswordDialog()">
+		<ng-template>
+			<app-admin-password-dialog (whenAuthenticated)="onAdminAuthenticated()" (whenCanceled)="closeAdminPasswordDialog()" />
+		</ng-template>
+	</ion-modal>
 
 	<div class="w-fit flex justify-end items-center gap-4">
 		<div class="relative">
@@ -54,7 +66,7 @@
 				(didDismiss)="onUsernamePopoverDidDismiss()">
 				<ng-template>
 					<div
-						class="w-full landscape:max-md:w-40 md:w-48 bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 landscape:max-md:p-2 md:p-3 flex flex-col gap-1 landscape:max-md:gap-1 md:gap-1.5">
+						class="w-full bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 landscape:max-md:p-2 md:p-3 flex flex-col gap-1 landscape:max-md:gap-1 md:gap-1.5">
 						<button
 							type="button"
 							(click)="openStats()"
@@ -88,9 +100,19 @@
 						@if (showAdminOption()) {
 							<div class="username-popover__divider"></div>
 							@if (isAdminAuthenticated()) {
-								<button type="button" (click)="navigateToManageTriads()" class="username-popover__option">Manage Triads</button>
+								<button
+									type="button"
+									(click)="navigateToManageTriads()"
+									class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+									Manage Triads
+								</button>
 							} @else {
-								<button type="button" (click)="openAdminPasswordDialog()" class="username-popover__option">Admin</button>
+								<button
+									type="button"
+									(click)="openAdminPasswordDialog()"
+									class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+									Admin
+								</button>
 							}
 						}
 					</div>
