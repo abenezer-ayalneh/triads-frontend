@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
+import { IonModal } from '@ionic/angular/standalone'
 import { Subject, takeUntil } from 'rxjs'
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators'
 
@@ -13,7 +14,7 @@ import { TriadManagementApi } from './services/triad-management-api'
 @Component({
 	selector: 'app-triad-management',
 	standalone: true,
-	imports: [TriadGroupCard, AddTriadGroupDialog, EditTriadGroupDialog, DeleteConfirmationDialog],
+	imports: [TriadGroupCard, AddTriadGroupDialog, EditTriadGroupDialog, DeleteConfirmationDialog, IonModal],
 	templateUrl: './triad-management.page.html',
 	styleUrl: './triad-management.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -221,4 +222,6 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 			this.loadTriadGroups(true)
 		})
 	}
+
+	protected readonly Boolean = Boolean
 }

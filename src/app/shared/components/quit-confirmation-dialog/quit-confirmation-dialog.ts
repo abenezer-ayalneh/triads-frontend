@@ -1,9 +1,10 @@
 import { afterNextRender, Component, output, signal } from '@angular/core'
-import { IonButton, IonContent, IonHeader, IonModal, IonTitle, IonToolbar } from '@ionic/angular/standalone'
+
+import { Dialog } from '../dialog/dialog'
 
 @Component({
 	selector: 'app-quit-confirmation-dialog',
-	imports: [IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton],
+	imports: [Dialog],
 	templateUrl: './quit-confirmation-dialog.html',
 	styleUrl: './quit-confirmation-dialog.scss',
 })

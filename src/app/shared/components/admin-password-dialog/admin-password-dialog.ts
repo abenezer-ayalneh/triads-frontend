@@ -1,10 +1,11 @@
 import { Component, inject, output, signal } from '@angular/core'
 
 import { AdminAuthService } from '../../services/admin-auth.service'
+import { Dialog } from '../dialog/dialog'
 
 @Component({
 	selector: 'app-admin-password-dialog',
-	imports: [],
+	imports: [Dialog],
 	templateUrl: './admin-password-dialog.html',
 	styleUrl: './admin-password-dialog.scss',
 })

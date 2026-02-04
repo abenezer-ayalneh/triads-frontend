@@ -1,8 +1,8 @@
 import { Component, computed, ElementRef, inject, input } from '@angular/core'
 import { AnimationOptions, LottieDirective } from 'ngx-lottie'
 
-import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
-import { GlobalStore } from '../../state/global.store'
+import { GlobalStore } from '../../../../state/global.store'
+import { GamePlayState } from '../../enums/game-play.enum'
 
 @Component({
 	selector: 'app-bubble',
