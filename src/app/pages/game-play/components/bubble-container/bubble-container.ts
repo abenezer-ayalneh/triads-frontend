@@ -100,6 +100,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 	}
 
 	ngAfterViewInit() {
+		this.applyHeaderOffset()
 		// Start sequential bubble creation
 		this.startSequentialBubbleCreation(this.bubbleComponents())
 	}
@@ -496,6 +497,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		// Handler function that updates everything on resize
 		const handleResize = () => {
+			this.applyHeaderOffset()
 			// Force a reflow to ensure CSS responsive classes have been applied
 			// This is especially important for orientation changes
 			void container.offsetHeight
@@ -573,6 +575,7 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 
 		// Handler for orientation changes
 		const handleOrientationChange = () => {
+			this.applyHeaderOffset()
 			// Force immediate update on orientation change
 			const container = this.container().nativeElement
 			const width = container.clientWidth || container.offsetWidth || 0
@@ -615,6 +618,12 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 			}, 100)
 		}
 		window.addEventListener('orientationchange', this.orientationChangeListener)
+	}
+
+	private applyHeaderOffset() {
+		const header = document.querySelector('ion-header') as HTMLElement | null
+		const headerHeight = header?.getBoundingClientRect().height ?? 0
+		this.container().nativeElement.style.setProperty('--bubble-header-offset', `${headerHeight}px`)
 	}
 
 	private animateFinalTriadCues() {

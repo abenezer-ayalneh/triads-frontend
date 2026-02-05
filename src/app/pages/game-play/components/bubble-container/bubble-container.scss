@@ -5,3 +5,8 @@
 	width: 100%;
 	height: 100%;
 }
+
+.bubbles-container {
+	height: calc(100% - var(--bubble-header-offset, 0px));
+	margin-top: var(--bubble-header-offset, 0px);
+}
