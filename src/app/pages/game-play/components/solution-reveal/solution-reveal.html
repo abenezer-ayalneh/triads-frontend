@@ -1,23 +1,32 @@
 @if (hasUnsolvedTriads()) {
-	<div class="solution-reveal-container">
+	<div
+		class="w-full h-full pointer-events-none flex flex-row landscape:max-lg:flex-col items-start justify-center landscape:max-lg:justify-start gap-4 px-4 pb-2 overflow-auto max-md:px-3 max-md:pt-4 max-md:gap-3 max-md:justify-start landscape:max-md:px-2 landscape:max-md:pb-1 landscape:max-md:gap-2 landscape:max-md:justify-start">
 		@for (triad of unsolvedTriads(); track triad.id) {
-			<div class="solution-box">
-				<div class="solution-header">
-					<h3 class="solution-title">Solution</h3>
+			<div
+				class="bg-[rgba(33,53,76,0.5)] backdrop-blur-[8px] rounded-xl p-4 w-[280px] shrink-0 pointer-events-auto max-md:w-[240px] max-md:p-3.5 landscape:max-md:w-[200px] landscape:max-md:p-2.5 landscape:max-md:rounded-lg">
+				<div class="mb-3 border-b border-white/10 pb-2 landscape:max-md:mb-2 landscape:max-md:pb-1.5">
+					<h3 class="text-amber-400 text-base font-semibold m-0 text-center max-md:text-[0.9375rem] landscape:max-md:text-[0.8125rem]">Solution</h3>
 				</div>
-				<div class="solution-content">
-					<div class="cues-section">
+				<div class="flex flex-col gap-3 landscape:max-md:gap-2">
+					<div class="flex flex-wrap gap-1.5 justify-center">
 						@for (cue of triad.cues; track cue) {
-							<span class="cue-badge">{{ cue }}</span>
+							<span
+								class="bg-blue-500/20 border border-blue-500/40 text-blue-300 px-3 py-1.5 rounded-md font-medium text-xs max-md:px-2.5 max-md:py-1 max-md:text-[0.6875rem] landscape:max-md:px-1.5 landscape:max-md:py-[0.2rem] landscape:max-md:text-[0.625rem]">
+								{{ cue }}
+							</span>
 						}
 					</div>
-					<div class="keyword-section">
-						<span class="keyword-label">Keyword:</span>
-						<span class="keyword-value">{{ triad.keyword }}</span>
+					<div class="flex items-center justify-center gap-2 p-3 bg-green-500/10 border border-green-500/30 rounded-lg landscape:max-md:p-2">
+						<span class="text-green-300 font-semibold text-sm landscape:max-md:text-xs">Keyword:</span>
+						<span class="text-green-500 font-bold text-xl uppercase tracking-[0.05em] max-md:text-lg landscape:max-md:text-base">{{
+							triad.keyword
+						}}</span>
 					</div>
-					<div class="phrases-section">
+					<div class="flex flex-col gap-1.5">
 						@for (phrase of triad.fullPhrases; track phrase) {
-							<div class="phrase-item" [innerHTML]="phrase | highlightKey: triad.keyword : 'text-green-500'"></div>
+							<div
+								class="text-gray-200 text-[0.8125rem] p-1.5 text-center border-b border-white/5 last:border-b-0 max-md:text-xs max-md:p-1 landscape:max-md:text-[0.6875rem] landscape:max-md:p-[0.2rem]"
+								[innerHTML]="phrase | highlightKey: triad.keyword : 'text-green-500'"></div>
 						}
 					</div>
 				</div>

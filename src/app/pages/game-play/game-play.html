@@ -111,18 +111,12 @@
 			<app-game-result-dialog [result]="'WON'" (restartRequested)="restartGame()">
 				<!--				<h2 class="text-success text-4xl font-bold">You Won!</h2>-->
 				<p class="text-base-100 text-lg">{{ answerDialogMessage() }}</p>
-				<div class="bg-success/20 rounded-lg px-4 py-2 border border-success/30">
-					<p class="text-success font-semibold text-xl">Final Score: {{ store.gameScore() }}</p>
-				</div>
 			</app-game-result-dialog>
 		}
 		@case (GamePlayState.LOST) {
 			<app-game-result-dialog [result]="'LOST'" (restartRequested)="restartGame()">
 				<!--				<h2 class="text-error text-4xl font-bold">Nice Try!</h2>-->
 				<p class="text-base-100 text-lg">{{ answerDialogMessage() }}</p>
-				<div class="bg-error/20 rounded-lg px-4 py-2 border border-error/30">
-					<p class="text-error font-semibold text-xl">Final Score: {{ store.gameScore() }}</p>
-				</div>
 			</app-game-result-dialog>
 		}
 	}

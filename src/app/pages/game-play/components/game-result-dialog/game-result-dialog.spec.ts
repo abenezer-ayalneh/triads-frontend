@@ -3,6 +3,7 @@ import { Router } from '@angular/router'
 
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
+import { getScoreGifPath } from '../../constants/share.constant'
 import { GameResultDialog } from './game-result-dialog'
 
 type ShareStatus = 'shared' | 'cancelled' | 'failed' | 'unsupported'
@@ -74,6 +75,14 @@ describe('GameResultDialog', () => {
 
 	it('should create', () => {
 		expect(component).toBeTruthy()
+	})
+
+	it('renders score-specific GIF in result dialog', () => {
+		const renderedGif = fixture.nativeElement.querySelector('img')
+
+		expect(renderedGif).toBeTruthy()
+		expect(renderedGif.getAttribute('src')).toBe(getScoreGifPath(10))
+		expect(renderedGif.getAttribute('alt')).toContain('score 10')
 	})
 
 	it('shares with GIF file first when file sharing is supported', async () => {

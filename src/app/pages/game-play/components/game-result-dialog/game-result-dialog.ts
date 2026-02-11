@@ -1,6 +1,5 @@
-import { Component, effect, inject, input, output, signal } from '@angular/core'
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core'
 import { Router } from '@angular/router'
-import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
@@ -9,7 +8,7 @@ import { SolutionReveal } from '../solution-reveal/solution-reveal'
 
 @Component({
 	selector: 'app-game-result-dialog',
-	imports: [LottieComponent, SolutionReveal],
+	imports: [SolutionReveal],
 	templateUrl: './game-result-dialog.html',
 	styleUrl: './game-result-dialog.scss',
 })
@@ -26,7 +25,7 @@ export class GameResultDialog {
 
 	showPlayAgainButton = signal(false)
 
-	showConfetti = signal(false)
+	readonly scoreGifPath = computed(() => getScoreGifPath(this.store.gameScore()))
 
 	private readonly taDahAudio = new Audio()
 
@@ -64,25 +63,9 @@ export class GameResultDialog {
 						// Silently fail if audio can't play (e.g., user interaction required)
 						console.warn('Could not play celebration sound:', error)
 					})
-
-					// Show confetti for 2 seconds
-					this.showConfetti.set(true)
 				}
 			}
 		})
-	}
-
-	wonAnimationOptions: AnimationOptions = {
-		path: 'lotties/correct-answer-lottie.json',
-	}
-
-	lostAnimationOptions: AnimationOptions = {
-		path: 'lotties/wrong-answer-lottie.json',
-	}
-
-	confettiAnimationOptions: AnimationOptions = {
-		path: 'lotties/bubble-burst-confetti.json',
-		loop: true,
 	}
 
 	restartGame() {
