@@ -4,6 +4,7 @@ import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
+import { getScoreGifFilename, getScoreGifPath, READY_TO_PLAY_LABEL, SCORE_SHARE_TITLE } from '../../constants/share.constant'
 import { SolutionReveal } from '../solution-reveal/solution-reveal'
 
 @Component({
@@ -99,53 +100,135 @@ export class GameResultDialog {
 	}
 
 	async shareGameResult() {
+		const sharePayload = this.buildSharePayload()
+		const scoreGifFile = await this.getScoreGifFile(sharePayload.scoreGifPath)
+
+		const fileShareStatus = await this.shareViaFile(sharePayload, scoreGifFile)
+		if (fileShareStatus === 'shared') {
+			this.snackbarService.showSnackbar('Game result shared!', 3000)
+			return
+		}
+		if (fileShareStatus === 'cancelled') {
+			return
+		}
+
+		const textShareStatus = await this.shareViaText(sharePayload)
+		if (textShareStatus === 'shared') {
+			this.snackbarService.showSnackbar('Game result shared!', 3000)
+			return
+		}
+		if (textShareStatus === 'cancelled') {
+			return
+		}
+
+		const copiedToClipboard = await this.copyShareText(sharePayload.clipboardText)
+		if (copiedToClipboard) {
+			this.snackbarService.showSnackbar('Game result copied to clipboard!', 3000)
+			return
+		}
+
+		this.snackbarService.showSnackbar('Failed to share game result. Please try again.', 5000)
+	}
+
+	private buildSharePayload() {
+		const gameScore = this.store.gameScore()
+		const appUrl = window.location.origin
+		const scoreGifPath = getScoreGifPath(gameScore)
+
+		const shareText = [`${READY_TO_PLAY_LABEL}`].join('\n')
+
+		return {
+			appUrl,
+			scoreGifPath,
+			shareText,
+			clipboardText: shareText,
+		}
+	}
+
+	private async getScoreGifFile(scoreGifPath: string): Promise<File | null> {
 		try {
-			const solvedTriads = this.store.solvedTriads()
-			const triadsStep = this.store.triadsStep()
-			const gameResult = this.result()
-			const turns = this.store.turns()
-			const gameScore = this.store.gameScore()
-
-			// Calculate tries used
-			const triesUsed = 3 - turns.filter((turn) => turn.available).length
-
-			// Determine triad status
-			const solvedCount = solvedTriads.length
-			const isFourthTriadSolved = triadsStep === 'FINAL' && gameResult === 'WON'
-
-			// Build emoji representation
-			const emojis: string[] = []
-			for (let i = 1; i <= 4; i++) {
-				if (i <= 3) {
-					// First 3 triads
-					emojis.push(solvedCount >= i ? '✅' : '⬛️')
-				} else {
-					// 4th triad (bonus)
-					// Try to use a larger variant if available, otherwise use the same emoji
-					const baseEmoji = isFourthTriadSolved ? '✅' : '⬛️'
-					// Attempt to use larger variant - for now, use the same emoji
-					// In the future, could check for larger Unicode variants
-					emojis.push(baseEmoji)
-				}
+			const response = await fetch(scoreGifPath)
+			if (!response.ok) {
+				return null
 			}
 
-			// Format the share text
-			const date = new Date().toLocaleDateString('en-US', {
-				month: 'short',
-				day: 'numeric',
-				year: 'numeric',
+			const gifBlob = await response.blob()
+			return new File([gifBlob], getScoreGifFilename(this.store.gameScore()), {
+				type: 'image/gif',
 			})
-			const resultEmoji = gameResult === 'WON' ? '🎉' : '😔'
-			const resultText = gameResult === 'WON' ? 'Won!' : 'Lost!'
+		} catch (error) {
+			console.warn('Failed to fetch score GIF for sharing:', error)
+			return null
+		}
+	}
 
-			const shareText = `Triads ${date}\n${emojis.join(' ')}\nTries Used: ${triesUsed}/3\nScore: ${gameScore}\n${resultEmoji} ${resultText}`
+	private async shareViaFile(
+		sharePayload: { shareText: string; appUrl: string },
+		scoreGifFile: File | null,
+	): Promise<'shared' | 'cancelled' | 'failed' | 'unsupported'> {
+		if (!scoreGifFile || typeof navigator.share !== 'function') {
+			return 'unsupported'
+		}
 
-			// Copy to clipboard
+		if (typeof navigator.canShare !== 'function' || !navigator.canShare({ files: [scoreGifFile] })) {
+			return 'unsupported'
+		}
+
+		try {
+			await navigator.share({
+				title: SCORE_SHARE_TITLE,
+				text: sharePayload.shareText,
+				url: sharePayload.appUrl,
+				files: [scoreGifFile],
+			})
+			return 'shared'
+		} catch (error) {
+			if (this.isShareCancelled(error)) {
+				return 'cancelled'
+			}
+
+			console.error('Failed to share game result with GIF:', error)
+			return 'failed'
+		}
+	}
+
+	private async shareViaText(sharePayload: { shareText: string; appUrl: string }): Promise<'shared' | 'cancelled' | 'failed' | 'unsupported'> {
+		if (typeof navigator.share !== 'function') {
+			return 'unsupported'
+		}
+
+		try {
+			await navigator.share({
+				title: SCORE_SHARE_TITLE,
+				text: sharePayload.shareText,
+				url: sharePayload.appUrl,
+			})
+			return 'shared'
+		} catch (error) {
+			if (this.isShareCancelled(error)) {
+				return 'cancelled'
+			}
+
+			console.error('Failed to share game result as text:', error)
+			return 'failed'
+		}
+	}
+
+	private async copyShareText(shareText: string): Promise<boolean> {
+		if (!navigator.clipboard?.writeText) {
+			return false
+		}
+
+		try {
 			await navigator.clipboard.writeText(shareText)
-			this.snackbarService.showSnackbar('Game result copied to clipboard!', 3000)
+			return true
 		} catch (error) {
 			console.error('Failed to copy game result to clipboard:', error)
-			this.snackbarService.showSnackbar('Failed to copy game result. Please try again.', 5000)
+			return false
 		}
+	}
+
+	private isShareCancelled(error: unknown): boolean {
+		return error instanceof DOMException && error.name === 'AbortError'
 	}
 }
