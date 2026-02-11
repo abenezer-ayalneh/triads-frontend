@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core'
 
+import { AVAILABLE_SCORE_GIFS, SCORE_GIF_BASE_PATH } from '../../pages/game-play/constants/share.constant'
+
 @Injectable({
 	providedIn: 'root',
 })
@@ -26,6 +28,7 @@ export class AssetPreloadService {
 		'images/turn-two.png',
 		'images/turn-three.png',
 		'images/lifesaver.svg',
+		...AVAILABLE_SCORE_GIFS.map((score) => `${SCORE_GIF_BASE_PATH}score-${score}.gif`),
 	]
 
 	/**
