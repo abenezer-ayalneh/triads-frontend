@@ -4,6 +4,7 @@ const config: CapacitorConfig = {
 	appId: 'org.gametrix',
 	appName: 'Triads',
 	webDir: './dist/triads/browser',
+	android: { allowMixedContent: true },
 	// server: {
 	// 	androidScheme: 'https',
 	// },

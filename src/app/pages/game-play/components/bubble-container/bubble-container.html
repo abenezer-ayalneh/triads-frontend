@@ -1,4 +1,4 @@
-<div #container class="bubbles-container w-full h-full relative overflow-visible z-10" style="pointer-events: none">
+<div #container class="bubbles-container w-full h-full relative overflow-hidden z-10" style="pointer-events: none">
 	@for (cue of cues(); track cue) {
 		<app-bubble #initialTriadBubble [cue]="cue"></app-bubble>
 	}
