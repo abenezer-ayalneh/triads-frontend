@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core'
+import { Component, inject, signal } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { RouterLink } from '@angular/router'
 
@@ -11,14 +11,16 @@ import { UserInfoDialog } from './components/user-info-dialog/user-info-dialog'
 	templateUrl: './home.page.html',
 	styleUrl: './home.page.scss',
 })
-export class HomePage implements OnInit {
+export class HomePage {
 	readonly store = inject(GlobalStore)
 
-	ngOnInit() {
-		this.prepareUser()
+	showDebugDialog = signal(false)
+
+	openDebugDialog() {
+		this.showDebugDialog.set(true)
 	}
 
-	private prepareUser() {
-		// this.store.setUser(this.userInfoDialogService.getUser()?.username)
+	closeDebugDialog() {
+		this.showDebugDialog.set(false)
 	}
 }
