@@ -46,6 +46,9 @@ importers:
             '@capacitor/core':
                 specifier: ^8.0.2
                 version: 8.0.2
+            '@capacitor/filesystem':
+                specifier: ^8.1.1
+                version: 8.1.1(@capacitor/core@8.0.2)
             '@capacitor/haptics':
                 specifier: 8.0.0
                 version: 8.0.0(@capacitor/core@8.0.2)
@@ -1144,6 +1147,11 @@ packages:
     '@capacitor/core@8.0.2':
         resolution: { integrity: sha512-EXZfxkL6GFJS2cb7TIBR7RiHA5iz6ufDcl1VmUpI2pga3lJ5Ck2+iqbx7N+osL3XYem9ad4XCidJEMm64DX6UQ== }
 
+    '@capacitor/filesystem@8.1.1':
+        resolution: { integrity: sha512-g8szun+Nj9O/CIWNJ1c4cTsGchJE3B7080X+eh3hQXKf9UdRDllwVJy6reoI5EngwWh9xUgkI7fwkxg5BONrKw== }
+        peerDependencies:
+            '@capacitor/core': '>=8.0.0'
+
     '@capacitor/haptics@8.0.0':
         resolution: { integrity: sha512-DY1IUOjke1T4ITl7mFHQIKCaJJyHYAYRYHG9bVApU7PDOZiMVGMp48Yjzdqjya+wv/AHS5mDabSTUmhJ5uDvBA== }
         peerDependencies:
@@ -1168,6 +1176,9 @@ packages:
         resolution: { integrity: sha512-aIj3bc7z8lfPgOen8HlrBrkfnxpFnh21OCx6jCUx4Mvv+B6eEkUQ49b32DOddgVfr+igRHLX2SYi7duqIsNDXg== }
         peerDependencies:
             '@capacitor/core': '>=8.0.0'
+
+    '@capacitor/synapse@1.0.4':
+        resolution: { integrity: sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw== }
 
     '@colors/colors@1.5.0':
         resolution: { integrity: sha512-ooWCrlZP11i8GImSjTHYHLkvFDP48nS4+204nGb1RiX/WXYHmJA2III9/e2DWVabCESdW7hBAEzHRqUn9OUVvQ== }
@@ -7768,6 +7779,11 @@ snapshots:
         dependencies:
             tslib: 2.8.1
 
+    '@capacitor/filesystem@8.1.1(@capacitor/core@8.0.2)':
+        dependencies:
+            '@capacitor/core': 8.0.2
+            '@capacitor/synapse': 1.0.4
+
     '@capacitor/haptics@8.0.0(@capacitor/core@8.0.2)':
         dependencies:
             '@capacitor/core': 8.0.2
@@ -7787,6 +7803,8 @@ snapshots:
     '@capacitor/status-bar@8.0.0(@capacitor/core@8.0.2)':
         dependencies:
             '@capacitor/core': 8.0.2
+
+    '@capacitor/synapse@1.0.4': {}
 
     '@colors/colors@1.5.0': {}
 
