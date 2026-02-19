@@ -6,3 +6,8 @@ ion-toolbar {
 	--background: transparent;
 	--border-color: transparent;
 }
+
+ion-header.overlay-visible,
+ion-header.overlay-visible ion-toolbar {
+	z-index: 0;
+}

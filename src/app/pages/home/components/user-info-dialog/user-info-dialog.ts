@@ -28,12 +28,9 @@ export class UserInfoDialog implements OnInit {
 		path: '/lotties/play-button-lottie.json',
 	}
 
-	private readonly elementRef = inject(ElementRef)
-
 	private readonly userService = inject(UserService)
 
 	ngOnInit() {
-		document.body.appendChild(this.elementRef.nativeElement)
 		this.generateUsername()
 		this.usernameInput().nativeElement.focus()
 	}

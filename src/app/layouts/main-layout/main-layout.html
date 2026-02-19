@@ -1,11 +1,11 @@
-<ion-header class="ion-no-border">
+<ion-header class="ion-no-border" [class.overlay-visible]="overlayVisible()">
 	<ion-toolbar>
 		<app-header />
 	</ion-toolbar>
 </ion-header>
 <ion-content [fullscreen]="true">
+	<ion-router-outlet />
 	@if (store.showHowToPlay()) {
 		<app-how-to-play />
 	}
-	<ion-router-outlet />
 </ion-content>
