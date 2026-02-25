@@ -146,6 +146,11 @@ export class GamePlayLogic {
 					if (bonusTriad) {
 						unsolvedTriads = [bonusTriad]
 					}
+				} else {
+					const fourthTriad = await firstValueFrom(this.gamePlayApi.fetchFourthTriadSolution(triadGroupId))
+					if (fourthTriad) {
+						unsolvedTriads = [fourthTriad]
+					}
 				}
 			}
 

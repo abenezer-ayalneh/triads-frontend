@@ -27,6 +27,10 @@ export class GamePlayApi {
 		return this.httpClient.get<string[]>('triads/fourth-triad-cues', { params: { triadGroupId } })
 	}
 
+	fetchFourthTriadSolution(triadGroupId: number | string) {
+		return this.httpClient.get<SolvedTriad>('triads/fourth-triad-solution', { params: { triadGroupId } })
+	}
+
 	getTriadGroupSolutions(triadGroupId: string | number) {
 		return this.httpClient.get<SolvedTriad[]>(`triads/groups/${triadGroupId}/triads`)
 	}
