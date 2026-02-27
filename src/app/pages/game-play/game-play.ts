@@ -315,22 +315,26 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	checkAndShowWelcomeDialog() {
 		const user = this.store.user()
-		if (!user || !user.firstFiveGameScores || user.welcomeMessageShown) {
+		if (!user || !user.scores || user.welcomeMessageShown) {
 			return
 		}
 
-		// Check if user has completed exactly 5 games
 		const totalGamesPlayed = Object.values(user.scores).reduce((sum, count) => sum + count, 0)
+		if (totalGamesPlayed < 5) {
+			return
+		}
 
-		if (totalGamesPlayed === 5 && user.firstFiveGameScores.length === 5) {
-			// Calculate total points from first 5 games
-			const totalPoints = user.firstFiveGameScores.reduce((sum, score) => sum + score, 0)
+		const winCounts = Object.entries(user.scores).reduce((sum, [score, count]) => {
+			const numericScore = Number(score)
+			return numericScore > 0 ? sum + count : sum
+		}, 0)
 
-			// Show welcome dialog
-			this.welcomeDialogTotalPoints.set(totalPoints)
+		const successRate = totalGamesPlayed > 0 ? winCounts / totalGamesPlayed : 0
+
+		if (successRate >= 0.6) {
+			this.welcomeDialogTotalPoints.set(Math.round(successRate * 100))
 			this.showWelcomeDialog.set(true)
 
-			// Mark welcome message as shown
 			const updatedUser = { ...user, welcomeMessageShown: true }
 			this.store.setUser(updatedUser)
 			this.store.userService.setUser(updatedUser)
