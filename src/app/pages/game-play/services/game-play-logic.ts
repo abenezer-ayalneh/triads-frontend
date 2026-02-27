@@ -6,8 +6,7 @@ import { GlobalStore } from '../../../state/global.store'
 import { GamePlayState } from '../enums/game-play.enum'
 import { SolvedTriad } from '../interfaces/triad.interface'
 import { GamePlayApi } from './game-play-api'
-import { HintService } from './hint-service'
-import { TurnService } from './turn-service'
+import { TurnHintService } from './turn-hint.service'
 
 @Injectable({
 	providedIn: 'root',
@@ -17,9 +16,7 @@ export class GamePlayLogic {
 
 	private readonly userService = inject(UserService)
 
-	private readonly hintService = inject(HintService)
-
-	private readonly turnService = inject(TurnService)
+	private readonly turnHintService = inject(TurnHintService)
 
 	private readonly gamePlayApi = inject(GamePlayApi)
 
@@ -163,8 +160,8 @@ export class GamePlayLogic {
 	}
 
 	calculateScore() {
-		const availableTurns = this.turnService.numberOfAvailableTurns(this.store.turns())
-		const availableHints = this.hintService.numberOfAvailableHints(this.store.hints())
+		const availableTurns = this.turnHintService.numberOfAvailableTurns(this.store.turns())
+		const availableHints = this.turnHintService.numberOfAvailableHints(this.store.hints())
 		const availableCues = this.store.cues()
 		const finalTriadCues = this.store.finalTriadCues()
 

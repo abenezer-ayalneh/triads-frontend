@@ -62,9 +62,9 @@
 					</h3>
 					<div class="space-y-2 landscape:max-md:space-y-2 md:space-y-3 text-xs landscape:max-md:text-xs md:text-base">
 						<p>
-							You have three guesses and two hints, any combination. Miss a guess, lose a turn. Take a hint, lose a turn. When 9 or 6 Cues remain,
-							a hint highlights a Triad to help you. When only 3 Cues remain, a hint gives you options: show number of letters in the Key, or show
-							its first letter.
+							You have 3 guesses and 2 hints, any combination. Miss a guess, lose a turn. Take a hint, lose a turn. When more than 3 Cues remain,
+							your first hint highlights a Triad to help you. When only 3 Cues remain, a hint give you options: a) show the number of letters in
+							the Key word; or b) show its first letter. Even when down to one last turn, if your guess is correct you're still in the game.
 						</p>
 						<div class="w-full max-w-md px-4 space-y-3">
 							<div class="flex items-center">
@@ -162,7 +162,9 @@
 									@for (row of scoringData; track row.outcome) {
 										<tr class="hover:bg-gray-50">
 											<td class="px-4 py-3 md:px-5 lg:px-6">{{ row.outcome }}</td>
-											<td class="px-4 py-3 md:px-5 lg:px-6 text-center font-semibold text-green-600 md:text-lg">{{ row.points }}</td>
+											<td class="px-4 py-3 md:px-5 lg:px-6 text-center font-semibold text-green-600 md:text-lg">
+												{{ row.points }}
+											</td>
 										</tr>
 									}
 								</tbody>

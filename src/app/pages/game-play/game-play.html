@@ -121,6 +121,37 @@
 		}
 	}
 
+	<!--Game Intro Dialog-->
+	@if (showGameIntroDialog()) {
+		<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" (click)="onIntroBackdropClick($event)">
+			<div class="w-[90%] max-w-xl">
+				<app-dialog title="How to Play Triads" (whenClosed)="onGameIntroDialogClosed()">
+					<div class="space-y-3 md:space-y-4 text-sm md:text-base text-base-content">
+						<p>
+							You’re given 9 bubbles containing words that seem unrelated, called “CUES.” Find 3 Cues that share a common KEY word to form a Triad
+							(a Key is always a single, stand-alone word).
+						</p>
+						<p>For example, the Cues SWING, FLAT, and PRESSURE share the word “tire” (tire swing, flat tire, and tire pressure). It’s a Triad.</p>
+						<p class="text-xs md:text-sm text-base-content/80">
+							More detailed instructions are available by clicking the '?' button within the game.
+						</p>
+					</div>
+
+					<div class="mt-4 md:mt-6 flex justify-center">
+						<label class="inline-flex items-center gap-2 cursor-pointer text-xs md:text-sm text-base-content">
+							<input
+								type="checkbox"
+								class="checkbox checkbox-xs md:checkbox-sm"
+								[checked]="introDontShowAgain()"
+								(change)="onIntroDontShowAgainChange($event.target.checked)" />
+							<span>Don't show again</span>
+						</label>
+					</div>
+				</app-dialog>
+			</div>
+		</div>
+	}
+
 	<!--Welcome Dialog-->
 	@if (showWelcomeDialog()) {
 		<app-welcome-dialog [totalPoints]="welcomeDialogTotalPoints()" (whenClosed)="onWelcomeDialogClosed()" />

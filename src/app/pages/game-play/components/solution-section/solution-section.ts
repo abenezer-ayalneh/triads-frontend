@@ -9,7 +9,7 @@ import { GamePlayState } from '../../enums/game-play.enum'
 import { SolvedTriad } from '../../interfaces/triad.interface'
 import { GamePlayApi } from '../../services/game-play-api'
 import { GamePlayLogic } from '../../services/game-play-logic'
-import { TurnService } from '../../services/turn-service'
+import { TurnHintService } from '../../services/turn-hint.service'
 import { InputSet } from '../input-set/input-set'
 
 @Component({
@@ -38,7 +38,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 
 	private readonly gamePlayLogic = inject(GamePlayLogic)
 
-	private readonly turnService = inject(TurnService)
+	private readonly turnHintService = inject(TurnHintService)
 
 	private readonly snackbarService = inject(SnackbarService)
 
@@ -141,11 +141,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 								}
 							} else {
 								this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
-								this.useTurn()
-								// Check if turns are exhausted immediately after using a turn
-								if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
-									this.gamePlayLogic.handleGameLost()
-								}
+								this.applyOrganicFail()
 							}
 						}),
 						filter((success) => !success),
@@ -155,11 +151,11 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 							if (
 								this.store.gamePlayState() !== GamePlayState.WON &&
 								this.store.gamePlayState() !== GamePlayState.LOST &&
-								this.turnService.numberOfAvailableTurns(this.store.turns()) > 0
+								this.turnHintService.numberOfAvailableTurns(this.store.turns()) > 0
 							) {
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 								this.store.setSelectedCues([])
-							} else if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+							} else if (this.turnHintService.numberOfAvailableTurns(this.store.turns()) === 0) {
 								// If turns are exhausted, ensure game lost state is set
 								this.gamePlayLogic.handleGameLost()
 							}
@@ -226,21 +222,23 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 			this.timeoutIds.push(timeoutId)
 		} else {
 			this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
-			// If hint was used with one turn remaining, consume the deferred turn
-			if (this.store.hintUsedWithOneTurnRemaining()) {
-				this.useTurn()
-				this.store.setHintUsedWithOneTurnRemaining(false)
-				// Check if turns are exhausted immediately after using a turn
-				if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
-					this.gamePlayLogic.handleGameLost()
-				}
-			} else if (!this.store.hintUsed()) {
-				// Normal case: use a turn if hint wasn't used
-				this.useTurn()
-				// Check if turns are exhausted immediately after using a turn
-				if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
-					this.gamePlayLogic.handleGameLost()
-				}
+			let turns = this.store.turns()
+			let hints = this.store.hints()
+			let gameEnds = false
+
+			// If no hint was used for this attempt, treat it as an organic fail
+			if (!this.store.hintUsed()) {
+				const result = this.turnHintService.applyOrganicFail(turns, hints)
+				turns = result.turns
+				hints = result.hints
+				gameEnds = result.gameEnds
+			}
+
+			this.store.setTurns(turns)
+			this.store.setHints(hints)
+
+			if (gameEnds) {
+				this.gamePlayLogic.handleGameLost()
 			}
 		}
 		this.answerFormControl.reset()
@@ -297,7 +295,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 					}
 				} else {
 					// If the game was in its initial stage and the player ran out of turns
-					if (this.turnService.numberOfAvailableTurns(this.store.turns()) === 0) {
+					if (this.turnHintService.numberOfAvailableTurns(this.store.turns()) === 0) {
 						this.gamePlayLogic.handleGameLost()
 					} else {
 						const availableHints = this.store.hints().filter((hint) => hint.available).length
@@ -318,10 +316,15 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		this.timeoutIds.push(timeoutId)
 	}
 
-	private useTurn() {
+	private applyOrganicFail() {
 		try {
-			const turnsAfterUsage = this.turnService.useTurn(this.store.turns())
-			this.store.setTurns(turnsAfterUsage)
+			const { turns, hints, gameEnds } = this.turnHintService.applyOrganicFail(this.store.turns(), this.store.hints())
+			this.store.setTurns(turns)
+			this.store.setHints(hints)
+
+			if (gameEnds) {
+				this.gamePlayLogic.handleGameLost()
+			}
 		} catch (error) {
 			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 		}

@@ -5,6 +5,7 @@ import { gsap } from 'gsap'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 import { Subscription } from 'rxjs'
 
+import { Dialog } from '../../shared/components/dialog/dialog'
 import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { DifficultyService } from '../../shared/services/difficulty.service'
@@ -30,6 +31,7 @@ import { GamePlayLogic } from './services/game-play-logic'
 		LottieComponent,
 		ReactiveFormsModule,
 		FormsModule,
+		Dialog,
 		BackgroundBubbles,
 		SolutionSection,
 		TurnsBox,
@@ -96,6 +98,12 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	welcomeDialogTotalPoints = signal<number>(0)
 
+	private static readonly GAME_INTRO_DISMISSED_KEY = 'triads.gameIntro.dismissed'
+
+	showGameIntroDialog = signal<boolean>(false)
+
+	introDontShowAgain = signal<boolean>(false)
+
 	constructor() {
 		// Watch for game completion to check if welcome dialog should be shown
 		effect(() => {
@@ -109,6 +117,7 @@ export class GamePlay implements OnInit, OnDestroy {
 	ngOnInit() {
 		// Initialize selected difficulty with current setting
 		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
+		this.initializeGameIntroDialog()
 		this.initializeGame()
 	}
 
@@ -174,6 +183,16 @@ export class GamePlay implements OnInit, OnDestroy {
 				},
 			}),
 		)
+	}
+
+	private initializeGameIntroDialog() {
+		if (typeof window === 'undefined') {
+			this.showGameIntroDialog.set(true)
+			return
+		}
+
+		const isDismissed = window.localStorage.getItem(GamePlay.GAME_INTRO_DISMISSED_KEY) === 'true'
+		this.showGameIntroDialog.set(!isDismissed)
 	}
 
 	private getDifficultyLabel(difficulty: string): string {
@@ -320,5 +339,23 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	onWelcomeDialogClosed() {
 		this.showWelcomeDialog.set(false)
+	}
+
+	onIntroDontShowAgainChange(checked: boolean) {
+		this.introDontShowAgain.set(checked)
+	}
+
+	onIntroBackdropClick(event: Event) {
+		if (event.target === event.currentTarget) {
+			this.onGameIntroDialogClosed()
+		}
+	}
+
+	onGameIntroDialogClosed() {
+		if (this.introDontShowAgain() && typeof window !== 'undefined') {
+			window.localStorage.setItem(GamePlay.GAME_INTRO_DISMISSED_KEY, 'true')
+		}
+
+		this.showGameIntroDialog.set(false)
 	}
 }
