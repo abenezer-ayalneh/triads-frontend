@@ -5,7 +5,7 @@ import { gsap } from 'gsap'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 import { Subscription } from 'rxjs'
 
-import { Dialog } from '../../shared/components/dialog/dialog'
+import { Intro } from '../../shared/components/intro/intro'
 import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { DifficultyService } from '../../shared/services/difficulty.service'
@@ -31,7 +31,6 @@ import { GamePlayLogic } from './services/game-play-logic'
 		LottieComponent,
 		ReactiveFormsModule,
 		FormsModule,
-		Dialog,
 		BackgroundBubbles,
 		SolutionSection,
 		TurnsBox,
@@ -41,6 +40,7 @@ import { GamePlayLogic } from './services/game-play-logic'
 		SolvedTriad,
 		BubbleContainer,
 		WelcomeDialog,
+		Intro,
 	],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
@@ -70,6 +70,14 @@ export class GamePlay implements OnInit, OnDestroy {
 		path: 'lotties/loading-lottie.json',
 	}
 
+	noTriadsMessage = signal<string>('')
+
+	selectedDifficulty = signal<Difficulty>(Difficulty.RANDOM)
+
+	showWelcomeDialog = signal<boolean>(false)
+
+	welcomeDialogTotalPoints = signal<number>(0)
+
 	protected readonly RequestState = RequestState
 
 	protected readonly length = length
@@ -90,20 +98,6 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private readonly solutionSectionRef = viewChild<SolutionSection>('solutionSection')
 
-	noTriadsMessage = signal<string>('')
-
-	selectedDifficulty = signal<Difficulty>(Difficulty.RANDOM)
-
-	showWelcomeDialog = signal<boolean>(false)
-
-	welcomeDialogTotalPoints = signal<number>(0)
-
-	private static readonly GAME_INTRO_DISMISSED_KEY = 'triads.gameIntro.dismissed'
-
-	showGameIntroDialog = signal<boolean>(false)
-
-	introDontShowAgain = signal<boolean>(false)
-
 	constructor() {
 		// Watch for game completion to check if welcome dialog should be shown
 		effect(() => {
@@ -117,36 +111,12 @@ export class GamePlay implements OnInit, OnDestroy {
 	ngOnInit() {
 		// Initialize selected difficulty with current setting
 		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
-		this.initializeGameIntroDialog()
 		this.initializeGame()
 	}
 
 	ngOnDestroy() {
 		// Reset game state when navigating away from the gameplay page
 		this.resetGameState()
-	}
-
-	private resetGameState() {
-		// Clear existing subscriptions to avoid memory leaks
-		this.subscriptions$.unsubscribe()
-		// Create a new subscription object
-		this.subscriptions$ = new Subscription()
-		// Reset local component state
-		this.cueFetchingState.set(RequestState.LOADING)
-		this.explodingBubbles.set([])
-		this.noTriadsMessage.set('')
-		this.showWelcomeDialog.set(false)
-		this.welcomeDialogTotalPoints.set(0)
-		// Reset GamePlayLogic BehaviorSubjects
-		this.gamePlayLogic.resetAnswerFieldState()
-		// Reset SolutionSection component state
-		const solutionSection = this.solutionSectionRef()
-		if (solutionSection) {
-			solutionSection.resetComponentState()
-		}
-		// Reset global store game state
-		this.store.setUnsolvedTriads(null)
-		this.store.resetGameState()
 	}
 
 	initializeGame() {
@@ -183,26 +153,6 @@ export class GamePlay implements OnInit, OnDestroy {
 				},
 			}),
 		)
-	}
-
-	private initializeGameIntroDialog() {
-		if (typeof window === 'undefined') {
-			this.showGameIntroDialog.set(true)
-			return
-		}
-
-		const isDismissed = window.localStorage.getItem(GamePlay.GAME_INTRO_DISMISSED_KEY) === 'true'
-		this.showGameIntroDialog.set(!isDismissed)
-	}
-
-	private getDifficultyLabel(difficulty: string): string {
-		const labels: Record<string, string> = {
-			EASY: 'Soft',
-			MEDIUM: 'Firm',
-			HARD: 'Hard',
-			RANDOM: 'Mixed (complete)',
-		}
-		return labels[difficulty] || difficulty
 	}
 
 	retryGame() {
@@ -300,19 +250,6 @@ export class GamePlay implements OnInit, OnDestroy {
 		return GAME_END_MESSAGES[gameScore]
 	}
 
-	private async animateSolvedTriadAppearance(solvedArea: HTMLElement) {
-		// Start with the solved component hidden and small
-		gsap.set(solvedArea, { scale: 0, opacity: 0 })
-
-		// Animate it to appear with a bounce effect
-		await gsap.to(solvedArea, {
-			duration: 0.8,
-			scale: 1,
-			opacity: 0.65,
-			ease: 'back.out(1.7)',
-		})
-	}
-
 	checkAndShowWelcomeDialog() {
 		const user = this.store.user()
 		if (!user || !user.scores || user.welcomeMessageShown) {
@@ -345,21 +282,49 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.showWelcomeDialog.set(false)
 	}
 
-	onIntroDontShowAgainChange(checked: boolean) {
-		this.introDontShowAgain.set(checked)
+	private resetGameState() {
+		// Clear existing subscriptions to avoid memory leaks
+		this.subscriptions$.unsubscribe()
+		// Create a new subscription object
+		this.subscriptions$ = new Subscription()
+		// Reset local component state
+		this.cueFetchingState.set(RequestState.LOADING)
+		this.explodingBubbles.set([])
+		this.noTriadsMessage.set('')
+		this.showWelcomeDialog.set(false)
+		this.welcomeDialogTotalPoints.set(0)
+		// Reset GamePlayLogic BehaviorSubjects
+		this.gamePlayLogic.resetAnswerFieldState()
+		// Reset SolutionSection component state
+		const solutionSection = this.solutionSectionRef()
+		if (solutionSection) {
+			solutionSection.resetComponentState()
+		}
+		// Reset global store game state
+		this.store.setUnsolvedTriads(null)
+		this.store.resetGameState()
 	}
 
-	onIntroBackdropClick(event: Event) {
-		if (event.target === event.currentTarget) {
-			this.onGameIntroDialogClosed()
+	private getDifficultyLabel(difficulty: string): string {
+		const labels: Record<string, string> = {
+			EASY: 'Soft',
+			MEDIUM: 'Firm',
+			HARD: 'Hard',
+			RANDOM: 'Mixed (complete)',
 		}
+		return labels[difficulty] || difficulty
 	}
 
-	onGameIntroDialogClosed() {
-		if (this.introDontShowAgain() && typeof window !== 'undefined') {
-			window.localStorage.setItem(GamePlay.GAME_INTRO_DISMISSED_KEY, 'true')
-		}
+	private async animateSolvedTriadAppearance(solvedArea: HTMLElement) {
+		// Start with the solved component hidden and small
+		gsap.set(solvedArea, { scale: 0, opacity: 0 })
 
-		this.showGameIntroDialog.set(false)
+		// Animate it to appear with a bounce effect
+		await gsap.to(solvedArea, {
+			duration: 0.8,
+			scale: 1,
+			opacity: 0.65,
+			ease: 'back.out(1.7)',
+		})
 	}
 }

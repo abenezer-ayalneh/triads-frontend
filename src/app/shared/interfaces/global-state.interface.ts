@@ -28,4 +28,5 @@ export interface GlobalState {
 	cuesToExplode: string[]
 	triadGroupId: string | number | null
 	unsolvedTriads: SolvedTriad[] | null
+	introShownPerSession: boolean
 }

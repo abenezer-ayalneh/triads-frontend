@@ -4,6 +4,7 @@ import { patchState, signalStore, withHooks, withMethods, withProps, withState }
 import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
 import { SolvedTriad } from '../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
+import { GAME_INTRO_DISMISSED_KEY } from '../shared/components/intro/intro-constant'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
 import { UserService } from '../shared/services/user.service'
@@ -40,6 +41,7 @@ const initialState: GlobalState = {
 	cuesToExplode: [],
 	triadGroupId: null,
 	unsolvedTriads: null,
+	introShownPerSession: false,
 }
 
 export const GlobalStore = signalStore(
@@ -172,10 +174,14 @@ export const GlobalStore = signalStore(
 				unsolvedTriads: null,
 			}))
 		},
+		setIntroShownPerSession: (introShownPerSession: boolean) => {
+			patchState(store, (state) => ({ ...state, introShownPerSession }))
+		},
 	})),
 	withHooks({
 		onInit(store) {
 			store.setUser(store.userService.getUser())
+			store.setIntroShownPerSession(localStorage.getItem(GAME_INTRO_DISMISSED_KEY) === 'true')
 		},
 	}),
 )

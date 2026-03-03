@@ -1,0 +1,32 @@
+<ion-modal [isOpen]="!store.introShownPerSession()" [backdropDismiss]="true" (didDismiss)="onGameIntroDialogClosed()">
+	<ng-template>
+		<app-dialog title="How to Play Triads" (whenClosed)="onGameIntroDialogClosed()">
+			<div class="space-y-3 md:space-y-4 text-sm md:text-base text-base-content">
+				<p class="text-center">
+					You’re given 9 bubbles containing words that seem unrelated, called <b>“CUES.”</b> Find 3 Cues that share a common <b>KEY</b> word to form a
+					Triad (a Key is always a single, stand-alone word).
+				</p>
+				<p class="text-center">
+					For example, the Cues <span class="font-extralight">SWING</span>, <span class="font-extralight">FLAT</span>, and
+					<span class="font-extralight">PRESSURE</span> share the word “tire” (<b>tire</b> swing, flat <b>tire</b>, and <b>tire</b> pressure). It’s a
+					<i>Triad</i>.
+				</p>
+				<p class="text-xs md:text-sm text-base-content/80 text-center">
+					More detailed instructions are available by clicking the
+					<button
+						class="w-fit h-5 md:h-7 xl:h-8 inline-flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
+						<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">?</p>
+					</button>
+					button within the game.
+				</p>
+			</div>
+
+			<div class="mt-4 md:mt-6 flex justify-center">
+				<label class="inline-flex items-center gap-2 cursor-pointer text-xs md:text-sm text-base-content">
+					<input type="checkbox" class="checkbox checkbox-xs md:checkbox-sm" (change)="onIntroDontShowAgainChange($event.target.checked)" />
+					<span>Don't show again</span>
+				</label>
+			</div>
+		</app-dialog>
+	</ng-template>
+</ion-modal>
