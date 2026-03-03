@@ -1,13 +1,6 @@
-<ion-modal [isOpen]="isOpen()" [backdropDismiss]="true" (didDismiss)="onClose()">
-	<ion-header>
-		<ion-toolbar class="triad-gradient">
-			<ion-title>Welcome to Triads!</ion-title>
-		</ion-toolbar>
-	</ion-header>
-	<ion-content class="ion-padding">
-		<p class="text-base-content text-xs landscape:max-md:text-xs md:text-base lg:text-lg mb-4 landscape:max-md:mb-4 md:mb-6">{{ getMessage() }}</p>
-		<div class="flex gap-2 landscape:max-md:gap-2 md:gap-3 justify-end">
-			<ion-button (click)="onClose()"> Got it! </ion-button>
-		</div>
-	</ion-content>
-</ion-modal>
+<app-dialog title="Welcome to Triads!" (whenClosed)="onClose()">
+	<p class="text-base md:text-lg">{{ getMessage() }}</p>
+	<div class="flex gap-2 landscape:max-md:gap-2 md:gap-3 justify-end">
+		<button class="btn btn-sm md:btn-md btn-primary" (click)="onClose()">Got it!</button>
+	</div>
+</app-dialog>

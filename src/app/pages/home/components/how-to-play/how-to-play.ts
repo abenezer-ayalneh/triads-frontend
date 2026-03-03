@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms'
 import { IonModal } from '@ionic/angular/standalone'
 import { OverlayEventDetail } from '@ionic/core/components'
 
+import { Dialog } from '../../../../shared/components/dialog/dialog'
 import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
 	selector: 'app-how-to-play',
-	imports: [CommonModule, IonModal, FormsModule],
+	imports: [CommonModule, IonModal, FormsModule, Dialog],
 	templateUrl: './how-to-play.html',
 	styleUrl: './how-to-play.scss',
 })

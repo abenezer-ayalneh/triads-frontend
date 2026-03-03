@@ -1,9 +1,11 @@
 import { afterNextRender, Component, input, output, signal } from '@angular/core'
 import { IonButton, IonContent, IonHeader, IonModal, IonTitle, IonToolbar } from '@ionic/angular/standalone'
 
+import { Dialog } from '../../../../shared/components/dialog/dialog'
+
 @Component({
 	selector: 'app-welcome-dialog',
-	imports: [IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton],
+	imports: [IonModal, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, Dialog],
 	templateUrl: './welcome-dialog.html',
 	styleUrl: './welcome-dialog.scss',
 })
