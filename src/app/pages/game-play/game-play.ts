@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { Router } from '@angular/router'
+import { IonModal } from '@ionic/angular/standalone'
 import { gsap } from 'gsap'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 import { Subscription } from 'rxjs'
@@ -41,6 +42,7 @@ import { GamePlayLogic } from './services/game-play-logic'
 		BubbleContainer,
 		WelcomeDialog,
 		Intro,
+		IonModal,
 	],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',

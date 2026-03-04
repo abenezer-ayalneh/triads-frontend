@@ -127,7 +127,9 @@
 	}
 
 	<!--Welcome Dialog-->
-	@if (showWelcomeDialog()) {
-		<app-welcome-dialog [totalPoints]="welcomeDialogTotalPoints()" (whenClosed)="onWelcomeDialogClosed()" />
-	}
+	<ion-modal [isOpen]="showWelcomeDialog()" (didDismiss)="onWelcomeDialogClosed()">
+		<ng-template>
+			<app-welcome-dialog [totalPoints]="welcomeDialogTotalPoints()" (whenClosed)="onWelcomeDialogClosed()" />
+		</ng-template>
+	</ion-modal>
 </div>
