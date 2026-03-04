@@ -90,7 +90,7 @@
 								"input": "public"
 							}
 						],
-						"styles": ["src/styles.css", "src/styles.scss"],
+						"styles": ["src/global.css", "src/global.scss"],
 						"scripts": []
 					}
 				},

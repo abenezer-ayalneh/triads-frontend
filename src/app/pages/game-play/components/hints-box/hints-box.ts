@@ -75,6 +75,9 @@ export class HintsBox implements OnDestroy {
 		}
 
 		this.store.setHintUsage(true)
+		if (this.turnHintService.numberOfAvailableTurns(this.store.turns()) === 1) {
+			this.store.setHintUsedWithOneTurnRemaining(true)
+		}
 
 		// Check if user has 3 cues selected - if so, use those for the hint
 		const selectedCues = this.store.selectedCues()

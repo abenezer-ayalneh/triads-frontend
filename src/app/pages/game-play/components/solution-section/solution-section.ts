@@ -198,6 +198,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	private handleAnswerResponse(response: boolean | SolvedTriad) {
+		// This means the answer was correct
 		if (response && typeof response !== 'boolean') {
 			// Reset deferred turn flag on correct answer (turn was not consumed)
 			this.store.setHintUsedWithOneTurnRemaining(false)
@@ -221,23 +222,14 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 			}, 1000)
 			this.timeoutIds.push(timeoutId)
 		} else {
+			// This means the answer was wrong
 			this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
-			let turns = this.store.turns()
-			let hints = this.store.hints()
-			let gameEnds = false
+			// Wrong answer: always apply organic fail (T−1, H unchanged; game ends if T=1)
+			const result = this.turnHintService.applyFailure(this.store.turns(), this.store.hints())
+			this.store.setTurns(result.turns)
+			this.store.setHints(result.hints)
 
-			// If no hint was used for this attempt, treat it as an organic fail
-			if (!this.store.hintUsed()) {
-				const result = this.turnHintService.applyOrganicFail(turns, hints)
-				turns = result.turns
-				hints = result.hints
-				gameEnds = result.gameEnds
-			}
-
-			this.store.setTurns(turns)
-			this.store.setHints(hints)
-
-			if (gameEnds) {
+			if (result.gameEnds) {
 				this.gamePlayLogic.handleGameLost()
 			}
 		}
@@ -318,7 +310,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 
 	private applyOrganicFail() {
 		try {
-			const { turns, hints, gameEnds } = this.turnHintService.applyOrganicFail(this.store.turns(), this.store.hints())
+			const { turns, hints, gameEnds } = this.turnHintService.applyFailure(this.store.turns(), this.store.hints())
 			this.store.setTurns(turns)
 			this.store.setHints(hints)
 

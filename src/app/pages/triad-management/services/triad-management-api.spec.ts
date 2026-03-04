@@ -53,12 +53,21 @@ describe('TriadManagementApi', () => {
 
 	it('should create a triad group', () => {
 		const mockData: TriadGroupFormData = {
-			triad1: { keyword: 'TEST', cues: ['TEST1', 'TEST2', 'TEST3'] },
-			triad2: { keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
-			triad3: { keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'] },
-			triad4: { keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'] },
+			difficulty: 'EASY',
+			triad1: { keyword: 'TEST', fullPhrases: ['TEST1', 'TEST2', 'TEST3'] },
+			triad2: { keyword: 'SAMPLE', fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { keyword: 'DEMO', fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { keyword: 'FINAL', fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
 		}
-		const mockResponse = { id: 1, active: true, ...mockData }
+		const mockResponse: TriadGroupResponse = {
+			id: 1,
+			active: true,
+			difficulty: 'EASY',
+			triad1: { id: 10, keyword: 'TEST', cues: ['TEST1', 'TEST2', 'TEST3'], fullPhrases: ['TEST1', 'TEST2', 'TEST3'] },
+			triad2: { id: 20, keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'], fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { id: 30, keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'], fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { id: 40, keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'], fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
+		}
 
 		service.createTriadGroup(mockData).subscribe((response) => {
 			expect(response).toEqual(mockResponse)
@@ -72,12 +81,21 @@ describe('TriadManagementApi', () => {
 
 	it('should update a triad group', () => {
 		const mockData: TriadGroupFormData = {
-			triad1: { keyword: 'TEST', cues: ['TEST1', 'TEST2', 'TEST3'] },
-			triad2: { keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
-			triad3: { keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'] },
-			triad4: { keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'] },
+			difficulty: 'EASY',
+			triad1: { keyword: 'TEST', fullPhrases: ['TEST1', 'TEST2', 'TEST3'] },
+			triad2: { keyword: 'SAMPLE', fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { keyword: 'DEMO', fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { keyword: 'FINAL', fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
 		}
-		const mockResponse = { id: 1, active: true, ...mockData }
+		const mockResponse: TriadGroupResponse = {
+			id: 1,
+			active: true,
+			difficulty: 'EASY',
+			triad1: { id: 10, keyword: 'TEST', cues: ['TEST1', 'TEST2', 'TEST3'], fullPhrases: ['TEST1', 'TEST2', 'TEST3'] },
+			triad2: { id: 20, keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'], fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { id: 30, keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'], fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { id: 40, keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'], fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
+		}
 
 		service.updateTriadGroup(1, mockData).subscribe((response) => {
 			expect(response).toEqual(mockResponse)
@@ -101,6 +119,7 @@ describe('TriadManagementApi', () => {
 		const mockResponse: TriadGroupResponse = {
 			id: 1,
 			active: false,
+			difficulty: 'EASY',
 			triad1: { id: 10, keyword: 'TEST', cues: ['TEST1', 'TEST2', 'TEST3'], fullPhrases: [] },
 			triad2: { id: 20, keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'], fullPhrases: [] },
 			triad3: { id: 30, keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'], fullPhrases: [] },

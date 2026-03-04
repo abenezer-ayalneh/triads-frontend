@@ -17,10 +17,11 @@ describe('TriadValidationService', () => {
 
 	it('should validate a correct triad group', () => {
 		const validData: TriadGroupFormData = {
-			triad1: { keyword: 'TEST', cues: ['TEST1', 'TEST2', 'TEST3'] },
-			triad2: { keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
-			triad3: { keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'] },
-			triad4: { keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'] },
+			difficulty: 'EASY',
+			triad1: { keyword: 'TEST', fullPhrases: ['TEST1', 'TEST2', 'TEST3'] },
+			triad2: { keyword: 'SAMPLE', fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { keyword: 'DEMO', fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { keyword: 'FINAL', fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
 		}
 
 		const result = service.validateTriadGroup(validData)
@@ -30,10 +31,11 @@ describe('TriadValidationService', () => {
 
 	it('should fail validation when keyword is missing', () => {
 		const invalidData: TriadGroupFormData = {
-			triad1: { keyword: '', cues: ['TEST1', 'TEST2', 'TEST3'] },
-			triad2: { keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
-			triad3: { keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'] },
-			triad4: { keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'] },
+			difficulty: 'EASY',
+			triad1: { keyword: '', fullPhrases: ['TEST1', 'TEST2', 'TEST3'] },
+			triad2: { keyword: 'SAMPLE', fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { keyword: 'DEMO', fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { keyword: 'FINAL', fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
 		}
 
 		const result = service.validateTriadGroup(invalidData)
@@ -41,42 +43,45 @@ describe('TriadValidationService', () => {
 		expect(result.errors.some((e) => e.includes('Keyword is required'))).toBe(true)
 	})
 
-	it('should fail validation when cues count is not 3', () => {
+	it('should fail validation when full phrases count is not 3', () => {
 		const invalidData = {
-			triad1: { keyword: 'TEST', cues: ['TEST1', 'TEST2'] },
-			triad2: { keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
-			triad3: { keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'] },
-			triad4: { keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'] },
-		} as TriadGroupFormData
+			difficulty: 'EASY',
+			triad1: { keyword: 'TEST', fullPhrases: ['TEST1', 'TEST2'] },
+			triad2: { keyword: 'SAMPLE', fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { keyword: 'DEMO', fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { keyword: 'FINAL', fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
+		} as unknown as TriadGroupFormData
 
 		const result = service.validateTriadGroup(invalidData)
 		expect(result.valid).toBe(false)
-		expect(result.errors.some((e) => e.includes('Exactly 3 cues are required'))).toBe(true)
+		expect(result.errors.some((e) => e.includes('Exactly 3 full phrases are required'))).toBe(true)
 	})
 
-	it('should fail validation when keyword is not substring of cue', () => {
+	it('should fail validation when keyword is not substring of full phrase', () => {
 		const invalidData: TriadGroupFormData = {
-			triad1: { keyword: 'TEST', cues: ['WRONG1', 'TEST2', 'TEST3'] },
-			triad2: { keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
-			triad3: { keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'] },
-			triad4: { keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'DEMO'] },
+			difficulty: 'EASY',
+			triad1: { keyword: 'TEST', fullPhrases: ['WRONG1', 'TEST2', 'TEST3'] },
+			triad2: { keyword: 'SAMPLE', fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { keyword: 'DEMO', fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { keyword: 'FINAL', fullPhrases: ['TEST', 'SAMPLE', 'DEMO'] },
 		}
 
 		const result = service.validateTriadGroup(invalidData)
 		expect(result.valid).toBe(false)
-		expect(result.errors.some((e) => e.includes('must be a substring'))).toBe(true)
+		expect(result.errors.some((e) => e.includes('must be a substring of Word'))).toBe(true)
 	})
 
-	it('should fail validation when triad 4 cues do not match triads 1-3 keywords', () => {
+	it('should fail validation when triad 4 full phrases do not match triads 1-3 keywords', () => {
 		const invalidData: TriadGroupFormData = {
-			triad1: { keyword: 'TEST', cues: ['TEST1', 'TEST2', 'TEST3'] },
-			triad2: { keyword: 'SAMPLE', cues: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
-			triad3: { keyword: 'DEMO', cues: ['DEMO1', 'DEMO2', 'DEMO3'] },
-			triad4: { keyword: 'FINAL', cues: ['TEST', 'SAMPLE', 'WRONG'] },
+			difficulty: 'EASY',
+			triad1: { keyword: 'TEST', fullPhrases: ['TEST1', 'TEST2', 'TEST3'] },
+			triad2: { keyword: 'SAMPLE', fullPhrases: ['SAMPLE1', 'SAMPLE2', 'SAMPLE3'] },
+			triad3: { keyword: 'DEMO', fullPhrases: ['DEMO1', 'DEMO2', 'DEMO3'] },
+			triad4: { keyword: 'FINAL', fullPhrases: ['TEST', 'SAMPLE', 'WRONG'] },
 		}
 
 		const result = service.validateTriadGroup(invalidData)
 		expect(result.valid).toBe(false)
-		expect(result.errors.some((e) => e.includes('Triad 4') && e.includes('Missing'))).toBe(true)
+		expect(result.errors.some((e) => e.includes('Triad 4') && e.includes('substring'))).toBe(true)
 	})
 })

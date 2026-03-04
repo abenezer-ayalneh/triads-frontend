@@ -29,22 +29,6 @@ export class GamePlayLogic {
 		this.answerFieldValue$.next(null)
 	}
 
-	decideGameResult() {
-		if (
-			this.store.cues() !== null &&
-			this.store.cues()?.length === 0 &&
-			this.store.finalTriadCues() !== null &&
-			Array.isArray(this.store.finalTriadCues()) &&
-			this.store.finalTriadCues()?.length === 0
-		) {
-			return GamePlayState.WON
-		} else if (this.store.turns().filter((turn) => turn.available).length === 0) {
-			return GamePlayState.LOST
-		}
-
-		return this.store.gamePlayState()
-	}
-
 	handleGameWon() {
 		// Score updates
 		const score = this.calculateScore()

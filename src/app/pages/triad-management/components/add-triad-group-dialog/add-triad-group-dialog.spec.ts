@@ -32,10 +32,11 @@ describe('AddTriadGroupDialog', () => {
 	it('should validate and emit whenCreated on valid submit', () => {
 		// Fill form with valid data
 		component.formGroup.patchValue({
-			triad1: { keyword: 'TEST', cue1: 'TEST1', cue2: 'TEST2', cue3: 'TEST3' },
-			triad2: { keyword: 'SAMPLE', cue1: 'SAMPLE1', cue2: 'SAMPLE2', cue3: 'SAMPLE3' },
-			triad3: { keyword: 'DEMO', cue1: 'DEMO1', cue2: 'DEMO2', cue3: 'DEMO3' },
-			triad4: { keyword: 'FINAL', cue1: 'TEST', cue2: 'SAMPLE', cue3: 'DEMO' },
+			difficulty: 'EASY',
+			triad1: { keyword: 'TEST', fullPhrase1: 'TEST1', fullPhrase2: 'TEST2', fullPhrase3: 'TEST3' },
+			triad2: { keyword: 'SAMPLE', fullPhrase1: 'SAMPLE1', fullPhrase2: 'SAMPLE2', fullPhrase3: 'SAMPLE3' },
+			triad3: { keyword: 'DEMO', fullPhrase1: 'DEMO1', fullPhrase2: 'DEMO2', fullPhrase3: 'DEMO3' },
+			triad4: { keyword: 'FINAL', fullPhrase1: 'TEST', fullPhrase2: 'SAMPLE', fullPhrase3: 'DEMO' },
 		})
 
 		spyOn(component.whenCreated, 'emit')

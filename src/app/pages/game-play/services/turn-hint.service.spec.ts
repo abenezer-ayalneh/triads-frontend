@@ -73,7 +73,7 @@ describe('TurnHintService (turns & hints table)', () => {
 				const turns = createTurns(startT)
 				const hints = createHints(startH)
 
-				const result = service.applyOrganicFail(turns, hints)
+				const result = service.applyFailure(turns, hints)
 
 				expect(service.numberOfAvailableTurns(result.turns)).withContext(`Organic fail turns from (T=${startT}, H=${startH})`).toBe(endT)
 				expect(service.numberOfAvailableHints(result.hints)).withContext(`Organic fail hints from (T=${startT}, H=${startH})`).toBe(endH)
@@ -134,6 +134,110 @@ describe('TurnHintService (turns & hints table)', () => {
 				expect(result.endT).withContext(`Hint + Fail turns from (T=${startT}, H=${startH})`).toBe(endT)
 				expect(result.endH).withContext(`Hint + Fail hints from (T=${startT}, H=${startH})`).toBe(endH)
 				expect(result.gameEnds).withContext(`Hint + Fail gameEnds from (T=${startT}, H=${startH})`).toBe(gameEnds)
+			}
+		})
+
+		it('(1,0) Hint + Correct/Fail are not possible: useHintToken throws when no hints available', () => {
+			const turns = createTurns(1)
+			const hints = createHints(0)
+
+			expect(service.canUseHint(turns, hints)).toBe(false)
+			expect(() => service.useHintToken(hints)).toThrowError('No available hints to use')
+		})
+	})
+
+	describe('Full state transition table (screenshot spec)', () => {
+		const runHintFlow = (startT: number, startH: number, outcome: 'CORRECT' | 'FAIL') => {
+			const turns = createTurns(startT)
+			const hints = createHints(startH)
+			const hintsAfterUse = service.useHintToken(hints)
+			const { turns: finalTurns, hints: finalHints, gameEnds } = service.applyHintOutcome(turns, hintsAfterUse, outcome)
+			return {
+				endT: service.numberOfAvailableTurns(finalTurns),
+				endH: service.numberOfAvailableHints(finalHints),
+				gameEnds,
+			}
+		}
+
+		it('every (T,H) row: Organic Fail, Hint+Correct, Hint+Fail match the table', () => {
+			const table: {
+				startT: number
+				startH: number
+				hintAllowed: boolean
+				organicFail: { endT: number; endH: number; gameEnds: boolean }
+				hintCorrect: { endT: number; endH: number; gameEnds: boolean } | null
+				hintFail: { endT: number; endH: number; gameEnds: boolean } | null
+			}[] = [
+				{
+					startT: 3,
+					startH: 2,
+					hintAllowed: true,
+					organicFail: { endT: 2, endH: 2, gameEnds: false },
+					hintCorrect: { endT: 2, endH: 1, gameEnds: false },
+					hintFail: { endT: 2, endH: 1, gameEnds: false },
+				},
+				{
+					startT: 2,
+					startH: 2,
+					hintAllowed: true,
+					organicFail: { endT: 1, endH: 2, gameEnds: false },
+					hintCorrect: { endT: 1, endH: 1, gameEnds: false },
+					hintFail: { endT: 1, endH: 1, gameEnds: false },
+				},
+				{
+					startT: 2,
+					startH: 1,
+					hintAllowed: true,
+					organicFail: { endT: 1, endH: 1, gameEnds: false },
+					hintCorrect: { endT: 1, endH: 0, gameEnds: false },
+					hintFail: { endT: 1, endH: 0, gameEnds: false },
+				},
+				{
+					startT: 1,
+					startH: 2,
+					hintAllowed: true,
+					organicFail: { endT: 0, endH: 2, gameEnds: true },
+					hintCorrect: { endT: 1, endH: 1, gameEnds: false },
+					hintFail: { endT: 0, endH: 1, gameEnds: true },
+				},
+				{
+					startT: 1,
+					startH: 1,
+					hintAllowed: true,
+					organicFail: { endT: 0, endH: 1, gameEnds: true },
+					hintCorrect: { endT: 1, endH: 0, gameEnds: false },
+					hintFail: { endT: 0, endH: 0, gameEnds: true },
+				},
+				{ startT: 1, startH: 0, hintAllowed: false, organicFail: { endT: 0, endH: 0, gameEnds: true }, hintCorrect: null, hintFail: null },
+			]
+
+			for (const row of table) {
+				const turns = createTurns(row.startT)
+				const hints = createHints(row.startH)
+
+				expect(service.canUseHint(turns, hints)).withContext(`(T=${row.startT}, H=${row.startH}) hint allowed`).toBe(row.hintAllowed)
+
+				const organic = service.applyFailure(turns, hints)
+				expect(service.numberOfAvailableTurns(organic.turns))
+					.withContext(`(T=${row.startT}, H=${row.startH}) organic fail -> T`)
+					.toBe(row.organicFail.endT)
+				expect(service.numberOfAvailableHints(organic.hints))
+					.withContext(`(T=${row.startT}, H=${row.startH}) organic fail -> H`)
+					.toBe(row.organicFail.endH)
+				expect(organic.gameEnds).withContext(`(T=${row.startT}, H=${row.startH}) organic fail -> gameEnds`).toBe(row.organicFail.gameEnds)
+
+				if (row.hintCorrect !== null) {
+					const result = runHintFlow(row.startT, row.startH, 'CORRECT')
+					expect(result.endT).withContext(`(T=${row.startT}, H=${row.startH}) hint+correct -> T`).toBe(row.hintCorrect.endT)
+					expect(result.endH).withContext(`(T=${row.startT}, H=${row.startH}) hint+correct -> H`).toBe(row.hintCorrect.endH)
+					expect(result.gameEnds).withContext(`(T=${row.startT}, H=${row.startH}) hint+correct -> gameEnds`).toBe(row.hintCorrect.gameEnds)
+				}
+				if (row.hintFail !== null) {
+					const result = runHintFlow(row.startT, row.startH, 'FAIL')
+					expect(result.endT).withContext(`(T=${row.startT}, H=${row.startH}) hint+fail -> T`).toBe(row.hintFail.endT)
+					expect(result.endH).withContext(`(T=${row.startT}, H=${row.startH}) hint+fail -> H`).toBe(row.hintFail.endH)
+					expect(result.gameEnds).withContext(`(T=${row.startT}, H=${row.startH}) hint+fail -> gameEnds`).toBe(row.hintFail.gameEnds)
+				}
 			}
 		})
 	})
