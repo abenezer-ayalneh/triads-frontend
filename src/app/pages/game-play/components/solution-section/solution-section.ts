@@ -336,7 +336,10 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		this.subscriptions$.add(
 			this.gamePlayLogic.answerFieldFocus$.pipe(filter((focus) => focus)).subscribe({
 				next: () => {
-					this.answerFieldRef()?.nativeElement.focus()
+					setTimeout(() => {
+						const el = this.answerFieldRef()?.nativeElement
+						if (el) el.focus()
+					}, 0)
 				},
 			}),
 		)

@@ -153,7 +153,7 @@ export class GameResultDialog {
 		const appUrl = window.location.origin
 		const scoreGifPath = getScoreGifPath(gameScore)
 
-		const shareText = [READY_TO_PLAY_LABEL, appUrl].join('\n')
+		const shareText = [READY_TO_PLAY_LABEL].join('\n')
 
 		return {
 			appUrl,
