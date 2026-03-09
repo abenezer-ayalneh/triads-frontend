@@ -1,5 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
+import { Capacitor } from '@capacitor/core'
+import { Directory, Filesystem } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
@@ -7,8 +10,10 @@ import { getScoreGifPath, getScorePngPath } from '../../constants/share.constant
 import { GameResultDialog } from './game-result-dialog'
 
 interface GameResultDialogPrivateApi {
+	shareScoreImageNatively: (scorePngPath: string) => Promise<boolean>
 	copyScoreImageToClipboard: (scorePngPath: string) => Promise<boolean>
 	renderImageToPngBlob: (src: string) => Promise<Blob>
+	renderImageToBase64Png: (src: string) => Promise<string>
 }
 
 describe('GameResultDialog', () => {
@@ -73,23 +78,81 @@ describe('GameResultDialog', () => {
 		expect(renderedImage.getAttribute('alt')).toContain('score 10')
 	})
 
-	it('copies score PNG image to clipboard when share is clicked', async () => {
-		const privateApi = component as unknown as GameResultDialogPrivateApi
-		spyOn(privateApi, 'copyScoreImageToClipboard').and.resolveTo(true)
+	describe('on web', () => {
+		beforeEach(() => {
+			spyOn(Capacitor, 'isNativePlatform').and.returnValue(false)
+		})
 
-		await component.shareGameResult()
+		it('copies score PNG image to clipboard when share is clicked', async () => {
+			const privateApi = component as unknown as GameResultDialogPrivateApi
+			spyOn(privateApi, 'copyScoreImageToClipboard').and.resolveTo(true)
 
-		expect(privateApi.copyScoreImageToClipboard).toHaveBeenCalledWith(getScorePngPath(10))
-		expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Score image copied to clipboard!', 3000)
+			await component.shareGameResult()
+
+			expect(privateApi.copyScoreImageToClipboard).toHaveBeenCalledWith(getScorePngPath(10))
+			expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Score image copied to clipboard!', 3000)
+		})
+
+		it('shows failure snackbar when clipboard copy fails', async () => {
+			const privateApi = component as unknown as GameResultDialogPrivateApi
+			spyOn(privateApi, 'copyScoreImageToClipboard').and.resolveTo(false)
+
+			await component.shareGameResult()
+
+			expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Failed to copy score image. Please try again.', 5000)
+		})
 	})
 
-	it('shows failure snackbar when clipboard copy fails', async () => {
-		const privateApi = component as unknown as GameResultDialogPrivateApi
-		spyOn(privateApi, 'copyScoreImageToClipboard').and.resolveTo(false)
+	describe('on native', () => {
+		beforeEach(() => {
+			spyOn(Capacitor, 'isNativePlatform').and.returnValue(true)
+		})
 
-		await component.shareGameResult()
+		it('opens native share sheet when share is clicked', async () => {
+			const privateApi = component as unknown as GameResultDialogPrivateApi
+			spyOn(privateApi, 'shareScoreImageNatively').and.resolveTo(true)
 
-		expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Failed to copy score image. Please try again.', 5000)
+			await component.shareGameResult()
+
+			expect(privateApi.shareScoreImageNatively).toHaveBeenCalledWith(getScorePngPath(10))
+			expect(snackbarService.showSnackbar).not.toHaveBeenCalled()
+		})
+
+		it('shows failure snackbar when native share fails', async () => {
+			const privateApi = component as unknown as GameResultDialogPrivateApi
+			spyOn(privateApi, 'shareScoreImageNatively').and.resolveTo(false)
+
+			await component.shareGameResult()
+
+			expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Failed to share score image. Please try again.', 5000)
+		})
+
+		it('writes PNG to cache and opens share sheet via Capacitor plugins', async () => {
+			const privateApi = component as unknown as GameResultDialogPrivateApi
+			const base64Data = 'aGVsbG8='
+			spyOn(privateApi, 'renderImageToBase64Png').and.resolveTo(base64Data)
+			spyOn(Filesystem, 'writeFile').and.resolveTo({ uri: '' })
+			spyOn(Filesystem, 'getUri').and.resolveTo({ uri: 'file:///cache/triads-score.png' })
+			spyOn(Share, 'share').and.resolveTo({ activityType: '' })
+
+			const result = await privateApi.shareScoreImageNatively('/images/score-pngs/score-10.png')
+
+			expect(privateApi.renderImageToBase64Png).toHaveBeenCalledWith('/images/score-pngs/score-10.png')
+			expect(Filesystem.writeFile).toHaveBeenCalledWith(
+				jasmine.objectContaining({ path: 'triads-score.png', data: base64Data, directory: Directory.Cache }),
+			)
+			expect(Share.share).toHaveBeenCalledWith(jasmine.objectContaining({ files: ['file:///cache/triads-score.png'] }))
+			expect(result).toBe(true)
+		})
+
+		it('returns false when native share throws', async () => {
+			const privateApi = component as unknown as GameResultDialogPrivateApi
+			spyOn(privateApi, 'renderImageToBase64Png').and.rejectWith(new Error('load failed'))
+
+			const result = await privateApi.shareScoreImageNatively('/images/score-pngs/score-10.png')
+
+			expect(result).toBe(false)
+		})
 	})
 
 	it('copies PNG image to clipboard via canvas and navigator.clipboard.write', async () => {

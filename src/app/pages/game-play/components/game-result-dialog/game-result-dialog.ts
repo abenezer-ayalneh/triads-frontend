@@ -1,5 +1,8 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core'
 import { Router } from '@angular/router'
+import { Capacitor } from '@capacitor/core'
+import { Directory, Filesystem } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
@@ -86,11 +89,46 @@ export class GameResultDialog {
 
 	async shareGameResult() {
 		const scorePngPath = this.scorePngPath()
-		const copied = await this.copyScoreImageToClipboard(scorePngPath)
-		if (copied) {
-			this.snackbarService.showSnackbar('Score image copied to clipboard!', 3000)
+
+		if (Capacitor.isNativePlatform()) {
+			const shared = await this.shareScoreImageNatively(scorePngPath)
+			if (!shared) {
+				this.snackbarService.showSnackbar('Failed to share score image. Please try again.', 5000)
+			}
 		} else {
-			this.snackbarService.showSnackbar('Failed to copy score image. Please try again.', 5000)
+			const copied = await this.copyScoreImageToClipboard(scorePngPath)
+			if (copied) {
+				this.snackbarService.showSnackbar('Score image copied to clipboard!', 3000)
+			} else {
+				this.snackbarService.showSnackbar('Failed to copy score image. Please try again.', 5000)
+			}
+		}
+	}
+
+	private async shareScoreImageNatively(scorePngPath: string): Promise<boolean> {
+		try {
+			const base64Png = await this.renderImageToBase64Png(scorePngPath)
+
+			await Filesystem.writeFile({
+				path: 'triads-score.png',
+				data: base64Png,
+				directory: Directory.Cache,
+			})
+
+			const { uri } = await Filesystem.getUri({
+				path: 'triads-score.png',
+				directory: Directory.Cache,
+			})
+
+			await Share.share({
+				files: [uri],
+				dialogTitle: 'Share your score',
+			})
+
+			return true
+		} catch (error) {
+			console.warn('Failed to share score image natively:', error)
+			return false
 		}
 	}
 
@@ -109,7 +147,25 @@ export class GameResultDialog {
 		}
 	}
 
-	private renderImageToPngBlob(src: string): Promise<Blob> {
+	private async renderImageToPngBlob(src: string): Promise<Blob> {
+		const canvas = await this.renderImageToCanvas(src)
+		return new Promise((resolve, reject) => {
+			canvas.toBlob((blob) => {
+				if (blob) {
+					resolve(blob)
+				} else {
+					reject(new Error('canvas.toBlob returned null'))
+				}
+			}, 'image/png')
+		})
+	}
+
+	private async renderImageToBase64Png(src: string): Promise<string> {
+		const canvas = await this.renderImageToCanvas(src)
+		return canvas.toDataURL('image/png').split(',')[1]
+	}
+
+	private renderImageToCanvas(src: string): Promise<HTMLCanvasElement> {
 		return new Promise((resolve, reject) => {
 			const img = new Image()
 
@@ -125,13 +181,7 @@ export class GameResultDialog {
 				}
 
 				ctx.drawImage(img, 0, 0)
-				canvas.toBlob((blob) => {
-					if (blob) {
-						resolve(blob)
-					} else {
-						reject(new Error('canvas.toBlob returned null'))
-					}
-				}, 'image/png')
+				resolve(canvas)
 			}
 
 			img.onerror = () => reject(new Error(`Failed to load image: ${src}`))
