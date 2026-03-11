@@ -338,7 +338,14 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 				next: () => {
 					setTimeout(() => {
 						const el = this.answerFieldRef()?.nativeElement
-						if (el) el.focus()
+
+						if (el) {
+							// Ensure the control and DOM element are enabled before focusing
+							this.answerFormControl.enable()
+							el.disabled = false
+
+							el.focus()
+						}
 					}, 0)
 				},
 			}),

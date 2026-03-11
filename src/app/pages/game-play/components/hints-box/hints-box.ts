@@ -128,6 +128,10 @@ export class HintsBox implements OnDestroy {
 								// If keyword length hint already exists, we'll fill the first box in InputSet
 								// Otherwise, set it for the regular input field
 								if (this.store.keywordLengthHint() === null) {
+									// Ensure the answer field is enabled before focusing it
+									this.store.setIsCheckingTriad(false)
+									this.store.setIsCheckingAnswer(false)
+
 									this.gamePlayLogic.answerFieldValue$.next(triadsForHint.withValue)
 									// Set the flag to focus the answer field when it appears
 									this.gamePlayLogic.answerFieldFocus$.next(true)
