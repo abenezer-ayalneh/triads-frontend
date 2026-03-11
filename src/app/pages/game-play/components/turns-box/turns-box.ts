@@ -1,5 +1,5 @@
 import { NgClass } from '@angular/common'
-import { Component, inject } from '@angular/core'
+import { Component, computed, inject } from '@angular/core'
 
 import { GlobalStore } from '../../../../state/global.store'
 
@@ -11,4 +11,25 @@ import { GlobalStore } from '../../../../state/global.store'
 })
 export class TurnsBox {
 	readonly store = inject(GlobalStore)
+
+	readonly isLastTurnAndNoHints = computed(() => {
+		const turns = this.store.turns()
+		const hints = this.store.hints()
+
+		const availableTurns = turns.filter((turn) => turn.available).length
+		const availableHints = hints.filter((hint) => hint.available).length
+
+		return availableTurns === 1 && availableHints === 0
+	})
+
+	readonly lastAvailableTurnId = computed(() => {
+		const turns = this.store.turns()
+		const availableTurns = turns.filter((turn) => turn.available)
+
+		if (availableTurns.length === 0) {
+			return null
+		}
+
+		return availableTurns[availableTurns.length - 1]!.id
+	})
 }
