@@ -8,11 +8,12 @@ const config: CapacitorConfig = {
 	// server: {
 	// 	androidScheme: 'https',
 	// },
-	// plugins: {
-	// 	App: {
-	// 		launchUrl: 'https://triads.gametrix.org',
-	// 	},
-	// },
+	plugins: {
+		Keyboard: {
+			resize: 'body',
+			resizeOnFullScreen: true,
+		},
+	},
 }
 
 export default config
