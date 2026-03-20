@@ -19,6 +19,10 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 
 	private hasAttemptedFocus = false
 
+	private visualViewportCleanup: (() => void) | undefined
+
+	private ionScrollSlackCleanup: (() => void) | undefined
+
 	quantity = input.required<number>()
 
 	firstLetter = input<string | null>(null)
@@ -103,6 +107,25 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 		}
 		// Try to focus immediately, but if component is hidden, AfterViewChecked will handle it
 		this.attemptFocus()
+
+		const vv = typeof window !== 'undefined' ? window.visualViewport : undefined
+		if (vv) {
+			const onVvChange = () => {
+				if (vv.height >= window.innerHeight - 16) {
+					this.clearIonScrollSlack()
+				}
+				const active = document.activeElement
+				if (active instanceof HTMLInputElement && this.inputRefs().some((r) => r.nativeElement === active)) {
+					this.scrollLetterInputIntoView(active)
+				}
+			}
+			vv.addEventListener('resize', onVvChange)
+			vv.addEventListener('scroll', onVvChange)
+			this.visualViewportCleanup = () => {
+				vv.removeEventListener('resize', onVvChange)
+				vv.removeEventListener('scroll', onVvChange)
+			}
+		}
 	}
 
 	ngAfterViewChecked(): void {
@@ -117,6 +140,8 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 		// CRITICAL: Clear all pending timeouts
 		this.timeoutIds.forEach((id) => clearTimeout(id))
 		this.timeoutIds = []
+		this.clearIonScrollSlack()
+		this.visualViewportCleanup?.()
 	}
 
 	/**
@@ -156,7 +181,13 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	 * @return {void} This method does not return a value.
 	 */
 	onFocus(index: number): void {
-		this.inputRefs()[index].nativeElement.select()
+		const el = this.inputRefs()[index].nativeElement
+		el.select()
+		requestAnimationFrame(() => {
+			this.scrollLetterInputIntoView(el)
+			const t = setTimeout(() => this.scrollLetterInputIntoView(el), 400)
+			this.timeoutIds.push(t)
+		})
 	}
 
 	submitAnswer() {
@@ -261,5 +292,117 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 		return (
 			/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768 && 'ontouchstart' in window)
 		)
+	}
+
+	private scrollLetterInputIntoView(el: HTMLInputElement): void {
+		el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' })
+		this.nudgeLetterInputIntoVisualViewport(el)
+		if (this.isMobileDevice()) {
+			for (const ms of [80, 220, 480]) {
+				const id = setTimeout(() => void this.runNudgeLoop(el), ms)
+				this.timeoutIds.push(id)
+			}
+		}
+	}
+
+	private nudgeLetterInputIntoVisualViewport(el: HTMLInputElement): void {
+		void this.runNudgeLoop(el)
+		requestAnimationFrame(() => void this.runNudgeLoop(el))
+	}
+
+	private async runNudgeLoop(el: HTMLInputElement): Promise<void> {
+		const margin = 24
+		for (let attempt = 0; attempt < 5; attempt++) {
+			const vv = window.visualViewport
+			if (!vv) {
+				return
+			}
+
+			await this.ensureIonContentSlackIfClipped(el, vv, margin)
+			await this.afterReflow()
+			const rect = el.getBoundingClientRect()
+			const visibleTop = vv.offsetTop + margin
+			const visibleBottom = vv.offsetTop + vv.height - margin
+			let dy = 0
+			if (rect.bottom > visibleBottom) {
+				dy = rect.bottom - visibleBottom
+			} else if (rect.top < visibleTop) {
+				dy = rect.top - visibleTop
+			}
+			if (Math.abs(dy) < 3) {
+				return
+			}
+			await this.applyScrollDeltaAsync(dy)
+			await this.afterReflow()
+		}
+	}
+
+	private afterReflow(): Promise<void> {
+		return new Promise((resolve) => {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => resolve())
+			})
+		})
+	}
+
+	private async ensureIonContentSlackIfClipped(el: HTMLInputElement, vv: VisualViewport, margin: number): Promise<void> {
+		const rect = el.getBoundingClientRect()
+		const visibleBottom = vv.offsetTop + vv.height - margin
+		const hiddenBelow = rect.bottom - visibleBottom
+		if (hiddenBelow <= 4) {
+			return
+		}
+
+		const ion = document.querySelector('ion-content')
+		if (!ion || !('getScrollElement' in ion)) {
+			return
+		}
+
+		const scrollEl = await (ion as { getScrollElement: () => Promise<HTMLElement> }).getScrollElement()
+
+		const extra = Math.ceil(hiddenBelow + 120)
+		const prev = scrollEl.style.paddingBottom
+		const prevNum = prev ? parseFloat(prev) : 0
+		if (prevNum >= extra) {
+			return
+		}
+
+		scrollEl.style.paddingBottom = `${extra}px`
+		this.ionScrollSlackCleanup = () => {
+			scrollEl.style.paddingBottom = ''
+		}
+		void scrollEl.offsetHeight
+		el.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'instant' })
+	}
+
+	private clearIonScrollSlack(): void {
+		this.ionScrollSlackCleanup?.()
+		this.ionScrollSlackCleanup = undefined
+	}
+
+	private async applyScrollDeltaAsync(dy: number): Promise<void> {
+		const ion = document.querySelector('ion-content')
+		if (ion && 'getScrollElement' in ion) {
+			const scrollEl = await (ion as { getScrollElement: () => Promise<HTMLElement> }).getScrollElement()
+			const maxScrollTop = Math.max(0, scrollEl.scrollHeight - scrollEl.clientHeight)
+			const nextTop = Math.min(maxScrollTop, Math.max(0, scrollEl.scrollTop + dy))
+			const before = scrollEl.scrollTop
+			scrollEl.scrollTop = nextTop
+			if (dy > 8 && Math.abs(scrollEl.scrollTop - before) < 2 && maxScrollTop < dy * 0.25) {
+				window.scrollTo({ top: window.scrollY + dy, behavior: 'instant' })
+			}
+			return
+		}
+
+		const root = document.scrollingElement
+		if (root) {
+			const maxScrollTop = Math.max(0, root.scrollHeight - root.clientHeight)
+			const nextTop = Math.min(maxScrollTop, Math.max(0, root.scrollTop + dy))
+			const before = root.scrollTop
+			root.scrollTop = nextTop
+			if (dy > 8 && Math.abs(root.scrollTop - before) < 2) {
+				window.scrollTo({ top: window.scrollY + dy, behavior: 'instant' })
+			}
+		}
 	}
 }

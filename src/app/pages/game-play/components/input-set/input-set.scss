@@ -1,0 +1,11 @@
+:host {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+/* iOS Safari: reserve space when scrolling the focused box into view above the keyboard */
+:host input {
+	scroll-margin-bottom: min(42dvh, 24rem);
+	scroll-margin-top: 1.5rem;
+}
