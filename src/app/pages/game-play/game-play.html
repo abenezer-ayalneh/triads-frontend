@@ -2,97 +2,123 @@
 	<!-- Decorative background bubbles -->
 	<app-background-bubbles />
 
-	<!--Ballons Section-->
-	<div class="w-full flex-1 min-h-0 py-1 px-2 md:px-4 lg:px-6 overflow-hidden">
-		@if (cueFetchingState() === RequestState.LOADING || store.isFetchingFinalTriadCues()) {
-			<div class="w-full h-full flex justify-center items-center">
-				<span class="w-40 h-40 landscape:max-lg:w-20 landscape:max-lg:h-20 md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
-					<ng-lottie [options]="loadingAnimationOptions" />
-				</span>
-			</div>
-		} @else if (cueFetchingState() === RequestState.READY) {
-			<app-bubble-container [cues]="store.cues()" />
-		} @else if (cueFetchingState() === RequestState.EMPTY || cueFetchingState() === RequestState.ERROR) {
-			<div class="w-full h-full flex flex-col justify-center items-center gap-4 landscape:max-lg:gap-2 px-4 landscape:max-lg:px-2 overflow-y-auto">
-				<div
-					class="bg-base-100/90 backdrop-blur-sm rounded-2xl shadow-lg border border-base-300 p-4 landscape:max-lg:p-3 md:p-8 max-w-md landscape:max-lg:max-w-sm w-full text-center landscape:max-lg:max-h-[90vh] overflow-y-auto">
-					<div class="mb-3 landscape:max-lg:mb-2">
-						<svg
-							class="w-12 h-12 landscape:max-lg:w-10 landscape:max-lg:h-10 md:w-20 md:h-20 mx-auto text-warning"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-						</svg>
-					</div>
-					<h2 class="text-lg landscape:max-lg:text-base md:text-2xl font-bold text-base-content mb-2 landscape:max-lg:mb-1">No Triads Available</h2>
-					<p class="text-sm landscape:max-lg:text-xs md:text-lg text-base-content/80 mb-3 landscape:max-lg:mb-2">{{ noTriadsMessage() }}</p>
-					<div class="mb-4 landscape:max-lg:mb-3">
-						<label
-							for="error-difficulty-dropdown"
-							class="block text-xs landscape:max-lg:text-[10px] md:text-sm font-medium text-base-content mb-1 landscape:max-lg:mb-0.5"
-							>Select Difficulty</label
-						>
-						<select
-							id="error-difficulty-dropdown"
-							[ngModel]="selectedDifficulty()"
-							(ngModelChange)="onDifficultyChange($event)"
-							class="w-full px-3 landscape:max-lg:px-2 py-1.5 landscape:max-lg:py-1 md:px-4 md:py-2 text-sm landscape:max-lg:text-xs md:text-base text-base-content bg-base-200 border border-base-300 rounded-lg hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
-							<option [value]="Difficulty.EASY">Soft</option>
-							<option [value]="Difficulty.MEDIUM">Firm</option>
-							<option [value]="Difficulty.HARD">Hard</option>
-							<option [value]="Difficulty.RANDOM">Mixed (complete)</option>
-						</select>
-					</div>
-					<div class="flex flex-col sm:flex-row gap-2 landscape:max-lg:gap-1.5 md:gap-3 justify-center">
-						<button
-							(click)="retryGame()"
-							class="px-4 landscape:max-lg:px-3 py-2 landscape:max-lg:py-1.5 md:px-6 md:py-3 bg-primary text-primary-content rounded-lg font-semibold text-sm landscape:max-lg:text-xs md:text-base hover:opacity-80 transition-opacity cursor-pointer">
-							Try Again
-						</button>
-						<button
-							(click)="goToHome()"
-							class="px-4 landscape:max-lg:px-3 py-2 landscape:max-lg:py-1.5 md:px-6 md:py-3 bg-base-200 text-base-content rounded-lg font-semibold text-sm landscape:max-lg:text-xs md:text-base hover:bg-base-300 transition-colors cursor-pointer">
-							Go to Home
-						</button>
-					</div>
+	@if (showMainGameShell()) {
+		<!--Ballons Section-->
+		<div class="w-full flex-1 min-h-0 py-1 px-2 md:px-4 lg:px-6 overflow-hidden">
+			@if (cueFetchingState() === RequestState.LOADING || store.isFetchingFinalTriadCues()) {
+				<div class="w-full h-full flex justify-center items-center">
+					<span
+						class="w-40 h-40 landscape:max-lg:w-20 landscape:max-lg:h-20 md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
+						<ng-lottie [options]="loadingAnimationOptions" />
+					</span>
 				</div>
-			</div>
-		}
-	</div>
-
-	<!--Solution Input Section-->
-	<div class="w-full h-11 md:h-14 landscape:max-lg:h-10 flex justify-center items-center">
-		@if (cueFetchingState() === RequestState.READY) {
-			<div class="w-[80%] landscape:max-lg:w-[60%] md:w-[60%] landscape:lg:w-[40%] h-full">
-				<app-solution-section #solutionSection (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
-			</div>
-		}
-	</div>
-
-	<!--Turn & Hint Section-->
-	<div class="w-full h-20 landscape:max-lg:h-20 md:h-28 lg:h-32 flex justify-between items-center px-4 md:px-6 lg:px-8 py-1">
-		@if (cueFetchingState() === RequestState.READY) {
-			<!--Turn Section-->
-			<app-turns-box />
-
-			<!--Solved Triads Section-->
-			<div
-				#solvedArea
-				class="h-full grid grid-cols-2 landscape:max-lg:grid-cols-4 grid-rows-2 landscape:max-lg:grid-rows-1 place-items-center md:flex md:justify-center md:items-center gap-x-2 gap-y-1">
-				@for (solvedTriad of store.solvedTriads(); track solvedTriad.id) {
-					<app-solved-triad id="solved-{{ solvedTriad.id }}" [solvedTriad]="solvedTriad" />
+			} @else if (cueFetchingState() === RequestState.READY) {
+				<app-bubble-container [cues]="store.cues()" />
+			} @else if (cueFetchingState() === RequestState.EMPTY || cueFetchingState() === RequestState.ERROR) {
+				@if (store.gameMode() === 'daily' && store.dailyNoScheduleMessage()) {
+					<div
+						class="w-full h-full flex flex-col justify-center items-center gap-4 landscape:max-lg:gap-2 px-4 landscape:max-lg:px-2 overflow-y-auto">
+						<div
+							class="bg-base-100/90 backdrop-blur-sm rounded-2xl shadow-lg border border-base-300 p-4 landscape:max-lg:p-3 md:p-8 max-w-md landscape:max-lg:max-w-sm w-full text-center landscape:max-lg:max-h-[90vh] overflow-y-auto">
+							<h2 class="text-lg landscape:max-lg:text-base md:text-2xl font-bold text-base-content mb-2 landscape:max-lg:mb-1">
+								No puzzle today
+							</h2>
+							<p class="text-sm landscape:max-lg:text-xs md:text-lg text-base-content/80 mb-3 landscape:max-lg:mb-2">
+								{{ store.dailyNoScheduleMessage() }}
+							</p>
+							@if (store.dailyNextPuzzleAt(); as nextAt) {
+								<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-content/70">
+									Next puzzle opens (Eastern): {{ nextAt | date: 'medium' }}
+								</p>
+							}
+						</div>
+					</div>
+				} @else {
+					<div
+						class="w-full h-full flex flex-col justify-center items-center gap-4 landscape:max-lg:gap-2 px-4 landscape:max-lg:px-2 overflow-y-auto">
+						<div
+							class="bg-base-100/90 backdrop-blur-sm rounded-2xl shadow-lg border border-base-300 p-4 landscape:max-lg:p-3 md:p-8 max-w-md landscape:max-lg:max-w-sm w-full text-center landscape:max-lg:max-h-[90vh] overflow-y-auto">
+							<div class="mb-3 landscape:max-lg:mb-2">
+								<svg
+									class="w-12 h-12 landscape:max-lg:w-10 landscape:max-lg:h-10 md:w-20 md:h-20 mx-auto text-warning"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+								</svg>
+							</div>
+							<h2 class="text-lg landscape:max-lg:text-base md:text-2xl font-bold text-base-content mb-2 landscape:max-lg:mb-1">
+								No Triads Available
+							</h2>
+							<p class="text-sm landscape:max-lg:text-xs md:text-lg text-base-content/80 mb-3 landscape:max-lg:mb-2">{{ noTriadsMessage() }}</p>
+							<div class="mb-4 landscape:max-lg:mb-3">
+								<label
+									for="error-difficulty-dropdown"
+									class="block text-xs landscape:max-lg:text-[10px] md:text-sm font-medium text-base-content mb-1 landscape:max-lg:mb-0.5"
+									>Select Difficulty</label
+								>
+								<select
+									id="error-difficulty-dropdown"
+									[ngModel]="selectedDifficulty()"
+									(ngModelChange)="onDifficultyChange($event)"
+									class="w-full px-3 landscape:max-lg:px-2 py-1.5 landscape:max-lg:py-1 md:px-4 md:py-2 text-sm landscape:max-lg:text-xs md:text-base text-base-content bg-base-200 border border-base-300 rounded-lg hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+									<option [value]="Difficulty.EASY">Soft</option>
+									<option [value]="Difficulty.MEDIUM">Firm</option>
+									<option [value]="Difficulty.HARD">Hard</option>
+									<option [value]="Difficulty.RANDOM">Mixed (complete)</option>
+								</select>
+							</div>
+							<div class="flex flex-col sm:flex-row gap-2 landscape:max-lg:gap-1.5 md:gap-3 justify-center">
+								<button
+									(click)="retryGame()"
+									class="px-4 landscape:max-lg:px-3 py-2 landscape:max-lg:py-1.5 md:px-6 md:py-3 bg-primary text-primary-content rounded-lg font-semibold text-sm landscape:max-lg:text-xs md:text-base hover:opacity-80 transition-opacity cursor-pointer">
+									Try Again
+								</button>
+								<button
+									(click)="goToHome()"
+									class="px-4 landscape:max-lg:px-3 py-2 landscape:max-lg:py-1.5 md:px-6 md:py-3 bg-base-200 text-base-content rounded-lg font-semibold text-sm landscape:max-lg:text-xs md:text-base hover:bg-base-300 transition-colors cursor-pointer">
+									Go to Home
+								</button>
+							</div>
+						</div>
+					</div>
 				}
-			</div>
+			}
+		</div>
 
-			<!--Hint Section-->
-			<app-hints-box />
-		}
-	</div>
+		<!--Solution Input Section-->
+		<div class="w-full h-11 md:h-14 landscape:max-lg:h-10 flex justify-center items-center">
+			@if (cueFetchingState() === RequestState.READY) {
+				<div class="w-[80%] landscape:max-lg:w-[60%] md:w-[60%] landscape:lg:w-[40%] h-full">
+					<app-solution-section #solutionSection (whenMovingCueToSolutionBox)="moveToSolvedArea($event)" />
+				</div>
+			}
+		</div>
+
+		<!--Turn & Hint Section-->
+		<div class="w-full h-20 landscape:max-lg:h-20 md:h-28 lg:h-32 flex justify-between items-center px-4 md:px-6 lg:px-8 py-1">
+			@if (cueFetchingState() === RequestState.READY) {
+				<!--Turn Section-->
+				<app-turns-box />
+
+				<!--Solved Triads Section-->
+				<div
+					#solvedArea
+					class="h-full grid grid-cols-2 landscape:max-lg:grid-cols-4 grid-rows-2 landscape:max-lg:grid-rows-1 place-items-center md:flex md:justify-center md:items-center gap-x-2 gap-y-1">
+					@for (solvedTriad of store.solvedTriads(); track solvedTriad.id) {
+						<app-solved-triad id="solved-{{ solvedTriad.id }}" [solvedTriad]="solvedTriad" />
+					}
+				</div>
+
+				<!--Hint Section-->
+				<app-hints-box />
+			}
+		</div>
+	}
 
 	<!--Popup Section-->
 	@switch (store.gamePlayState()) {
@@ -109,27 +135,27 @@
 		}
 		@case (GamePlayState.WON) {
 			<app-game-result-dialog [result]="'WON'" (restartRequested)="restartGame()">
-				<!--				<h2 class="text-success text-4xl font-bold">You Won!</h2>-->
 				<p class="text-base-100 text-lg">{{ answerDialogMessage() }}</p>
 			</app-game-result-dialog>
 		}
 		@case (GamePlayState.LOST) {
 			<app-game-result-dialog [result]="'LOST'" (restartRequested)="restartGame()">
-				<!--				<h2 class="text-error text-4xl font-bold">Nice Try!</h2>-->
 				<p class="text-base-100 text-lg">{{ answerDialogMessage() }}</p>
 			</app-game-result-dialog>
 		}
 	}
 
 	<!--Game Intro Dialog-->
-	@if (!store.introShownPerSession()) {
+	@if (!store.introShownPerSession() && store.gameMode() !== 'daily') {
 		<app-intro />
 	}
 
 	<!--Welcome Dialog-->
-	<ion-modal [isOpen]="showWelcomeDialog()" (didDismiss)="onWelcomeDialogClosed()">
-		<ng-template>
-			<app-welcome-dialog [totalPoints]="welcomeDialogTotalPoints()" (whenClosed)="onWelcomeDialogClosed()" />
-		</ng-template>
-	</ion-modal>
+	@if (store.gameMode() !== 'daily') {
+		<ion-modal [isOpen]="showWelcomeDialog()" (didDismiss)="onWelcomeDialogClosed()">
+			<ng-template>
+				<app-welcome-dialog [totalPoints]="welcomeDialogTotalPoints()" (whenClosed)="onWelcomeDialogClosed()" />
+			</ng-template>
+		</ion-modal>
+	}
 </div>

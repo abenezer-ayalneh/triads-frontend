@@ -1,4 +1,4 @@
-<ion-header class="ion-no-border" [class.overlay-visible]="overlayVisible()">
+<ion-header class="ion-no-border" [class.overlay-visible]="overlayVisible()" [class.daily-toolbar]="store.gameMode() === 'daily'">
 	<ion-toolbar>
 		<app-header />
 	</ion-toolbar>

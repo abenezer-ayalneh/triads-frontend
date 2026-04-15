@@ -49,80 +49,93 @@
 	</ion-modal>
 
 	<div class="w-fit flex justify-end items-center gap-4">
-		<div class="relative">
-			<button
-				id="username-dropdown-trigger"
-				(click)="toggleUsernameDropdown($event)"
-				class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
-				<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
-			</button>
-			<ion-popover
-				trigger="username-dropdown-trigger"
-				triggerAction="click"
-				side="bottom"
-				alignment="end"
-				[showBackdrop]="false"
-				(willPresent)="onUsernamePopoverWillPresent()"
-				(didDismiss)="onUsernamePopoverDidDismiss()">
-				<ng-template>
-					<div
-						class="w-full bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 landscape:max-md:p-2 md:p-3 flex flex-col gap-1 landscape:max-md:gap-1 md:gap-1.5">
-						<button
-							type="button"
-							(click)="openStats()"
-							class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-							Check your stats
-						</button>
-						<button
-							type="button"
-							(click)="openNewIdentity()"
-							class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-							New identity
-						</button>
-						<div class="username-popover__divider"></div>
-						<div class="username-popover__section">
-							<label
-								for="difficulty-dropdown"
-								class="block text-[10px] landscape:max-md:text-[10px] md:text-xs text-base-content/70 mb-0.5 landscape:max-md:mb-0.5 md:mb-1"
-								>Select Difficulty</label
-							>
-							<select
-								id="difficulty-dropdown"
-								[ngModel]="selectedDifficulty()"
-								(ngModelChange)="onDifficultyChange($event)"
-								class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content bg-base-200 border border-base-300 rounded-md hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
-								<option [value]="Difficulty.EASY">Soft</option>
-								<option [value]="Difficulty.MEDIUM">Firm</option>
-								<option [value]="Difficulty.HARD">Hard</option>
-								<option [value]="Difficulty.RANDOM">Mixed (complete)</option>
-							</select>
-						</div>
-						@if (showAdminOption()) {
+		@if (store.gameMode() !== 'daily') {
+			<div class="relative">
+				<button
+					id="username-dropdown-trigger"
+					(click)="toggleUsernameDropdown($event)"
+					class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
+					<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
+				</button>
+				<ion-popover
+					trigger="username-dropdown-trigger"
+					triggerAction="click"
+					side="bottom"
+					alignment="end"
+					[showBackdrop]="false"
+					(willPresent)="onUsernamePopoverWillPresent()"
+					(didDismiss)="onUsernamePopoverDidDismiss()">
+					<ng-template>
+						<div
+							class="w-full bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 landscape:max-md:p-2 md:p-3 flex flex-col gap-1 landscape:max-md:gap-1 md:gap-1.5">
+							<button
+								type="button"
+								(click)="openStats()"
+								class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+								Check your stats
+							</button>
+							<button
+								type="button"
+								(click)="openNewIdentity()"
+								class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+								New identity
+							</button>
 							<div class="username-popover__divider"></div>
-							@if (isAdminAuthenticated()) {
-								<button
-									type="button"
-									(click)="navigateToManageTriads()"
-									class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-									Manage Triads
-								</button>
-							} @else {
-								<button
-									type="button"
-									(click)="openAdminPasswordDialog()"
-									class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-									Admin
-								</button>
+							<div class="username-popover__section">
+								<label
+									for="difficulty-dropdown"
+									class="block text-[10px] landscape:max-md:text-[10px] md:text-xs text-base-content/70 mb-0.5 landscape:max-md:mb-0.5 md:mb-1"
+									>Select Difficulty</label
+								>
+								<select
+									id="difficulty-dropdown"
+									[ngModel]="selectedDifficulty()"
+									(ngModelChange)="onDifficultyChange($event)"
+									class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content bg-base-200 border border-base-300 rounded-md hover:bg-base-300 focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer">
+									<option [value]="Difficulty.EASY">Soft</option>
+									<option [value]="Difficulty.MEDIUM">Firm</option>
+									<option [value]="Difficulty.HARD">Hard</option>
+									<option [value]="Difficulty.RANDOM">Mixed (complete)</option>
+								</select>
+							</div>
+							@if (showAdminOption()) {
+								<div class="username-popover__divider"></div>
+								@if (isAdminAuthenticated()) {
+									<button
+										type="button"
+										(click)="navigateToManageTriads()"
+										class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+										Manage Triads
+									</button>
+								} @else {
+									<button
+										type="button"
+										(click)="openAdminPasswordDialog()"
+										class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+										Admin
+									</button>
+								}
 							}
-						}
-					</div>
-				</ng-template>
-			</ion-popover>
-		</div>
-		<button
-			(click)="showHowToPlay()"
-			class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
-			<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">?</p>
-		</button>
+						</div>
+					</ng-template>
+				</ion-popover>
+			</div>
+		}
+		@if (store.gameMode() === 'daily') {
+			<button
+				type="button"
+				(click)="onDirectionsClick($event)"
+				title="How to play. Hold ⌘ (Mac) or Ctrl (Windows) and click for admin."
+				class="triad-gradient flex h-5 w-fit max-w-[7.5rem] cursor-pointer items-center justify-center rounded-full px-2 shadow-sm md:h-7 md:max-w-none md:px-3 xl:h-8 xl:px-4">
+				<span class="text-center text-[10px] font-semibold leading-tight text-primary-content md:text-xs xl:text-sm">Directions</span>
+			</button>
+		} @else {
+			<button
+				type="button"
+				(click)="showHowToPlay()"
+				class="flex h-5 w-fit cursor-pointer items-center justify-center rounded-full px-2 shadow-sm triad-gradient md:h-7 md:px-4 xl:h-8 xl:px-6">
+				<span class="text-xs font-semibold text-primary-content md:text-base xl:text-lg">?</span>
+			</button>
+		}
 	</div>
 </header>

@@ -42,6 +42,10 @@ const initialState: GlobalState = {
 	triadGroupId: null,
 	unsolvedTriads: null,
 	introShownPerSession: false,
+	gameMode: 'classic',
+	dailyNextPuzzleAt: null,
+	dailyStandaloneResult: false,
+	dailyNoScheduleMessage: null,
 }
 
 export const GlobalStore = signalStore(
@@ -172,10 +176,25 @@ export const GlobalStore = signalStore(
 				cuesToExplode: [],
 				triadGroupId: null,
 				unsolvedTriads: null,
+				dailyNextPuzzleAt: null,
+				dailyStandaloneResult: false,
+				dailyNoScheduleMessage: null,
 			}))
 		},
 		setIntroShownPerSession: (introShownPerSession: boolean) => {
 			patchState(store, (state) => ({ ...state, introShownPerSession }))
+		},
+		setGameMode: (gameMode: 'classic' | 'daily') => {
+			patchState(store, (state) => ({ ...state, gameMode }))
+		},
+		setDailyNextPuzzleAt: (dailyNextPuzzleAt: string | null) => {
+			patchState(store, (state) => ({ ...state, dailyNextPuzzleAt }))
+		},
+		setDailyStandaloneResult: (dailyStandaloneResult: boolean) => {
+			patchState(store, (state) => ({ ...state, dailyStandaloneResult }))
+		},
+		setDailyNoScheduleMessage: (dailyNoScheduleMessage: string | null) => {
+			patchState(store, (state) => ({ ...state, dailyNoScheduleMessage }))
 		},
 	})),
 	withHooks({

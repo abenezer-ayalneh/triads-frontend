@@ -4,11 +4,66 @@ import { inject, Injectable } from '@angular/core'
 import { Difficulty } from '../../../shared/enums/difficulty.enum'
 import { SolvedTriad } from '../interfaces/triad.interface'
 
+export type DailyTodayInfoResponse =
+	| {
+			scheduled: false
+			puzzleDate: string
+	  }
+	| {
+			scheduled: true
+			puzzleDate: string
+			triadGroupId: number
+			/** Set when the request includes x-anonymous-id; true if today’s puzzle is finished (won or lost). */
+			hasCompletedDaily?: boolean
+	  }
+
+export type DailyCuesResponse =
+	| {
+			scheduled: false
+			puzzleDate: string
+			nextPuzzleAt: string
+			message: string
+	  }
+	| {
+			scheduled: true
+			alreadyCompleted: true
+			attemptStatus: 'WON' | 'LOST'
+			score: number | null
+			triadGroupId: number
+			puzzleDate: string
+			nextPuzzleAt: string
+			cues: null
+	  }
+	| {
+			scheduled: true
+			alreadyCompleted: false
+			attemptStatus: 'IN_PROGRESS'
+			triadGroupId: number
+			cues: string[]
+			puzzleDate: string
+			nextPuzzleAt: string
+	  }
+
 @Injectable({
 	providedIn: 'root',
 })
 export class GamePlayApi {
 	private readonly httpClient = inject(HttpClient)
+
+	getDailyTodayInfo() {
+		return this.httpClient.get<DailyTodayInfoResponse>('triads/daily/today')
+	}
+
+	getDailyCues() {
+		return this.httpClient.get<DailyCuesResponse>('triads/daily/cues')
+	}
+
+	postDailyComplete(outcome: 'won' | 'lost', score: number) {
+		return this.httpClient.post<{ ok: true; puzzleDate: string; nextPuzzleAt: string }>('triads/daily/complete', {
+			outcome,
+			score,
+		})
+	}
 
 	getCues(difficulty: Difficulty) {
 		const params = new HttpParams().set('difficulty', difficulty)

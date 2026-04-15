@@ -48,9 +48,13 @@
 				@for (group of triadGroups(); track group.id) {
 					<app-triad-group-card
 						[triadGroup]="group"
+						[scheduleHint]="scheduleHintForGroup(group.id)"
+						[scheduleDraftResetVersion]="scheduleDraftResetVersion()"
 						(editClicked)="onEdit($event)"
 						(deleteClicked)="onDelete($event)"
-						(toggleStatusClicked)="onToggleStatus($event.id, $event.active)" />
+						(toggleStatusClicked)="onToggleStatus($event.id, $event.active)"
+						(dailyScheduleSubmit)="onDailyScheduleSubmit($event)"
+						(unscheduleClicked)="onUnscheduleDailyRow($event)" />
 				}
 			}
 

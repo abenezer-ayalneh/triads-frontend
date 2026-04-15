@@ -2,6 +2,24 @@
 	class="w-full h-full rounded-lg px-4 py-2 md:px-6 md:py-4 shadow-md transition-all relative overflow-hidden bg-neutral-100"
 	[class.bg-neutral-400]="!triadGroup().active"
 	[class.bg-neutral-100]="triadGroup().active">
+	<!-- Scheduled for daily puzzle (Top Left Corner) -->
+	@if (scheduleHint()) {
+		<div
+			class="absolute top-0 left-0 z-[1] text-white shadow-lg bg-violet-600"
+			style="clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); padding: 10px 14px 14px 18px; transform: translate(-8px, -8px) rotate(-12deg)"
+			aria-hidden="true">
+			<div class="flex transform rotate-12 items-center justify-center">
+				<svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+				</svg>
+			</div>
+		</div>
+	}
+
 	<!-- Difficulty Badge (Top Right Corner) -->
 	<div
 		class="absolute top-0 right-0 text-white text-xs md:text-sm font-bold shadow-lg"
@@ -93,6 +111,43 @@
 						[innerHTML]="triadGroup().triad4.fullPhrases[2] | highlightKey: triadGroup().triad4.keyword : 'text-gray-700'"></p>
 				</div>
 			</div>
+		}
+	</div>
+
+	<!-- Daily puzzle schedule -->
+	<div class="w-full py-2 border-t border-gray-300">
+		@if (triadGroup().active) {
+			<!--			<p class="text-xs font-medium text-gray-600 mb-2">Daily puzzle (US Eastern date, one group per day)</p>-->
+			<div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-end gap-2">
+				<div class="flex flex-col gap-1 flex-1 min-w-0 sm:max-w-xs">
+					<label class="text-xs font-medium text-gray-600" [attr.for]="'daily-date-' + triadGroup().id">Date</label>
+					<input
+						[id]="'daily-date-' + triadGroup().id"
+						type="date"
+						[min]="effectiveDateInputMin()"
+						[value]="displayScheduleDateForInput()"
+						(input)="onDraftScheduleDateInput($event)"
+						class="rounded-lg border border-gray-300 bg-base-100 px-3 py-2 text-sm w-full" />
+				</div>
+				<div class="flex flex-wrap items-end gap-2 sm:self-end">
+					@if (scheduleHint()) {
+						<button
+							type="button"
+							(click)="onUnscheduleClick()"
+							class="px-3 md:px-4 py-2 rounded-lg border border-gray-300 bg-base-100 text-gray-700 hover:bg-base-200 transition-colors text-xs md:text-sm font-medium">
+							Remove schedule
+						</button>
+					}
+					<button
+						type="button"
+						(click)="onDailyScheduleSubmit()"
+						class="px-3 md:px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-violet-700 transition-colors text-xs md:text-sm font-medium shrink-0">
+						Schedule
+					</button>
+				</div>
+			</div>
+		} @else {
+			<p class="text-xs text-gray-500">Activate this group to schedule it for the daily puzzle.</p>
 		}
 	</div>
 

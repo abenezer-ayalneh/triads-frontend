@@ -63,10 +63,10 @@ export class Header implements OnInit, OnDestroy {
 		return url === '/play'
 	})
 
-	// Check if on manage triads page
+	// Manage triads (classic) or daily schedule admin (daily app)
 	isManageTriadsPage = computed(() => {
 		const url = this.currentUrl()
-		return url === '/manage-triads'
+		return url === '/manage-triads' || url === '/manage-daily-schedule'
 	})
 
 	constructor() {
@@ -93,7 +93,7 @@ export class Header implements OnInit, OnDestroy {
 
 	confirmQuit() {
 		this.store.resetGameState()
-		this.router.navigate(['/home'])
+		this.router.navigate(this.store.gameMode() === 'daily' ? ['/'] : ['/home'])
 		this.showQuitConfirmation.set(false)
 	}
 
@@ -111,6 +111,15 @@ export class Header implements OnInit, OnDestroy {
 
 	showHowToPlay() {
 		this.store.setShowHowToPlay(true)
+	}
+
+	/** Daily app: “Directions” replaces “?”. Modifier + click opens admin (same as username popover + Ctrl/Cmd). */
+	onDirectionsClick(event: MouseEvent) {
+		if (event.ctrlKey || event.metaKey) {
+			this.openAdminPasswordDialog()
+			return
+		}
+		this.showHowToPlay()
 	}
 
 	toggleUsernameDropdown(event?: MouseEvent) {
@@ -150,7 +159,7 @@ export class Header implements OnInit, OnDestroy {
 	}
 
 	navigateToHome() {
-		this.router.navigate(['/home'])
+		this.router.navigate(this.store.gameMode() === 'daily' ? ['/'] : ['/home'])
 	}
 
 	openAdminPasswordDialog() {
@@ -163,7 +172,8 @@ export class Header implements OnInit, OnDestroy {
 	}
 
 	navigateToManageTriads() {
-		this.router.navigate(['/manage-triads'])
+		const path = this.store.gameMode() === 'daily' ? '/manage-daily-schedule' : '/manage-triads'
+		this.router.navigate([path])
 		this.dismissUsernamePopover()
 	}
 

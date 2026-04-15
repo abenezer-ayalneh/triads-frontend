@@ -42,6 +42,7 @@
 								},
 								{
 									"type": "anyComponentStyle",
+
 									"maximumWarning": "4kB",
 									"maximumError": "8kB"
 								}
@@ -64,7 +65,9 @@
 				},
 				"serve": {
 					"builder": "@angular-devkit/build-angular:dev-server",
-					"options": { "allowedHosts": ["localhost", "dogfish-together-locust.ngrok-free.app"] },
+					"options": {
+						"allowedHosts": ["localhost", "dogfish-together-locust.ngrok-free.app"]
+					},
 					"configurations": {
 						"production": {
 							"buildTarget": "triads:build:production"
@@ -98,6 +101,108 @@
 					"builder": "@angular-eslint/builder:lint",
 					"options": {
 						"lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+					}
+				}
+			}
+		},
+		"triads-daily": {
+			"projectType": "application",
+			"schematics": {
+				"@schematics/angular:component": {
+					"style": "scss"
+				}
+			},
+			"root": "projects/triads-daily",
+			"sourceRoot": "projects/triads-daily",
+			"prefix": "app",
+			"architect": {
+				"build": {
+					"builder": "@angular-devkit/build-angular:application",
+					"options": {
+						"outputPath": "dist/triads-daily",
+						"index": "projects/triads-daily/index.html",
+						"browser": "projects/triads-daily/main.ts",
+						"polyfills": ["zone.js"],
+						"tsConfig": "projects/triads-daily/tsconfig.app.json",
+						"inlineStyleLanguage": "scss",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "public"
+							}
+						],
+						"styles": ["src/global.css", "src/global.scss"],
+						"scripts": []
+					},
+					"configurations": {
+						"production": {
+							"budgets": [
+								{
+									"type": "initial",
+									"maximumWarning": "2mb",
+									"maximumError": "5MB"
+								},
+								{
+									"type": "anyComponentStyle",
+									"maximumWarning": "4kB",
+									"maximumError": "8kB"
+								}
+							],
+							"fileReplacements": [
+								{
+									"replace": "src/environments/environment.ts",
+									"with": "src/environments/environment.prod.ts"
+								}
+							],
+							"outputHashing": "all"
+						},
+						"development": {
+							"optimization": false,
+							"extractLicenses": false,
+							"sourceMap": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-devkit/build-angular:dev-server",
+					"options": {
+						"port": 4201,
+						"allowedHosts": ["localhost"]
+					},
+					"configurations": {
+						"production": {
+							"buildTarget": "triads-daily:build:production"
+						},
+						"development": {
+							"buildTarget": "triads-daily:build:development"
+						}
+					},
+					"defaultConfiguration": "development"
+				},
+				"extract-i18n": {
+					"builder": "@angular-devkit/build-angular:extract-i18n"
+				},
+				"test": {
+					"builder": "@angular-devkit/build-angular:karma",
+					"options": {
+						"polyfills": ["zone.js", "zone.js/testing"],
+						"tsConfig": "projects/triads-daily/tsconfig.spec.json",
+						"inlineStyleLanguage": "scss",
+						"assets": [
+							{
+								"glob": "**/*",
+								"input": "public"
+							}
+						],
+						"styles": ["src/global.css", "src/global.scss"],
+						"scripts": []
+					}
+				},
+				"lint": {
+					"builder": "@angular-eslint/builder:lint",
+					"options": {
+						"lintFilePatterns": ["projects/triads-daily/**/*.ts", "src/**/*.ts", "src/**/*.html"]
 					}
 				}
 			}

@@ -1,13 +1,14 @@
-import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { IonModal } from '@ionic/angular/standalone'
 import { Subject, takeUntil } from 'rxjs'
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators'
 
+import { DailyScheduleAdminApi, DailyScheduleRow } from '../../shared/services/daily-schedule-admin-api'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { AddTriadGroupDialog } from './components/add-triad-group-dialog/add-triad-group-dialog'
 import { DeleteConfirmationDialog } from './components/delete-confirmation-dialog/delete-confirmation-dialog'
 import { EditTriadGroupDialog } from './components/edit-triad-group-dialog/edit-triad-group-dialog'
-import { TriadGroupCard } from './components/triad-group-card/triad-group-card'
+import { TriadDailyScheduleHint, TriadGroupCard } from './components/triad-group-card/triad-group-card'
 import { TriadGroup, TriadGroupFormData } from './interfaces/triad-group.interface'
 import { TriadManagementApi } from './services/triad-management-api'
 
@@ -38,6 +39,29 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 
 	deleteTargetId = signal<number | null>(null)
 
+	dailySchedules = signal<DailyScheduleRow[]>([])
+
+	/** Passed to triad cards to clear date inputs after a successful schedule. */
+	scheduleDraftResetVersion = signal(0)
+
+	/** Earliest scheduled Eastern date per triad group (for display + unschedule). */
+	readonly scheduleHintByGroupId = computed(() => {
+		const rows = this.dailySchedules()
+		const grouped = new Map<number, DailyScheduleRow[]>()
+		for (const r of rows) {
+			const list = grouped.get(r.triadGroupId) ?? []
+			list.push(r)
+			grouped.set(r.triadGroupId, list)
+		}
+		const out = new Map<number, TriadDailyScheduleHint>()
+		for (const [groupId, list] of grouped) {
+			list.sort((a, b) => a.puzzleDate.localeCompare(b.puzzleDate))
+			const row = list[0]
+			out.set(groupId, { dateYmd: row.puzzleDate, rowId: row.id })
+		}
+		return out
+	})
+
 	private offset = 0
 
 	private readonly limit = 20
@@ -48,6 +72,8 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 
 	private readonly api = inject(TriadManagementApi)
 
+	private readonly dailyScheduleApi = inject(DailyScheduleAdminApi)
+
 	private readonly snackbar = inject(SnackbarService)
 
 	private readonly scrollContainer = viewChild<ElementRef<HTMLElement>>('scrollContainer')
@@ -55,6 +81,7 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 	ngOnInit() {
 		this.setupSearchDebounce()
 		this.loadTriadGroups(true)
+		this.loadDailySchedules()
 	}
 
 	ngOnDestroy() {
@@ -201,6 +228,48 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 	onDeleteCanceled() {
 		this.showDeleteConfirm.set(false)
 		this.deleteTargetId.set(null)
+	}
+
+	loadDailySchedules() {
+		this.dailyScheduleApi.getSchedules(0, 100).subscribe({
+			next: (rows) => {
+				this.dailySchedules.set(rows)
+			},
+			error: () => {
+				this.snackbar.showSnackbar('Failed to load daily schedule')
+			},
+		})
+	}
+
+	scheduleHintForGroup(groupId: number): TriadDailyScheduleHint | null {
+		return this.scheduleHintByGroupId().get(groupId) ?? null
+	}
+
+	onUnscheduleDailyRow(rowId: number) {
+		this.dailyScheduleApi.deleteSchedule(rowId).subscribe({
+			next: () => {
+				this.snackbar.showSnackbar('Schedule entry removed')
+				this.scheduleDraftResetVersion.update((v) => v + 1)
+				this.loadDailySchedules()
+			},
+			error: () => {
+				// Error message shown by HTTP interceptor
+			},
+		})
+	}
+
+	onDailyScheduleSubmit(payload: { triadGroup: TriadGroup; puzzleDate: string }) {
+		const { triadGroup, puzzleDate } = payload
+		this.dailyScheduleApi.createSchedule(puzzleDate, triadGroup.id).subscribe({
+			next: () => {
+				this.snackbar.showSnackbar('Daily puzzle scheduled')
+				this.scheduleDraftResetVersion.update((v) => v + 1)
+				this.loadDailySchedules()
+			},
+			error: () => {
+				// Error message shown by HTTP interceptor
+			},
+		})
 	}
 
 	onToggleStatus(id: number, active: boolean) {

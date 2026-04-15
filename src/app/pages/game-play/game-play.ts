@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common'
 import { Component, computed, effect, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { Router } from '@angular/router'
@@ -29,6 +30,7 @@ import { GamePlayLogic } from './services/game-play-logic'
 @Component({
 	selector: 'app-game-play',
 	imports: [
+		DatePipe,
 		LottieComponent,
 		ReactiveFormsModule,
 		FormsModule,
@@ -88,6 +90,8 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	protected readonly Difficulty = Difficulty
 
+	showMainGameShell = computed(() => !this.store.dailyStandaloneResult())
+
 	private readonly gamePlayApi = inject(GamePlayApi)
 
 	private readonly gamePlayLogic = inject(GamePlayLogic)
@@ -113,12 +117,53 @@ export class GamePlay implements OnInit, OnDestroy {
 	ngOnInit() {
 		// Initialize selected difficulty with current setting
 		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
-		this.initializeGame()
+		if (this.store.gameMode() === 'daily') {
+			this.initializeDailyGame()
+		} else {
+			this.initializeGame()
+		}
 	}
 
 	ngOnDestroy() {
 		// Reset game state when navigating away from the gameplay page
 		this.resetGameState()
+	}
+
+	initializeDailyGame() {
+		this.cueFetchingState.set(RequestState.LOADING)
+		this.noTriadsMessage.set('')
+		this.store.setDailyNoScheduleMessage(null)
+		this.store.setDailyStandaloneResult(false)
+		this.subscriptions$.add(
+			this.gamePlayApi.getDailyCues().subscribe({
+				next: (response) => {
+					if (!response.scheduled) {
+						this.store.setDailyNoScheduleMessage(response.message)
+						this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)
+						this.cueFetchingState.set(RequestState.EMPTY)
+						return
+					}
+					if (response.alreadyCompleted) {
+						this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)
+						this.store.setTriadGroupId(response.triadGroupId)
+						this.store.setGameScore(response.score ?? 0)
+						this.store.setDailyStandaloneResult(true)
+						this.store.setGamePlayState(response.attemptStatus === 'WON' ? GamePlayState.WON : GamePlayState.LOST)
+						this.cueFetchingState.set(RequestState.IDLE)
+						return
+					}
+					this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)
+					this.store.setCues(response.cues)
+					this.store.setTriadGroupId(response.triadGroupId)
+					this.cueFetchingState.set(RequestState.READY)
+					this.store.setGamePlayState(GamePlayState.PLAYING)
+				},
+				error: () => {
+					this.noTriadsMessage.set('Unable to load today’s puzzle. Please try again later.')
+					this.cueFetchingState.set(RequestState.ERROR)
+				},
+			}),
+		)
 	}
 
 	initializeGame() {
@@ -158,6 +203,10 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	retryGame() {
+		if (this.store.gameMode() === 'daily') {
+			this.initializeDailyGame()
+			return
+		}
 		// Use the selected difficulty from the dropdown and save it
 		const selectedDifficulty = this.selectedDifficulty()
 		this.difficultyService.setDifficulty(selectedDifficulty)
@@ -171,10 +220,16 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	goToHome() {
+		if (this.store.gameMode() === 'daily') {
+			return
+		}
 		this.router.navigate(['/home'])
 	}
 
 	restartGame() {
+		if (this.store.gameMode() === 'daily') {
+			return
+		}
 		// Reset all game state
 		this.resetGameState()
 		// Reinitialize the game
@@ -253,6 +308,9 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	checkAndShowWelcomeDialog() {
+		if (this.store.gameMode() === 'daily') {
+			return
+		}
 		const user = this.store.user()
 		if (!user || !user.scores || user.welcomeMessageShown) {
 			return
@@ -293,6 +351,8 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.cueFetchingState.set(RequestState.LOADING)
 		this.explodingBubbles.set([])
 		this.noTriadsMessage.set('')
+		this.store.setDailyNoScheduleMessage(null)
+		this.store.setDailyStandaloneResult(false)
 		this.showWelcomeDialog.set(false)
 		this.welcomeDialogTotalPoints.set(0)
 		// Reset GamePlayLogic BehaviorSubjects

@@ -33,13 +33,21 @@ export class GamePlayLogic {
 		// Score updates
 		const score = this.calculateScore()
 
+		if (this.store.gameMode() === 'daily') {
+			this.gamePlayApi.postDailyComplete('won', score).subscribe({
+				next: (res) => this.store.setDailyNextPuzzleAt(res.nextPuzzleAt),
+				error: () => {
+					/* non-blocking */
+				},
+			})
+		}
+
 		// User state updates
 		const user = this.store.user()
 		this.store.setGameScore(score)
+		this.store.setGamePlayState(GamePlayState.WON)
 
 		if (user && user.scores) {
-			this.store.setGamePlayState(GamePlayState.WON)
-
 			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
 
 			// Track first 5 games
@@ -66,13 +74,21 @@ export class GamePlayLogic {
 		// Score updates
 		const score = this.calculateScore()
 
+		if (this.store.gameMode() === 'daily') {
+			this.gamePlayApi.postDailyComplete('lost', score).subscribe({
+				next: (res) => this.store.setDailyNextPuzzleAt(res.nextPuzzleAt),
+				error: () => {
+					/* non-blocking */
+				},
+			})
+		}
+
 		// User state updates
 		const user = this.store.user()
 		this.store.setGameScore(score)
+		this.store.setGamePlayState(GamePlayState.LOST)
 
 		if (user && user.scores) {
-			this.store.setGamePlayState(GamePlayState.LOST)
-
 			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
 
 			// Track first 5 games

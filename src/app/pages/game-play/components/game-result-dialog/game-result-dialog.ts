@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common'
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core'
 import { Router } from '@angular/router'
 import { Capacitor } from '@capacitor/core'
@@ -11,7 +12,7 @@ import { SolutionReveal } from '../solution-reveal/solution-reveal'
 
 @Component({
 	selector: 'app-game-result-dialog',
-	imports: [SolutionReveal],
+	imports: [DatePipe, SolutionReveal],
 	templateUrl: './game-result-dialog.html',
 	styleUrl: './game-result-dialog.scss',
 })
@@ -28,6 +29,10 @@ export class GameResultDialog {
 
 	showPlayAgainButton = signal(false)
 
+	readonly isDailyMode = computed(() => this.store.gameMode() === 'daily')
+
+	countdownLabel = signal('')
+
 	readonly scorePngPath = computed(() => getScorePngPath(this.store.gameScore()))
 
 	readonly scoreGifPath = computed(() => getScoreGifPath(this.store.gameScore()))
@@ -38,11 +43,39 @@ export class GameResultDialog {
 		this.taDahAudio.src = 'sounds/ta-dah.mp3'
 		this.taDahAudio.volume = 0.7
 
+		effect((onCleanup) => {
+			const isDaily = this.store.gameMode() === 'daily'
+			const target = this.store.dailyNextPuzzleAt()
+			if (!isDaily || !target) {
+				this.countdownLabel.set('')
+				return
+			}
+			const tick = () => {
+				const diff = new Date(target).getTime() - Date.now()
+				if (diff <= 0) {
+					this.countdownLabel.set('The next puzzle is available now (refresh the page).')
+					return
+				}
+				const h = Math.floor(diff / 3600000)
+				const m = Math.floor((diff % 3600000) / 60000)
+				const s = Math.floor((diff % 60000) / 1000)
+				this.countdownLabel.set(`${h}h ${m}m ${s}s until the next daily puzzle (Eastern)`)
+			}
+			tick()
+			const id = window.setInterval(tick, 1000)
+			onCleanup(() => clearInterval(id))
+		})
+
 		// Watch for game state and unsolved triads to show button
 		effect(() => {
 			const result = this.result()
 			const unsolvedTriads = this.store.unsolvedTriads()
 			const gameScore = this.store.gameScore()
+
+			if (this.store.gameMode() === 'daily') {
+				this.showPlayAgainButton.set(true)
+				return
+			}
 
 			if (result === 'LOST') {
 				// For LOST state, show button after solutions appear (or after max 2 seconds)
@@ -84,6 +117,9 @@ export class GameResultDialog {
 		this.store.setUnsolvedTriads(null)
 		this.store.resetGameState()
 		this.showPlayAgainButton.set(false)
+		if (this.store.gameMode() === 'daily') {
+			return
+		}
 		this.router.navigate(['/home'])
 	}
 

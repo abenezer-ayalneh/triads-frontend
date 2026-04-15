@@ -28,8 +28,12 @@ export class MainLayout {
 	)
 
 	readonly overlayVisible = computed(() => {
+		if (this.store.showHowToPlay()) return true
+		// Daily app uses `/` for landing; do not treat as classic "home without user" — that path
+		// sets overlay-visible on the header, which applies z-index: 0 and hides the toolbar under fullscreen ion-content.
+		if (this.store.gameMode() === 'daily') return false
 		const url = this.currentUrl()
 		const onHome = url === '/home' || url === '/'
-		return this.store.showHowToPlay() || (onHome && !this.store.user())
+		return onHome && !this.store.user()
 	})
 }

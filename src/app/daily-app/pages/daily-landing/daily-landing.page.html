@@ -1,0 +1,28 @@
+<div class="flex h-full w-full flex-col items-center justify-center gap-3 px-4 py-6 text-center">
+	<div class="flex w-full max-w-md flex-col items-center gap-3">
+		<img
+			src="images/triads-logo-animated.gif"
+			alt="Triads"
+			decoding="async"
+			class="mx-auto h-auto w-full max-w-70 object-contain"
+			width="280"
+			height="200" />
+
+		<p class="text-xl font-semibold leading-snug text-base-content md:text-2xl">{{ tagline }}</p>
+		@if (!challengeLoading() && challengeLine(); as line) {
+			<p class="text-lg font-semibold leading-snug text-base-content md:text-xl">{{ line }}</p>
+		}
+		<!--		<p class="text-sm text-base-content/80 md:text-base">{{ attribution }}</p>-->
+
+		@if (dailyCompleted()) {
+			<button
+				type="button"
+				disabled
+				class="btn btn-lg mt-2 w-80 max-w-full cursor-not-allowed border-2 border-base-300/40 bg-base-100/50 font-semibold text-base-content shadow-md backdrop-blur-sm">
+				Come back tomorrow
+			</button>
+		} @else {
+			<a routerLink="/play" class="triad-gradient btn btn-lg mt-2 w-80 max-w-full border-none text-primary-content">Play Now</a>
+		}
+	</div>
+</div>
