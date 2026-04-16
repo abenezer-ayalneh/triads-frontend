@@ -28,6 +28,9 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	// Flag to track if we need to focus the answer field or not
 	shouldFocusAnswerField = false
 
+	/** After wrong answer with first-letter-only hint: focus plain input and select suffix (index 1..end) for editing. */
+	private selectPlainInputSuffixAfterFocus = false
+
 	protected readonly GamePlayState = GamePlayState
 
 	private readonly subscriptions$ = new Subscription()
@@ -43,6 +46,8 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	private readonly snackbarService = inject(SnackbarService)
 
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
+
+	private readonly letterInputsRef = viewChild<InputSet>('letterInputs')
 
 	private readonly bubblePopAudio = new Audio()
 
@@ -88,27 +93,39 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		this.answerFormControl.reset()
 		// Reset focus flag
 		this.shouldFocusAnswerField = false
+		this.selectPlainInputSuffixAfterFocus = false
 		// Clear all pending timeouts
 		this.timeoutIds.forEach((id) => clearTimeout(id))
 		this.timeoutIds = []
 	}
 
 	ngAfterViewChecked() {
-		// Focus the answer field if needed
-		if (this.shouldFocusAnswerField) {
-			const answerField = this.answerFieldRef()?.nativeElement
-			if (answerField) {
-				// Use setTimeout to avoid ExpressionChangedAfterItHasBeenCheckedError
+		if (!this.shouldFocusAnswerField) {
+			return
+		}
+		const useLetterInputs = this.store.keywordLengthHint() !== null
+		if (useLetterInputs) {
+			const letterInputs = this.letterInputsRef()
+			if (letterInputs) {
 				const timeoutId = setTimeout(() => {
-					answerField.focus()
-					// On mobile devices, also trigger click to ensure keyboard appears
-					if (this.isMobileDevice()) {
-						answerField.click()
-					}
+					letterInputs.focusForRetry()
 					this.shouldFocusAnswerField = false
 				}, 0)
 				this.timeoutIds.push(timeoutId)
 			}
+			return
+		}
+		const answerField = this.answerFieldRef()?.nativeElement
+		if (answerField) {
+			const timeoutId = setTimeout(() => {
+				answerField.focus()
+				if (this.isMobileDevice()) {
+					answerField.click()
+				}
+				this.applyPlainInputSuffixSelectionIfNeeded(answerField)
+				this.shouldFocusAnswerField = false
+			}, 0)
+			this.timeoutIds.push(timeoutId)
 		}
 	}
 
@@ -197,6 +214,26 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		)
 	}
 
+	/**
+	 * After a wrong guess with first-letter hint on the plain input, select characters after the first
+	 * so the user can re-type without replacing the hinted letter.
+	 */
+	private applyPlainInputSuffixSelectionIfNeeded(answerField: HTMLInputElement): void {
+		if (!this.selectPlainInputSuffixAfterFocus) {
+			return
+		}
+		this.selectPlainInputSuffixAfterFocus = false
+		const raw = this.answerFormControl.value ?? ''
+		if (raw.length < 1) {
+			return
+		}
+		const apply = () => {
+			answerField.setSelectionRange(1, raw.length)
+		}
+		apply()
+		requestAnimationFrame(apply)
+	}
+
 	private handleAnswerResponse(response: boolean | SolvedTriad) {
 		// This means the answer was correct
 		if (response && typeof response !== 'boolean') {
@@ -221,6 +258,8 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 				this.store.setGamePlayState(GamePlayState.CORRECT_ANSWER)
 			}, 1000)
 			this.timeoutIds.push(timeoutId)
+
+			this.answerFormControl.reset()
 		} else {
 			// This means the answer was wrong
 			this.store.setGamePlayState(GamePlayState.WRONG_ANSWER)
@@ -232,17 +271,17 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 			if (result.gameEnds) {
 				this.gamePlayLogic.handleGameLost()
 			}
+
+			const retainPlainAnswerForFirstLetterRetry = !result.gameEnds && this.store.firstLetterHint() !== null && this.store.keywordLengthHint() === null
+
+			if (!retainPlainAnswerForFirstLetterRetry) {
+				this.answerFormControl.reset()
+			}
 		}
-		this.answerFormControl.reset()
 
 		const timeoutId = setTimeout(() => {
 			// Only change state if not in the WON or LOST state
 			if (this.store.gamePlayState() !== GamePlayState.WON && this.store.gamePlayState() !== GamePlayState.LOST) {
-				// Always reset the keyword length hint and first letter hint back to null so the normal input field is shown
-				this.store.setKeywordLengthHint(null)
-				this.store.setFirstLetterHint(null)
-				this.store.setActiveHintType(null)
-
 				if (response && typeof response != 'boolean') {
 					// Reset used hint types only when a triad is solved correctly (not on wrong guesses)
 					this.store.resetUsedHintTypes()
@@ -291,12 +330,43 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 						this.gamePlayLogic.handleGameLost()
 					} else {
 						const availableHints = this.store.hints().filter((hint) => hint.available).length
+						const triadsStep = this.store.triadsStep()
+						const initialCues = this.store.cues()
+						const finalTriadCuesList = this.store.finalTriadCues()
+						const onlyThreeCuesRemain =
+							(triadsStep === 'INITIAL' && initialCues?.length === 3) || (triadsStep === 'FINAL' && finalTriadCuesList?.length === 3)
+						const forcedSelection: string[] | null = onlyThreeCuesRemain
+							? triadsStep === 'FINAL' && finalTriadCuesList
+								? [...finalTriadCuesList]
+								: initialCues
+									? [...initialCues]
+									: null
+							: null
+
 						if (availableHints === 0) {
-							this.store.setGamePlayState(GamePlayState.PLAYING)
-							this.store.setSelectedCues([])
+							if (forcedSelection && forcedSelection.length === 3) {
+								this.store.setSelectedCues(forcedSelection)
+								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+								this.shouldFocusAnswerField = true
+							} else {
+								this.store.setGamePlayState(GamePlayState.PLAYING)
+								this.store.setSelectedCues([])
+							}
 						} else {
+							if (forcedSelection && forcedSelection.length === 3) {
+								this.store.setSelectedCues(forcedSelection)
+							}
 							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 							this.shouldFocusAnswerField = true
+						}
+
+						if (
+							this.store.gamePlayState() === GamePlayState.ACCEPT_ANSWER &&
+							this.store.firstLetterHint() !== null &&
+							this.store.keywordLengthHint() === null &&
+							(this.answerFormControl.value ?? '').length >= 1
+						) {
+							this.selectPlainInputSuffixAfterFocus = true
 						}
 					}
 				}
@@ -337,14 +407,18 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 			this.gamePlayLogic.answerFieldFocus$.pipe(filter((focus) => focus)).subscribe({
 				next: () => {
 					setTimeout(() => {
+						if (this.store.keywordLengthHint() !== null) {
+							this.letterInputsRef()?.focusForRetry()
+							return
+						}
 						const el = this.answerFieldRef()?.nativeElement
 
 						if (el) {
-							// Ensure the control and DOM element are enabled before focusing
 							this.answerFormControl.enable()
 							el.disabled = false
 
 							el.focus()
+							this.applyPlainInputSuffixSelectionIfNeeded(el)
 						}
 					}, 0)
 				},

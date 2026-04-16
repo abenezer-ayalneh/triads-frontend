@@ -9,6 +9,13 @@ import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
 import { UserService } from '../shared/services/user.service'
 
+function selectedCueSetsEqual(a: readonly string[], b: readonly string[]): boolean {
+	if (a.length !== b.length) return false
+	const sa = [...a].sort((x, y) => x.localeCompare(y))
+	const sb = [...b].sort((x, y) => x.localeCompare(y))
+	return sa.every((v, i) => v === sb[i])
+}
+
 const initialState: GlobalState = {
 	user: null,
 	showHowToPlay: false,
@@ -71,13 +78,54 @@ export const GlobalStore = signalStore(
 			patchState(store, (state) => ({ ...state, finalTriadCues: triad }))
 		},
 		setSelectedCues: (selectedCues: string[]) => {
-			patchState(store, (state) => ({ ...state, selectedCues: [...selectedCues] }))
+			patchState(store, (state) => {
+				const prev = state.selectedCues
+				const next = [...selectedCues]
+				if (selectedCueSetsEqual(prev, next)) {
+					return { ...state, selectedCues: next }
+				}
+				const switchedToDifferentThree = prev.length === 3 && next.length === 3 && !selectedCueSetsEqual(prev, next)
+				return {
+					...state,
+					selectedCues: next,
+					keywordLengthHint: null,
+					firstLetterHint: null,
+					activeHintType: null,
+					...(switchedToDifferentThree ? { usedHintTypes: [] as GlobalState['usedHintTypes'] } : {}),
+				}
+			})
 		},
 		addSelectedCue: (selectedCue: string) => {
-			patchState(store, (state) => ({ ...state, selectedCues: [...state.selectedCues, selectedCue] }))
+			patchState(store, (state) => {
+				const prev = state.selectedCues
+				const next = [...state.selectedCues, selectedCue]
+				if (selectedCueSetsEqual(prev, next)) {
+					return { ...state, selectedCues: next }
+				}
+				return {
+					...state,
+					selectedCues: next,
+					keywordLengthHint: null,
+					firstLetterHint: null,
+					activeHintType: null,
+				}
+			})
 		},
 		removeSelectedCue: (selectedCue: string) => {
-			patchState(store, (state) => ({ ...state, selectedCues: state.selectedCues.filter((cue) => cue !== selectedCue) }))
+			patchState(store, (state) => {
+				const prev = state.selectedCues
+				const next = state.selectedCues.filter((cue) => cue !== selectedCue)
+				if (selectedCueSetsEqual(prev, next)) {
+					return { ...state, selectedCues: next }
+				}
+				return {
+					...state,
+					selectedCues: next,
+					keywordLengthHint: null,
+					firstLetterHint: null,
+					activeHintType: null,
+				}
+			})
 		},
 		setTurns: (turns: TurnAndHint[]) => {
 			patchState(store, (state) => ({ ...state, turns: [...turns] }))

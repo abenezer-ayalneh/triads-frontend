@@ -1,7 +1,7 @@
 <div class="flex h-full w-full flex-col items-center justify-center gap-3 px-4 py-6 text-center">
 	<div class="flex w-full max-w-md flex-col items-center gap-3">
 		<img
-			src="images/triads-logo-animated.gif"
+			src="images/triads-logo-animated.svg"
 			alt="Triads"
 			decoding="async"
 			class="mx-auto h-auto w-full max-w-70 object-contain"
@@ -22,7 +22,22 @@
 				Come back tomorrow
 			</button>
 		} @else {
-			<a routerLink="/play" class="triad-gradient btn btn-lg mt-2 w-80 max-w-full border-none text-primary-content">Play Now</a>
+			<button
+				type="button"
+				class="triad-gradient btn btn-lg mt-2 w-80 max-w-full border-none text-primary-content"
+				[class.pointer-events-none]="playAnimationRunning()"
+				[attr.aria-busy]="playAnimationRunning() ? 'true' : null"
+				(click)="onPlayNow()">
+				<span class="daily-play-inner">
+					<span class="daily-play-spacer" aria-hidden="true">brain warming up . . .</span>
+					<span #playLabel class="daily-play-label">Play Now</span>
+					<span #bt1 class="daily-play-text" style="color: #bbbbbb; opacity: 0">brain warming up . . .</span>
+					<span #bt2 class="daily-play-text" style="opacity: 0">
+						<span #bPrefix class="daily-play-prefix">brain getting</span>
+						<span #bHot class="daily-play-hot">hot</span>
+					</span>
+				</span>
+			</button>
 		}
 	</div>
 </div>

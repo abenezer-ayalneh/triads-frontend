@@ -27,6 +27,7 @@
 			@let isLoading = store.isCheckingAnswer() || store.isCheckingTriad();
 			@if (letKeywordLengthHint !== null) {
 				<app-input-set
+					#letterInputs
 					[quantity]="letKeywordLengthHint"
 					[firstLetter]="store.firstLetterHint()"
 					[isLoading]="isLoading"

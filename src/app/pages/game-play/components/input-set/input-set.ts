@@ -197,6 +197,17 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
+	 * Call after a wrong answer when InputSet stays mounted (hints preserved) so focus returns to the letter boxes.
+	 */
+	focusForRetry(): void {
+		this.hasAttemptedFocus = false
+		const timeoutId = setTimeout(() => {
+			this.attemptFocus()
+		}, 0)
+		this.timeoutIds.push(timeoutId)
+	}
+
+	/**
 	 * Attempts to focus the appropriate input field based on whether first letter hint exists
 	 */
 	private attemptFocus(): void {
