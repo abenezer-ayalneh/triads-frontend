@@ -2,11 +2,11 @@
 	class="w-full h-full rounded-lg px-4 py-2 md:px-6 md:py-4 shadow-md transition-all relative overflow-hidden bg-neutral-100"
 	[class.bg-neutral-400]="!triadGroup().active"
 	[class.bg-neutral-100]="triadGroup().active">
-	<!-- Scheduled for daily puzzle (Top Left Corner) -->
+	<!-- Scheduled for daily puzzle (Bottom Left Corner) -->
 	@if (scheduleHint()) {
 		<div
-			class="absolute top-0 left-0 z-[1] text-white shadow-lg bg-violet-600"
-			style="clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); padding: 10px 14px 14px 18px; transform: translate(-8px, -8px) rotate(-12deg)"
+			class="absolute bottom-0 left-0 z-[1] text-white shadow-lg bg-violet-600"
+			style="clip-path: polygon(0 0, 100% 15%, 100% 100%, 0 100%); padding: 14px 14px 10px 18px; transform: translate(-8px, 8px) rotate(-12deg)"
 			aria-hidden="true">
 			<div class="flex transform rotate-12 items-center justify-center">
 				<svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">

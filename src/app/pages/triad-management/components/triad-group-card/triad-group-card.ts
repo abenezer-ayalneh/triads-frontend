@@ -128,7 +128,7 @@ export class TriadGroupCard {
 		return this.draftScheduleDate() || this.scheduleHint()?.dateYmd || ''
 	}
 
-	/** Allows past scheduled dates to remain visible in the picker while new picks stay ≥ tomorrow. */
+	/** Allows past scheduled dates to remain visible in the picker while new picks stay ≥ Eastern today. */
 	effectiveDateInputMin(): string {
 		const hint = this.scheduleHint()?.dateYmd
 		if (!hint) {
