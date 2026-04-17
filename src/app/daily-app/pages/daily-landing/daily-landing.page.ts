@@ -119,7 +119,7 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 			next: (res) => {
 				this.challengeLoading.set(false)
 				if (res.scheduled) {
-					this.challengeLine.set(`Challenge #${DAILY_CHALLENGE_NUMBER_OFFSET + res.triadGroupId}`)
+					this.challengeLine.set(`Challenge #${DAILY_CHALLENGE_NUMBER_OFFSET + res.challengeNumber}`)
 					this.dailyCompleted.set(res.hasCompletedDaily === true)
 				} else {
 					this.challengeLine.set(null)

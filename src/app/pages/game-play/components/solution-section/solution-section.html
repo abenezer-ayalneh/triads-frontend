@@ -33,13 +33,30 @@
 					[isLoading]="isLoading"
 					(whenSubmitClicked)="submitAnswer($event)" />
 			} @else {
-				<input
-					#answerField
-					[formControl]="answerFormControl"
-					placeholder="Answer here..."
-					(keydown.enter)="submitAnswer(answerFormControl.value)"
-					appAutoCapitalize
-					class="flex-1 h-full input text-base focus:outline-none text-center not-placeholder-shown:text-xl md:not-placeholder-shown:text-2xl not-placeholder-shown:font-bold not-placeholder-shown:tracking-widest placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400 disabled:cursor-not-allowed" />
+				<div class="plain-input-wrapper relative flex-1 h-full">
+					<input
+						#answerField
+						[formControl]="answerFormControl"
+						[class.input-text-hidden]="isErasing"
+						placeholder="Answer here..."
+						(keydown)="onAnswerKeydown($event)"
+						(keydown.enter)="submitAnswer(answerFormControl.value)"
+						appAutoCapitalize
+						class="w-full h-full input text-base focus:outline-none text-center not-placeholder-shown:text-xl md:not-placeholder-shown:text-2xl not-placeholder-shown:font-bold not-placeholder-shown:tracking-widest placeholder:text-neutral-400 disabled:text-neutral-400 disabled:placeholder:text-neutral-400 disabled:cursor-not-allowed" />
+					@if (isErasing) {
+						<div
+							#eraseOverlay
+							appReverseErase
+							[preserveFirst]="preserveFirstLetterOnErase"
+							(letterErased)="onPlainLetterErased($event)"
+							(finished)="onPlainReverseEraseFinished()"
+							class="plain-input-overlay text-xl md:text-2xl font-bold tracking-widest">
+							@for (ch of eraseOverlayChars; track $index) {
+								<span class="erase-letter">{{ ch }}</span>
+							}
+						</div>
+					}
+				</div>
 				<button
 					type="button"
 					(click)="submitAnswer(answerFormControl.value)"

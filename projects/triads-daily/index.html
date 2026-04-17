@@ -10,8 +10,120 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 		<link rel="icon" type="image/x-icon" href="favicon.svg" />
 		<link rel="preload" href="images/main-background.jpg" as="image" type="image/jpeg" />
+		<style>
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				background-color: #0b1221;
+			}
+
+			#app-splash {
+				position: fixed;
+				inset: 0;
+				z-index: 2147483647;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 28px;
+				background: radial-gradient(circle at 50% 40%, #1f2a44 0%, #0b1221 70%);
+				color: #f1f5f9;
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+				transition: opacity 400ms ease;
+				opacity: 1;
+				-webkit-user-select: none;
+				user-select: none;
+				touch-action: none;
+			}
+
+			#app-splash[data-fade-out='true'] {
+				opacity: 0;
+				pointer-events: none;
+			}
+
+			#app-splash .splash-logo {
+				font-size: clamp(2.5rem, 8vw, 4.5rem);
+				font-weight: 900;
+				letter-spacing: 0.05em;
+				line-height: 1;
+				background: linear-gradient(90deg, #f87171, #facc15, #22c55e, #3b82f6);
+				-webkit-background-clip: text;
+				background-clip: text;
+				color: transparent;
+				animation: splash-pulse 1.8s ease-in-out infinite;
+			}
+
+			#app-splash .splash-spinner {
+				width: 64px;
+				height: 64px;
+				border-radius: 50%;
+				border: 4px solid rgba(255, 255, 255, 0.15);
+				border-top-color: #f87171;
+				border-right-color: #facc15;
+				border-bottom-color: #22c55e;
+				border-left-color: #3b82f6;
+				animation: splash-spin 1s linear infinite;
+			}
+
+			#app-splash .splash-progress {
+				width: min(280px, 60vw);
+				height: 6px;
+				border-radius: 999px;
+				background: rgba(255, 255, 255, 0.12);
+				overflow: hidden;
+			}
+
+			#app-splash .splash-progress-bar {
+				height: 100%;
+				width: 0%;
+				border-radius: inherit;
+				background: linear-gradient(90deg, #f87171, #facc15, #22c55e, #3b82f6);
+				transition: width 200ms ease;
+			}
+
+			#app-splash .splash-label {
+				font-size: 0.85rem;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: rgba(241, 245, 249, 0.7);
+			}
+
+			@keyframes splash-spin {
+				to {
+					transform: rotate(360deg);
+				}
+			}
+
+			@keyframes splash-pulse {
+				0%,
+				100% {
+					transform: scale(1);
+					opacity: 1;
+				}
+				50% {
+					transform: scale(1.04);
+					opacity: 0.9;
+				}
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				#app-splash .splash-logo,
+				#app-splash .splash-spinner {
+					animation: none;
+				}
+			}
+		</style>
 	</head>
 	<body>
+		<div id="app-splash" role="status" aria-live="polite" aria-label="Loading Triads">
+			<div class="splash-logo">Triads</div>
+			<div class="splash-spinner" aria-hidden="true"></div>
+			<div class="splash-progress" aria-hidden="true">
+				<div class="splash-progress-bar" id="app-splash-bar"></div>
+			</div>
+			<div class="splash-label" id="app-splash-label">Loading 0%</div>
+		</div>
 		<app-daily-root></app-daily-root>
 	</body>
 </html>

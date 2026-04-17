@@ -1,8 +1,11 @@
 import { Component, computed, ElementRef, inject, input } from '@angular/core'
 import { AnimationOptions, LottieDirective } from 'ngx-lottie'
 
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
+
+const BUBBLE_POP_LOTTIE_PATH = 'lotties/bubble-explosion.json'
 
 @Component({
 	selector: 'app-bubble',
@@ -12,6 +15,8 @@ import { GamePlayState } from '../../enums/game-play.enum'
 })
 export class Bubble {
 	readonly store = inject(GlobalStore)
+
+	private readonly assetPreloadService = inject(AssetPreloadService)
 
 	cue = input.required<string>()
 
@@ -29,7 +34,9 @@ export class Bubble {
 	element = inject<ElementRef<HTMLElement>>(ElementRef)
 
 	bubblePopAnimationOptions: AnimationOptions = {
-		path: 'lotties/bubble-explosion.json',
+		...(this.assetPreloadService.getLottie(BUBBLE_POP_LOTTIE_PATH)
+			? { animationData: this.assetPreloadService.getLottie(BUBBLE_POP_LOTTIE_PATH) }
+			: { path: BUBBLE_POP_LOTTIE_PATH }),
 		autoplay: true,
 		loop: false,
 	}

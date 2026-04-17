@@ -1,0 +1,26 @@
+.plain-input-wrapper {
+	position: relative;
+}
+
+.plain-input-overlay {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	pointer-events: none;
+	user-select: none;
+	.erase-letter {
+		display: inline-block;
+		will-change: transform, opacity;
+	}
+}
+
+.input-text-hidden {
+	color: transparent !important;
+	caret-color: transparent;
+	&::selection {
+		color: transparent;
+		background: transparent;
+	}
+}

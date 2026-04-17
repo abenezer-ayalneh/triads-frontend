@@ -1,8 +1,9 @@
-import { AfterViewChecked, Component, effect, ElementRef, inject, OnDestroy, OnInit, output, viewChild } from '@angular/core'
+import { AfterViewChecked, ChangeDetectorRef, Component, effect, ElementRef, inject, OnDestroy, OnInit, output, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
+import { ReverseErase } from '../../../../shared/directives/reverse-erase'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
@@ -12,9 +13,11 @@ import { GamePlayLogic } from '../../services/game-play-logic'
 import { TurnHintService } from '../../services/turn-hint.service'
 import { InputSet } from '../input-set/input-set'
 
+const REVERSE_ERASE_START_DELAY_MS = 250
+
 @Component({
 	selector: 'app-solution-section',
-	imports: [InputSet, ReactiveFormsModule, AutoCapitalize],
+	imports: [InputSet, ReactiveFormsModule, AutoCapitalize, ReverseErase],
 	templateUrl: './solution-section.html',
 	styleUrl: './solution-section.scss',
 })
@@ -28,8 +31,14 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	// Flag to track if we need to focus the answer field or not
 	shouldFocusAnswerField = false
 
-	/** After wrong answer with first-letter-only hint: focus plain input and select suffix (index 1..end) for editing. */
-	private selectPlainInputSuffixAfterFocus = false
+	/** Whether the plain-input reverse-erase animation is currently running. */
+	isErasing = false
+
+	/** Characters rendered in the ghost overlay during the reverse-erase animation. */
+	eraseOverlayChars: string[] = []
+
+	/** When true, the reverse-erase animation on the plain input will keep the first character. */
+	preserveFirstLetterOnErase = false
 
 	protected readonly GamePlayState = GamePlayState
 
@@ -45,9 +54,15 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 
 	private readonly snackbarService = inject(SnackbarService)
 
+	private readonly cdr = inject(ChangeDetectorRef)
+
 	private readonly answerFieldRef = viewChild<ElementRef<HTMLInputElement>>('answerField')
 
 	private readonly letterInputsRef = viewChild<InputSet>('letterInputs')
+
+	private readonly eraseOverlayRef = viewChild<ElementRef<HTMLElement>>('eraseOverlay')
+
+	private readonly plainReverseEraser = viewChild(ReverseErase)
 
 	private readonly bubblePopAudio = new Audio()
 
@@ -93,7 +108,9 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		this.answerFormControl.reset()
 		// Reset focus flag
 		this.shouldFocusAnswerField = false
-		this.selectPlainInputSuffixAfterFocus = false
+		this.isErasing = false
+		this.eraseOverlayChars = []
+		this.preserveFirstLetterOnErase = false
 		// Clear all pending timeouts
 		this.timeoutIds.forEach((id) => clearTimeout(id))
 		this.timeoutIds = []
@@ -122,7 +139,6 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 				if (this.isMobileDevice()) {
 					answerField.click()
 				}
-				this.applyPlainInputSuffixSelectionIfNeeded(answerField)
 				this.shouldFocusAnswerField = false
 			}, 0)
 			this.timeoutIds.push(timeoutId)
@@ -215,23 +231,83 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * After a wrong guess with first-letter hint on the plain input, select characters after the first
-	 * so the user can re-type without replacing the hinted letter.
+	 * Suppress keystrokes on the plain input while the reverse-erase animation is running.
+	 * The input stays visually enabled so focus is preserved, but typing is a no-op until the
+	 * animation completes.
 	 */
-	private applyPlainInputSuffixSelectionIfNeeded(answerField: HTMLInputElement): void {
-		if (!this.selectPlainInputSuffixAfterFocus) {
+	onAnswerKeydown(event: KeyboardEvent): void {
+		if (this.isErasing) {
+			event.preventDefault()
+		}
+	}
+
+	onPlainLetterErased(index: number): void {
+		const value = this.answerFormControl.value ?? ''
+		if (index < 0 || index >= value.length) {
 			return
 		}
-		this.selectPlainInputSuffixAfterFocus = false
-		const raw = this.answerFormControl.value ?? ''
-		if (raw.length < 1) {
+		const next = value.slice(0, index) + value.slice(index + 1)
+		this.answerFormControl.setValue(next, { emitEvent: false })
+	}
+
+	onPlainReverseEraseFinished(): void {
+		this.isErasing = false
+		this.eraseOverlayChars = []
+		const answerField = this.answerFieldRef()?.nativeElement
+		if (answerField) {
+			answerField.focus()
+			if (this.isMobileDevice()) {
+				answerField.click()
+			}
+			const value = this.answerFormControl.value ?? ''
+			const caret = value.length
+			const apply = () => answerField.setSelectionRange(caret, caret)
+			apply()
+			requestAnimationFrame(apply)
+		}
+		this.cdr.markForCheck()
+	}
+
+	/**
+	 * Schedules the reverse-erase animation to run shortly after a wrong answer is confirmed, so the
+	 * player briefly registers the failure before their word is visibly wiped away letter-by-letter.
+	 */
+	private scheduleWrongAnswerReverseErase(): void {
+		const timeoutId = setTimeout(() => {
+			if (this.store.gamePlayState() === GamePlayState.LOST || this.store.gamePlayState() === GamePlayState.WON) {
+				this.answerFormControl.reset()
+				return
+			}
+			const useLetterInputs = this.store.keywordLengthHint() !== null
+			if (useLetterInputs) {
+				const letterInputs = this.letterInputsRef()
+				if (letterInputs) {
+					letterInputs.playReverseErase()
+				}
+				return
+			}
+			this.playPlainReverseErase()
+		}, REVERSE_ERASE_START_DELAY_MS)
+		this.timeoutIds.push(timeoutId)
+	}
+
+	private playPlainReverseErase(): void {
+		const value = this.answerFormControl.value ?? ''
+		if (value.length === 0) {
 			return
 		}
-		const apply = () => {
-			answerField.setSelectionRange(1, raw.length)
+		this.preserveFirstLetterOnErase = this.store.firstLetterHint() !== null
+		this.eraseOverlayChars = Array.from(value)
+		this.isErasing = true
+		this.cdr.detectChanges()
+		const eraser = this.plainReverseEraser()
+		const overlay = this.eraseOverlayRef()?.nativeElement
+		if (!eraser || !overlay) {
+			this.onPlainReverseEraseFinished()
+			return
 		}
-		apply()
-		requestAnimationFrame(apply)
+		const targets = Array.from(overlay.querySelectorAll<HTMLElement>('.erase-letter'))
+		eraser.play(targets)
 	}
 
 	private handleAnswerResponse(response: boolean | SolvedTriad) {
@@ -270,12 +346,9 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 
 			if (result.gameEnds) {
 				this.gamePlayLogic.handleGameLost()
-			}
-
-			const retainPlainAnswerForFirstLetterRetry = !result.gameEnds && this.store.firstLetterHint() !== null && this.store.keywordLengthHint() === null
-
-			if (!retainPlainAnswerForFirstLetterRetry) {
 				this.answerFormControl.reset()
+			} else {
+				this.scheduleWrongAnswerReverseErase()
 			}
 		}
 
@@ -347,7 +420,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 							if (forcedSelection && forcedSelection.length === 3) {
 								this.store.setSelectedCues(forcedSelection)
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-								this.shouldFocusAnswerField = true
+								this.shouldFocusAnswerField = !this.isErasing
 							} else {
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 								this.store.setSelectedCues([])
@@ -357,16 +430,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 								this.store.setSelectedCues(forcedSelection)
 							}
 							this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
-							this.shouldFocusAnswerField = true
-						}
-
-						if (
-							this.store.gamePlayState() === GamePlayState.ACCEPT_ANSWER &&
-							this.store.firstLetterHint() !== null &&
-							this.store.keywordLengthHint() === null &&
-							(this.answerFormControl.value ?? '').length >= 1
-						) {
-							this.selectPlainInputSuffixAfterFocus = true
+							this.shouldFocusAnswerField = !this.isErasing
 						}
 					}
 				}
@@ -418,7 +482,6 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 							el.disabled = false
 
 							el.focus()
-							this.applyPlainInputSuffixSelectionIfNeeded(el)
 						}
 					}, 0)
 				},

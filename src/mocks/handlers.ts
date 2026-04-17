@@ -1,11 +1,21 @@
 import { http, HttpResponse } from 'msw'
 
 import { SolvedTriad } from '../app/pages/game-play/interfaces/triad.interface'
+import { DailyTodayInfoResponse } from '../app/pages/game-play/services/game-play-api'
 import { environment } from '../environments/environment'
 
 const API_URL = environment.apiUrl
 
 export const handlers = [
+	http.get(`${API_URL}/triads/daily/today`, () => {
+		return HttpResponse.json<DailyTodayInfoResponse>({
+			scheduled: true,
+			puzzleDate: new Date().toISOString().slice(0, 10),
+			triadGroupId: 1,
+			challengeNumber: 1,
+			hasCompletedDaily: false,
+		})
+	}),
 	http.get(`${API_URL}/triads/cues`, () => {
 		// Difficulty parameter is accepted but doesn't affect mock response
 		// For testing empty state, you can return null cues with a message

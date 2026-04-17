@@ -1,8 +1,9 @@
-import { AfterViewChecked, AfterViewInit, Component, effect, ElementRef, input, OnDestroy, output, viewChildren } from '@angular/core'
+import { AfterViewChecked, AfterViewInit, Component, effect, ElementRef, input, OnDestroy, output, viewChild, viewChildren } from '@angular/core'
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 import { Subscription } from 'rxjs'
 
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
+import { ReverseErase } from '../../../../shared/directives/reverse-erase'
 
 @Component({
 	selector: 'app-input-set',
@@ -10,7 +11,7 @@ import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 	styleUrls: ['./input-set.scss'],
 
 	standalone: true,
-	imports: [ReactiveFormsModule, AutoCapitalize],
+	imports: [ReactiveFormsModule, AutoCapitalize, ReverseErase],
 })
 export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	subscriptions$ = new Subscription()
@@ -32,6 +33,10 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	whenSubmitClicked = output<string>()
 
 	inputRefs = viewChildren<ElementRef<HTMLInputElement>>('inputBoxRef')
+
+	private readonly reverseEraser = viewChild(ReverseErase)
+
+	isErasing = false
 
 	inputSetFormGroup = new FormGroup({
 		inputBoxes: new FormArray<FormControl<string | null>>([]),
@@ -166,6 +171,10 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	 * @return {void} This method does not return any value.
 	 */
 	onKeydown(event: KeyboardEvent, index: number): void {
+		if (this.isErasing) {
+			event.preventDefault()
+			return
+		}
 		if (event.key === 'Backspace' && index > 0) {
 			if (this.inputRefs()[index].nativeElement.value === '') {
 				this.inputRefs()[index - 1].nativeElement.focus()
@@ -205,6 +214,38 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 			this.attemptFocus()
 		}, 0)
 		this.timeoutIds.push(timeoutId)
+	}
+
+	/**
+	 * Animates the letter boxes disappearing from the last to the first. When a first-letter hint is
+	 * active, the first box (index 0) is preserved. Resolves when the sequence is complete, at which
+	 * point focus has been restored to the appropriate box via {@link focusForRetry}.
+	 */
+	async playReverseErase(): Promise<void> {
+		const eraser = this.reverseEraser()
+		if (!eraser) {
+			return
+		}
+		this.isErasing = true
+		const targets = this.inputRefs().map((ref) => ref.nativeElement as HTMLElement)
+		await eraser.play(targets)
+	}
+
+	onLetterErased(index: number): void {
+		const control = this.inputBoxes.at(index)
+		if (control) {
+			control.reset()
+		}
+	}
+
+	onReverseEraseFinished(): void {
+		this.inputRefs().forEach((ref) => {
+			const input = ref.nativeElement
+			input.style.opacity = ''
+			input.removeAttribute('aria-hidden')
+		})
+		this.isErasing = false
+		this.focusForRetry()
 	}
 
 	/**
