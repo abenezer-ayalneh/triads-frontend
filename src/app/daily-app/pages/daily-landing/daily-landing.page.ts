@@ -4,11 +4,11 @@ import { NavigationEnd, Router } from '@angular/router'
 import { filter, skip, Subject, takeUntil } from 'rxjs'
 
 import { GamePlayApi } from '../../../pages/game-play/services/game-play-api'
-import { DAILY_CHALLENGE_NUMBER_OFFSET, DAILY_LANDING_ATTRIBUTION, DAILY_LANDING_TAGLINE } from '../../constants/daily-landing.constants'
+import { DAILY_CHALLENGE_NUMBER_OFFSET, DAILY_LANDING_TAGLINE } from '../../constants/daily-landing.constants'
 
-const LIGHT_GREY = '#BBBBBB'
-const DARK_GREY = '#555555'
-const MID_GREY = '#888888'
+const LIGHT_GREY = '#01fac0'
+const WHITE = '#ffffff'
+const MID_GREY = '#fbeaea'
 const HOT_RED = '#EF1A1A'
 const BASE_FONT_PX = 20
 const PREFIX_BIG_PX = 28
@@ -20,7 +20,7 @@ const PHASE2_START_MS = CROSSFADE_AT_MS + CROSSFADE_MS
 const SHIMMER_AT_MS = PHASE2_START_MS + 2000
 const EXPLODE_AT_MS = PHASE2_START_MS + 3500
 const PLAY_HIDE_DELAY_MS = 300
-const NAV_AFTER_EXPLODE_MS = 1100
+const NAV_AFTER_EXPLODE_MS = 100
 
 const CONFETTI_COLORS = ['#EF1A1A', '#FF6B6B', '#FF4444', '#CC0000', '#FF8C00', '#FFD700', '#FF3300', '#FF0066', '#CC3300']
 
@@ -56,8 +56,6 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 	readonly bPrefix = viewChild<ElementRef<HTMLSpanElement>>('bPrefix')
 
 	readonly tagline = DAILY_LANDING_TAGLINE
-
-	readonly attribution = DAILY_LANDING_ATTRIBUTION
 
 	readonly challengeLine = signal<string | null>(null)
 
@@ -178,9 +176,9 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 		})
 
 		this.after(0, () => this.setColor(bt1, LIGHT_GREY, 100))
-		this.after(PULSE_MS, () => this.setColor(bt1, DARK_GREY, 700))
+		this.after(PULSE_MS, () => this.setColor(bt1, WHITE, 700))
 		this.after(PULSE_MS * 2, () => this.setColor(bt1, LIGHT_GREY, 700))
-		this.after(PULSE_MS * 3, () => this.setColor(bt1, DARK_GREY, 700))
+		this.after(PULSE_MS * 3, () => this.setColor(bt1, WHITE, 700))
 
 		this.after(CROSSFADE_AT_MS, () => {
 			bt1.style.transition = `opacity ${CROSSFADE_MS}ms ease`
