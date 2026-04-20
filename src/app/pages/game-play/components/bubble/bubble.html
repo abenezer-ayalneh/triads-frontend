@@ -6,10 +6,11 @@
 	[class.cursor-pointer]="!isDisabled()"
 	[class.cursor-not-allowed]="isDisabled()"
 	[class.opacity-50]="isDisabled()"
+	[style.background-image]="!pop() ? bubbleBackgroundImage() : null"
 	[style.pointer-events]="isDisabled() ? 'none' : 'fill'"
 	(click)="whenClicked()">
 	@if (pop()) {
-		<div lottie [options]="bubblePopAnimationOptions" class="w-full h-full aspect-square circle contain-content relative cursor-pointer"></div>
+		<div lottie [options]="bubblePopLottieOptions()" class="w-full h-full aspect-square circle contain-content relative cursor-pointer"></div>
 	} @else if (selected()) {
 		<div class="w-full h-full aspect-square circle selected"></div>
 	}

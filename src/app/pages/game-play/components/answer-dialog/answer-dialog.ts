@@ -1,5 +1,10 @@
-import { afterNextRender, Component, input, signal } from '@angular/core'
+import { afterNextRender, Component, computed, inject, input, signal } from '@angular/core'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
+
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
+
+const WRONG_ANSWER_LOTTIE_PATH = 'lotties/wrong-answer-lottie.json'
+const CORRECT_ANSWER_LOTTIE_PATH = 'lotties/correct-answer-lottie.json'
 
 @Component({
 	selector: 'app-answer-dialog',
@@ -12,13 +17,19 @@ export class AnswerDialog {
 
 	isOpen = signal(true)
 
-	wrongAnswerAnimationOptions: AnimationOptions = {
-		path: 'lotties/wrong-answer-lottie.json',
-	}
+	private readonly assetPreloadService = inject(AssetPreloadService)
 
-	correctAnswerAnimationOptions: AnimationOptions = {
-		path: 'lotties/correct-answer-lottie.json',
-	}
+	readonly wrongAnswerAnimationOptions = computed<AnimationOptions>(() => {
+		this.assetPreloadService.lottieVersion()
+		const animationData = this.assetPreloadService.getLottie(WRONG_ANSWER_LOTTIE_PATH)
+		return animationData ? { animationData } : { path: WRONG_ANSWER_LOTTIE_PATH }
+	})
+
+	readonly correctAnswerAnimationOptions = computed<AnimationOptions>(() => {
+		this.assetPreloadService.lottieVersion()
+		const animationData = this.assetPreloadService.getLottie(CORRECT_ANSWER_LOTTIE_PATH)
+		return animationData ? { animationData } : { path: CORRECT_ANSWER_LOTTIE_PATH }
+	})
 
 	constructor() {
 		afterNextRender(() => {

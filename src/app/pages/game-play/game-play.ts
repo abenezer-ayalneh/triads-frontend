@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs'
 import { Intro } from '../../shared/components/intro/intro'
 import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
+import { AssetPreloadService } from '../../shared/services/asset-preload.service'
 import { DifficultyService } from '../../shared/services/difficulty.service'
 import { GlobalStore } from '../../state/global.store'
 import { AnswerDialog } from './components/answer-dialog/answer-dialog'
@@ -26,6 +27,8 @@ import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad as SolvedTriadInterface } from './interfaces/triad.interface'
 import { GamePlayApi } from './services/game-play-api'
 import { GamePlayLogic } from './services/game-play-logic'
+
+const LOADING_LOTTIE_PATH = 'lotties/loading-lottie.json'
 
 @Component({
 	selector: 'app-game-play',
@@ -70,9 +73,11 @@ export class GamePlay implements OnInit, OnDestroy {
 		return ''
 	})
 
-	loadingAnimationOptions: AnimationOptions = {
-		path: 'lotties/loading-lottie.json',
-	}
+	readonly loadingAnimationOptions = computed<AnimationOptions>(() => {
+		this.assetPreloadService.lottieVersion()
+		const animationData = this.assetPreloadService.getLottie(LOADING_LOTTIE_PATH)
+		return animationData ? { animationData } : { path: LOADING_LOTTIE_PATH }
+	})
 
 	noTriadsMessage = signal<string>('')
 
@@ -97,6 +102,8 @@ export class GamePlay implements OnInit, OnDestroy {
 	private readonly gamePlayLogic = inject(GamePlayLogic)
 
 	private readonly difficultyService = inject(DifficultyService)
+
+	private readonly assetPreloadService = inject(AssetPreloadService)
 
 	private readonly router = inject(Router)
 

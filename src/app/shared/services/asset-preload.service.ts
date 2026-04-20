@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core'
+import { Injectable, type Signal, signal } from '@angular/core'
 
 import { AVAILABLE_SCORE_GIFS, SCORE_GIF_BASE_PATH } from '../../pages/game-play/constants/share.constant'
 
@@ -12,6 +12,11 @@ export type PreloadProgressListener = (progress: PreloadProgress) => void
 
 const DEFAULT_PRELOAD_TIMEOUT_MS = 15_000
 const UNLOCK_EVENTS: (keyof DocumentEventMap)[] = ['pointerdown', 'keydown', 'touchstart']
+
+interface CachedImageAsset {
+	element: HTMLImageElement
+	resolvedUrl: string
+}
 
 /**
  * Normalizes an asset path used as a cache key. The app uses both `"images/foo.png"`
@@ -68,7 +73,11 @@ export class AssetPreloadService {
 
 	private static readonly lottieCache = new Map<string, unknown>()
 
-	private static readonly imageCache = new Map<string, HTMLImageElement>()
+	private static readonly lottieCacheVersion = signal(0)
+
+	private static readonly imageCache = new Map<string, CachedImageAsset>()
+
+	private static readonly imageCacheVersion = signal(0)
 
 	private static readonly audioBufferCache = new Map<string, AudioBuffer>()
 
@@ -79,6 +88,10 @@ export class AssetPreloadService {
 	private static audioUnlockHandler: (() => void) | null = null
 
 	private static preloadPromise: Promise<PreloadProgress> | null = null
+
+	readonly imageVersion: Signal<number> = AssetPreloadService.imageCacheVersion.asReadonly()
+
+	readonly lottieVersion: Signal<number> = AssetPreloadService.lottieCacheVersion.asReadonly()
 
 	/**
 	 * Kicks off the full preload. Subsequent calls return the same promise.
@@ -148,12 +161,22 @@ export class AssetPreloadService {
 
 	/**
 	 * Returns the cached, already-decoded `HTMLImageElement` for a given path.
-	 * The browser reuses the decoded bitmap for any other `<img>` that points
-	 * at the same URL, so simply keeping this reference alive is enough to
-	 * avoid decode latency on first render.
+	 * Most consumers should prefer `getImageUrl()`, which returns the stable
+	 * object URL backed by the preloaded Blob for direct template binding.
 	 */
 	getImage(path: string): HTMLImageElement | null {
-		return AssetPreloadService.imageCache.get(normalizeKey(path)) ?? null
+		return AssetPreloadService.imageCache.get(normalizeKey(path))?.element ?? null
+	}
+
+	/**
+	 * Returns the resolved URL that should be bound in templates. When an image
+	 * has been preloaded, this is a stable in-memory object URL backed by the
+	 * already-fetched Blob, so consumers avoid a second request for the original
+	 * asset path.
+	 */
+	getImageUrl(path: string): string {
+		const key = normalizeKey(path)
+		return AssetPreloadService.imageCache.get(key)?.resolvedUrl ?? key
 	}
 
 	/**
@@ -189,27 +212,40 @@ export class AssetPreloadService {
 		source.start(0)
 	}
 
-	private static preloadImage(path: string): Promise<void> {
+	private static async preloadImage(path: string): Promise<void> {
 		const key = normalizeKey(path)
 		if (AssetPreloadService.imageCache.has(key)) {
-			return Promise.resolve()
+			return
 		}
 
-		const img = new Image()
-		img.decoding = 'async'
-		img.loading = 'eager'
-		img.src = key
+		let resolvedUrl: string | null = null
 
-		const decodePromise = typeof img.decode === 'function' ? img.decode() : AssetPreloadService.waitForImageLoad(img)
+		try {
+			const response = await fetch(key, { cache: 'force-cache' })
+			if (!response.ok) {
+				throw new Error(`HTTP ${response.status}`)
+			}
 
-		return decodePromise
-			.then(() => {
-				AssetPreloadService.imageCache.set(key, img)
-			})
-			.catch((error) => {
-				console.warn(`Failed to preload image: ${key}`, error)
-				throw error
-			})
+			const blob = await response.blob()
+			resolvedUrl = URL.createObjectURL(blob)
+
+			const img = new Image()
+			img.decoding = 'async'
+			img.loading = 'eager'
+			img.src = resolvedUrl
+
+			const decodePromise = typeof img.decode === 'function' ? img.decode() : AssetPreloadService.waitForImageLoad(img)
+			await decodePromise
+
+			AssetPreloadService.imageCache.set(key, { element: img, resolvedUrl })
+			AssetPreloadService.imageCacheVersion.update((version) => version + 1)
+		} catch (error) {
+			if (resolvedUrl) {
+				URL.revokeObjectURL(resolvedUrl)
+			}
+			console.warn(`Failed to preload image: ${key}`, error)
+			throw error
+		}
 	}
 
 	private static waitForImageLoad(img: HTMLImageElement): Promise<void> {
@@ -232,6 +268,7 @@ export class AssetPreloadService {
 			}
 			const data = await response.json()
 			AssetPreloadService.lottieCache.set(key, data)
+			AssetPreloadService.lottieCacheVersion.update((version) => version + 1)
 		} catch (error) {
 			console.warn(`Failed to preload lottie: ${key}`, error)
 			throw error

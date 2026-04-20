@@ -1,6 +1,7 @@
 import { NgClass } from '@angular/common'
 import { Component, computed, inject } from '@angular/core'
 
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { GlobalStore } from '../../../../state/global.store'
 
 @Component({
@@ -11,6 +12,16 @@ import { GlobalStore } from '../../../../state/global.store'
 })
 export class TurnsBox {
 	readonly store = inject(GlobalStore)
+
+	private readonly assetPreloadService = inject(AssetPreloadService)
+
+	readonly turns = computed(() => {
+		this.assetPreloadService.imageVersion()
+		return this.store.turns().map((turn) => ({
+			...turn,
+			iconUrl: turn.icon ? this.assetPreloadService.getImageUrl(turn.icon) : '',
+		}))
+	})
 
 	readonly isLastTurnAndNoHints = computed(() => {
 		const turns = this.store.turns()

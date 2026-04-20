@@ -5,10 +5,13 @@ import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
 
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { getScoreGifPath, getScorePngPath } from '../../constants/share.constant'
 import { SolutionReveal } from '../solution-reveal/solution-reveal'
+
+const CELEBRATION_SOUND_PATH = 'sounds/ta-dah.mp3'
 
 @Component({
 	selector: 'app-game-result-dialog',
@@ -25,6 +28,8 @@ export class GameResultDialog {
 
 	private readonly router = inject(Router)
 
+	private readonly assetPreloadService = inject(AssetPreloadService)
+
 	private readonly snackbarService = inject(SnackbarService)
 
 	showPlayAgainButton = signal(false)
@@ -35,14 +40,12 @@ export class GameResultDialog {
 
 	readonly scorePngPath = computed(() => getScorePngPath(this.store.gameScore()))
 
-	readonly scoreGifPath = computed(() => getScoreGifPath(this.store.gameScore()))
-
-	private readonly taDahAudio = new Audio()
+	readonly scoreGifPath = computed(() => {
+		this.assetPreloadService.imageVersion()
+		return this.assetPreloadService.getImageUrl(getScoreGifPath(this.store.gameScore()))
+	})
 
 	constructor() {
-		this.taDahAudio.src = 'sounds/ta-dah.mp3'
-		this.taDahAudio.volume = 0.7
-
 		effect((onCleanup) => {
 			const isDaily = this.store.gameMode() === 'daily'
 			const target = this.store.dailyNextPuzzleAt()
@@ -96,11 +99,7 @@ export class GameResultDialog {
 
 				// Check if perfect score (15) - trigger celebration
 				if (gameScore === 15) {
-					// Play ta-dah sound effect
-					this.taDahAudio.play().catch((error) => {
-						// Silently fail if audio can't play (e.g., user interaction required)
-						console.warn('Could not play celebration sound:', error)
-					})
+					this.assetPreloadService.playSound(CELEBRATION_SOUND_PATH, { volume: 0.7 })
 				}
 			}
 		})

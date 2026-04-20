@@ -1,9 +1,13 @@
-import { Component, ElementRef, inject, model, OnInit, viewChild } from '@angular/core'
+import { Component, computed, ElementRef, inject, model, OnInit, viewChild } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { UserService } from '../../../../shared/services/user.service'
 import { GlobalStore } from '../../../../state/global.store'
+
+const HOW_TO_PLAY_LOTTIE_PATH = 'lotties/how-to-play-lottie.json'
+const PLAY_BUTTON_LOTTIE_PATH = 'lotties/play-button-lottie.json'
 
 @Component({
 	selector: 'app-user-info-dialog',
@@ -20,15 +24,21 @@ export class UserInfoDialog implements OnInit {
 
 	generatedUsername: string | null = null
 
-	infoButtonLottieAnimationOptions: AnimationOptions = {
-		path: '/lotties/how-to-play-lottie.json',
-	}
+	readonly infoButtonLottieAnimationOptions = computed<AnimationOptions>(() => {
+		this.assetPreloadService.lottieVersion()
+		const animationData = this.assetPreloadService.getLottie(HOW_TO_PLAY_LOTTIE_PATH)
+		return animationData ? { animationData } : { path: HOW_TO_PLAY_LOTTIE_PATH }
+	})
 
-	playButtonLottieAnimationOptions: AnimationOptions = {
-		path: '/lotties/play-button-lottie.json',
-	}
+	readonly playButtonLottieAnimationOptions = computed<AnimationOptions>(() => {
+		this.assetPreloadService.lottieVersion()
+		const animationData = this.assetPreloadService.getLottie(PLAY_BUTTON_LOTTIE_PATH)
+		return animationData ? { animationData } : { path: PLAY_BUTTON_LOTTIE_PATH }
+	})
 
 	private readonly userService = inject(UserService)
+
+	private readonly assetPreloadService = inject(AssetPreloadService)
 
 	ngOnInit() {
 		this.generateUsername()

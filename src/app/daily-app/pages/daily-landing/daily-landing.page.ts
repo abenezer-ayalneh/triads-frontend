@@ -1,9 +1,10 @@
 import { DOCUMENT } from '@angular/common'
-import { ChangeDetectionStrategy, Component, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { NavigationEnd, Router } from '@angular/router'
 import { filter, skip, Subject, takeUntil } from 'rxjs'
 
 import { GamePlayApi } from '../../../pages/game-play/services/game-play-api'
+import { AssetPreloadService } from '../../../shared/services/asset-preload.service'
 import { DAILY_CHALLENGE_NUMBER_OFFSET, DAILY_LANDING_TAGLINE } from '../../constants/daily-landing.constants'
 
 const LIGHT_GREY = '#01fac0'
@@ -21,6 +22,7 @@ const SHIMMER_AT_MS = PHASE2_START_MS + 2000
 const EXPLODE_AT_MS = PHASE2_START_MS + 3500
 const PLAY_HIDE_DELAY_MS = 300
 const NAV_AFTER_EXPLODE_MS = 100
+const TRIADS_LOGO_IMAGE_PATH = 'images/triads-logo-animated.svg'
 
 const CONFETTI_COLORS = ['#EF1A1A', '#FF6B6B', '#FF4444', '#CC0000', '#FF8C00', '#FFD700', '#FF3300', '#FF0066', '#CC3300']
 
@@ -41,6 +43,8 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 
 	private readonly document = inject(DOCUMENT)
 
+	private readonly assetPreloadService = inject(AssetPreloadService)
+
 	private readonly destroy$ = new Subject<void>()
 
 	private timers: ReturnType<typeof setTimeout>[] = []
@@ -60,6 +64,11 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 	readonly challengeLine = signal<string | null>(null)
 
 	readonly challengeLoading = signal(true)
+
+	readonly logoUrl = computed(() => {
+		this.assetPreloadService.imageVersion()
+		return this.assetPreloadService.getImageUrl(TRIADS_LOGO_IMAGE_PATH)
+	})
 
 	readonly dailyScheduled = signal(true)
 

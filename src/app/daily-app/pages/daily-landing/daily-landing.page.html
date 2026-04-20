@@ -1,12 +1,6 @@
 <div class="flex h-full w-full flex-col items-center justify-center gap-3 px-4 py-6 text-center">
 	<div class="flex w-full max-w-md flex-col items-center gap-3">
-		<img
-			src="images/triads-logo-animated.svg"
-			alt="Triads"
-			decoding="async"
-			class="mx-auto h-auto w-full max-w-70 object-contain scale-200"
-			width="280"
-			height="200" />
+		<img [src]="logoUrl()" alt="Triads" decoding="async" class="mx-auto h-auto w-full max-w-70 object-contain scale-200" width="280" height="200" />
 
 		<p class="text-xl font-semibold leading-snug text-base-content md:text-2xl">{{ tagline }}</p>
 		@if (!challengeLoading() && challengeLine(); as line) {

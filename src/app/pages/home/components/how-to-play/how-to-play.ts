@@ -1,11 +1,18 @@
 import { CommonModule } from '@angular/common'
-import { Component, ElementRef, inject, ViewChild } from '@angular/core'
+import { Component, computed, ElementRef, inject, ViewChild } from '@angular/core'
 import { FormsModule } from '@angular/forms'
 import { IonModal } from '@ionic/angular/standalone'
 import { OverlayEventDetail } from '@ionic/core/components'
 
 import { Dialog } from '../../../../shared/components/dialog/dialog'
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { GlobalStore } from '../../../../state/global.store'
+
+const TURN_IMAGE_PATHS = {
+	one: 'images/turn-one.png',
+	two: 'images/turn-two.png',
+	three: 'images/turn-three.png',
+} as const
 
 @Component({
 	selector: 'app-how-to-play',
@@ -17,6 +24,8 @@ export class HowToPlay {
 	readonly store = inject(GlobalStore)
 
 	readonly elementRef = inject(ElementRef)
+
+	private readonly assetPreloadService = inject(AssetPreloadService)
 
 	readonly scoringData = [
 		{ outcome: 'A perfect score! Got all 4 Triads with no misses, no hints', points: 15 },
@@ -32,6 +41,15 @@ export class HowToPlay {
 	message = 'This modal example uses triggers to automatically open a modal when the button is clicked.'
 
 	name!: string
+
+	readonly turnImageUrls = computed(() => {
+		this.assetPreloadService.imageVersion()
+		return {
+			one: this.assetPreloadService.getImageUrl(TURN_IMAGE_PATHS.one),
+			two: this.assetPreloadService.getImageUrl(TURN_IMAGE_PATHS.two),
+			three: this.assetPreloadService.getImageUrl(TURN_IMAGE_PATHS.three),
+		}
+	})
 
 	onClose() {
 		this.store.setShowHowToPlay(false)

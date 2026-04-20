@@ -1,13 +1,16 @@
-import { Component, ElementRef, inject, OnDestroy, viewChild } from '@angular/core'
+import { Component, computed, ElementRef, inject, OnDestroy, viewChild } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
 import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
 import { GamePlayApi } from '../../services/game-play-api'
 import { GamePlayLogic } from '../../services/game-play-logic'
 import { TurnHintService } from '../../services/turn-hint.service'
+
+const LIFESAVER_IMAGE_PATH = 'images/lifesaver.svg'
 
 @Component({
 	selector: 'app-hints-box',
@@ -20,6 +23,8 @@ export class HintsBox implements OnDestroy {
 
 	private readonly turnHintService = inject(TurnHintService)
 
+	private readonly assetPreloadService = inject(AssetPreloadService)
+
 	private readonly snackbarService = inject(SnackbarService)
 
 	private readonly gamePlayApi = inject(GamePlayApi)
@@ -29,6 +34,11 @@ export class HintsBox implements OnDestroy {
 	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
 
 	private readonly subscriptions$ = new Subscription()
+
+	readonly lifesaverIconUrl = computed(() => {
+		this.assetPreloadService.imageVersion()
+		return this.assetPreloadService.getImageUrl(LIFESAVER_IMAGE_PATH)
+	})
 
 	ngOnDestroy() {
 		this.subscriptions$.unsubscribe()

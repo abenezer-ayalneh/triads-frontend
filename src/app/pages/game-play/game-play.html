@@ -9,7 +9,7 @@
 				<div class="w-full h-full flex justify-center items-center">
 					<span
 						class="w-40 h-40 landscape:max-lg:w-20 landscape:max-lg:h-20 md:w-48 md:h-48 lg:w-56 lg:h-56 bg-neutral/20 rounded-2xl backdrop-blur-sm">
-						<ng-lottie [options]="loadingAnimationOptions" />
+						<ng-lottie [options]="loadingAnimationOptions()" />
 					</span>
 				</div>
 			} @else if (cueFetchingState() === RequestState.READY) {

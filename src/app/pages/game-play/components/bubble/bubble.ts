@@ -5,6 +5,7 @@ import { AssetPreloadService } from '../../../../shared/services/asset-preload.s
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
 
+const BUBBLE_IMAGE_PATH = 'images/bubble.png'
 const BUBBLE_POP_LOTTIE_PATH = 'lotties/bubble-explosion.json'
 
 @Component({
@@ -30,16 +31,23 @@ export class Bubble {
 		() => this.store.isCheckingTriad() || this.store.isCheckingAnswer() || this.store.isFetchingHint() || this.store.isFetchingFinalTriadCues(),
 	)
 
+	readonly bubbleBackgroundImage = computed(() => {
+		this.assetPreloadService.imageVersion()
+		return `url("${this.assetPreloadService.getImageUrl(BUBBLE_IMAGE_PATH)}")`
+	})
+
 	// Expose host element so parent can position it
 	element = inject<ElementRef<HTMLElement>>(ElementRef)
 
-	bubblePopAnimationOptions: AnimationOptions = {
-		...(this.assetPreloadService.getLottie(BUBBLE_POP_LOTTIE_PATH)
-			? { animationData: this.assetPreloadService.getLottie(BUBBLE_POP_LOTTIE_PATH) }
-			: { path: BUBBLE_POP_LOTTIE_PATH }),
-		autoplay: true,
-		loop: false,
-	}
+	readonly bubblePopLottieOptions = computed<AnimationOptions>(() => {
+		this.assetPreloadService.lottieVersion()
+		const animationData = this.assetPreloadService.getLottie(BUBBLE_POP_LOTTIE_PATH)
+		return {
+			...(animationData ? { animationData } : { path: BUBBLE_POP_LOTTIE_PATH }),
+			autoplay: true,
+			loop: false,
+		}
+	})
 
 	whenClicked() {
 		if (this.isDisabled()) {
