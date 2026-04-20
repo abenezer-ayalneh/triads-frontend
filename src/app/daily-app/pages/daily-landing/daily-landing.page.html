@@ -12,9 +12,19 @@
 		@if (!challengeLoading() && challengeLine(); as line) {
 			<p class="text-lg font-semibold leading-snug text-base-content md:text-xl">{{ line }}</p>
 		}
+		@if (!challengeLoading() && !dailyScheduled()) {
+			<p class="text-sm leading-snug text-base-content/70 md:text-base">No daily game is scheduled for today. Please check back later.</p>
+		}
 		<!--		<p class="text-sm text-base-content/80 md:text-base">{{ attribution }}</p>-->
 
-		@if (dailyCompleted()) {
+		@if (!dailyScheduled()) {
+			<button
+				type="button"
+				disabled
+				class="btn btn-lg mt-2 w-80 max-w-full cursor-not-allowed border-2 border-base-300/40 bg-base-100/50 font-semibold text-base-content shadow-md backdrop-blur-sm">
+				No game today
+			</button>
+		} @else if (dailyCompleted()) {
 			<button
 				type="button"
 				disabled

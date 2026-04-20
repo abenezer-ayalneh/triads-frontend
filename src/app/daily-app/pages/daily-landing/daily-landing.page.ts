@@ -61,6 +61,8 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 
 	readonly challengeLoading = signal(true)
 
+	readonly dailyScheduled = signal(true)
+
 	readonly dailyCompleted = signal(false)
 
 	readonly playAnimationRunning = signal(false)
@@ -119,15 +121,18 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 			next: (res) => {
 				this.challengeLoading.set(false)
 				if (res.scheduled) {
+					this.dailyScheduled.set(true)
 					this.challengeLine.set(`Challenge #${DAILY_CHALLENGE_NUMBER_OFFSET + res.challengeNumber}`)
 					this.dailyCompleted.set(res.hasCompletedDaily === true)
 				} else {
+					this.dailyScheduled.set(false)
 					this.challengeLine.set(null)
 					this.dailyCompleted.set(false)
 				}
 			},
 			error: () => {
 				this.challengeLoading.set(false)
+				this.dailyScheduled.set(false)
 				this.challengeLine.set(null)
 				this.dailyCompleted.set(false)
 			},
