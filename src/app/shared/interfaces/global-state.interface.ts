@@ -33,4 +33,5 @@ export interface GlobalState {
 	dailyNextPuzzleAt: string | null
 	dailyStandaloneResult: boolean
 	dailyNoScheduleMessage: string | null
+	dailyReviewTriads: SolvedTriad[] | null
 }

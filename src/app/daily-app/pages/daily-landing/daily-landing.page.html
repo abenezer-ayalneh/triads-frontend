@@ -19,12 +19,22 @@
 				No game today
 			</button>
 		} @else if (dailyCompleted()) {
-			<button
-				type="button"
-				disabled
-				class="btn btn-lg mt-2 w-80 max-w-full cursor-not-allowed border-2 border-base-300/40 bg-base-100/50 font-semibold text-base-content shadow-md backdrop-blur-sm">
-				Come back tomorrow
-			</button>
+			<div class="mt-2 flex w-80 max-w-full flex-row gap-2">
+				<button
+					type="button"
+					class="btn btn-lg min-w-0 flex-1 border-base-100/30 bg-base-100/10 font-semibold text-base-content shadow-md backdrop-blur-sm"
+					[disabled]="completedDailySummaryLoading()"
+					(click)="onShareCompletedDaily()">
+					{{ completedDailySummaryLoading() ? 'Loading...' : 'Share' }}
+				</button>
+				<button
+					type="button"
+					class="triad-gradient btn btn-lg min-w-0 flex-1 border-none text-primary-content"
+					[disabled]="completedDailySummaryLoading()"
+					(click)="onReviewCompletedDaily()">
+					Review
+				</button>
+			</div>
 		} @else {
 			<button
 				type="button"
@@ -45,3 +55,11 @@
 		}
 	</div>
 </div>
+
+@if (completedDailySummary(); as summary) {
+	<ion-modal [isOpen]="reviewDialogOpen()" (didDismiss)="closeReviewDialog()">
+		<ng-template>
+			<app-daily-review-dialog [summary]="summary" (whenClosed)="closeReviewDialog()" />
+		</ng-template>
+	</ion-modal>
+}

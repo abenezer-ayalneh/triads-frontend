@@ -53,6 +53,7 @@ const initialState: GlobalState = {
 	dailyNextPuzzleAt: null,
 	dailyStandaloneResult: false,
 	dailyNoScheduleMessage: null,
+	dailyReviewTriads: null,
 }
 
 export const GlobalStore = signalStore(
@@ -227,6 +228,7 @@ export const GlobalStore = signalStore(
 				dailyNextPuzzleAt: null,
 				dailyStandaloneResult: false,
 				dailyNoScheduleMessage: null,
+				dailyReviewTriads: null,
 			}))
 		},
 		setIntroShownPerSession: (introShownPerSession: boolean) => {
@@ -243,6 +245,9 @@ export const GlobalStore = signalStore(
 		},
 		setDailyNoScheduleMessage: (dailyNoScheduleMessage: string | null) => {
 			patchState(store, (state) => ({ ...state, dailyNoScheduleMessage }))
+		},
+		setDailyReviewTriads: (dailyReviewTriads: SolvedTriad[] | null) => {
+			patchState(store, (state) => ({ ...state, dailyReviewTriads }))
 		},
 	})),
 	withHooks({

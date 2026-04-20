@@ -17,23 +17,31 @@
 		@if (showPlayAgainButton()) {
 			@if (isDailyMode()) {
 				<div class="flex flex-col gap-3 landscape:max-lg:gap-2 items-center text-center w-full max-w-sm">
-					<button
-						(click)="shareGameResult()"
-						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-3 w-3 landscape:max-lg:h-3 landscape:max-lg:w-3 md:h-5 md:w-5"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-						</svg>
-						<span class="text-xs landscape:max-lg:text-xs md:text-base">Share</span>
-					</button>
+					<div class="flex w-full flex-row justify-center gap-2">
+						<button
+							(click)="shareGameResult()"
+							class="btn btn-outline btn-xs min-w-0 flex-1 landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info flex items-center justify-center gap-1 landscape:max-lg:gap-1 md:gap-2">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								class="h-3 w-3 landscape:max-lg:h-3 landscape:max-lg:w-3 md:h-5 md:w-5"
+								fill="none"
+								viewBox="0 0 24 24"
+								stroke="currentColor">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+							</svg>
+							<span class="text-xs landscape:max-lg:text-xs md:text-base">Share</span>
+						</button>
+						<button
+							(click)="openDailyReview()"
+							class="btn btn-outline btn-xs min-w-0 flex-1 landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-success flex items-center justify-center gap-1 landscape:max-lg:gap-1 md:gap-2"
+							[disabled]="reviewLoading()">
+							<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
+						</button>
+					</div>
 					@if (store.dailyNextPuzzleAt(); as nextAt) {
 						<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/80">
 							Next puzzle opens: {{ nextAt | date: 'medium' }} (your local time)
@@ -75,3 +83,11 @@
 		}
 	</div>
 </div>
+
+@if (reviewSummary(); as summary) {
+	<ion-modal [isOpen]="reviewDialogOpen()" (didDismiss)="closeDailyReview()">
+		<ng-template>
+			<app-daily-review-dialog [summary]="summary" (whenClosed)="closeDailyReview()" />
+		</ng-template>
+	</ion-modal>
+}

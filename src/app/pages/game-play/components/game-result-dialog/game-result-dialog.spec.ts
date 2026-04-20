@@ -1,46 +1,57 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
 import { Router } from '@angular/router'
-import { Capacitor } from '@capacitor/core'
-import { Directory, Filesystem } from '@capacitor/filesystem'
-import { Share } from '@capacitor/share'
 
+import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
+import { DailyPostPlayService } from '../../../../shared/services/daily-post-play.service'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
-import { getScoreGifPath, getScorePngPath } from '../../constants/share.constant'
+import { getScoreGifPath } from '../../constants/share.constant'
 import { GameResultDialog } from './game-result-dialog'
-
-interface GameResultDialogPrivateApi {
-	shareScoreImageNatively: (scorePngPath: string) => Promise<boolean>
-	copyScoreImageToClipboard: (scorePngPath: string) => Promise<boolean>
-	renderImageToPngBlob: (src: string) => Promise<Blob>
-	renderImageToBase64Png: (src: string) => Promise<string>
-}
 
 describe('GameResultDialog', () => {
 	let component: GameResultDialog
 	let fixture: ComponentFixture<GameResultDialog>
-	let snackbarService: jasmine.SpyObj<SnackbarService>
 	let mockStore: {
+		gameMode: jasmine.Spy
 		unsolvedTriads: jasmine.Spy
 		gameScore: jasmine.Spy
 		solvedTriads: jasmine.Spy
-		triadsStep: jasmine.Spy
-		turns: jasmine.Spy
+		dailyNextPuzzleAt: jasmine.Spy
+		dailyReviewTriads: jasmine.Spy
+		triadGroupId: jasmine.Spy
+		setDailyReviewTriads: jasmine.Spy
 		setUnsolvedTriads: jasmine.Spy
 		resetGameState: jasmine.Spy
 	}
+	let dailyPostPlayService: jasmine.SpyObj<DailyPostPlayService>
 
 	beforeEach(async () => {
-		snackbarService = jasmine.createSpyObj<SnackbarService>('SnackbarService', ['showSnackbar'])
 		mockStore = {
+			gameMode: jasmine.createSpy('gameMode').and.returnValue('daily'),
 			unsolvedTriads: jasmine.createSpy('unsolvedTriads').and.returnValue(null),
 			gameScore: jasmine.createSpy('gameScore').and.returnValue(10),
-			solvedTriads: jasmine.createSpy('solvedTriads').and.returnValue([{}, {}]),
-			triadsStep: jasmine.createSpy('triadsStep').and.returnValue('INITIAL'),
-			turns: jasmine.createSpy('turns').and.returnValue([{ available: true }, { available: false }, { available: false }]),
+			solvedTriads: jasmine.createSpy('solvedTriads').and.returnValue([]),
+			dailyNextPuzzleAt: jasmine.createSpy('dailyNextPuzzleAt').and.returnValue('2026-04-21T05:00:00.000Z'),
+			dailyReviewTriads: jasmine
+				.createSpy('dailyReviewTriads')
+				.and.returnValue([{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] }]),
+			triadGroupId: jasmine.createSpy('triadGroupId').and.returnValue(42),
+			setDailyReviewTriads: jasmine.createSpy('setDailyReviewTriads'),
 			setUnsolvedTriads: jasmine.createSpy('setUnsolvedTriads'),
 			resetGameState: jasmine.createSpy('resetGameState'),
 		}
+		dailyPostPlayService = jasmine.createSpyObj<DailyPostPlayService>('DailyPostPlayService', [
+			'shareScoreImage',
+			'createReviewSummary',
+			'mergeReviewTriads',
+			'loadReviewTriads',
+		])
+		dailyPostPlayService.createReviewSummary.and.callFake((summary) => summary)
+		dailyPostPlayService.mergeReviewTriads.and.callFake((solvedTriads, unsolvedTriads) => [...solvedTriads, ...(unsolvedTriads ?? [])])
+		dailyPostPlayService.shareScoreImage.and.resolveTo()
+		dailyPostPlayService.loadReviewTriads.and.resolveTo([
+			{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] },
+		])
 
 		await TestBed.configureTestingModule({
 			imports: [GameResultDialog],
@@ -50,8 +61,20 @@ describe('GameResultDialog', () => {
 					useValue: mockStore,
 				},
 				{
+					provide: DailyPostPlayService,
+					useValue: dailyPostPlayService,
+				},
+				{
+					provide: AssetPreloadService,
+					useValue: {
+						imageVersion: () => 0,
+						getImageUrl: (path: string) => path,
+						playSound: jasmine.createSpy('playSound'),
+					},
+				},
+				{
 					provide: SnackbarService,
-					useValue: snackbarService,
+					useValue: jasmine.createSpyObj<SnackbarService>('SnackbarService', ['showSnackbar']),
 				},
 				{
 					provide: Router,
@@ -78,113 +101,41 @@ describe('GameResultDialog', () => {
 		expect(renderedImage.getAttribute('alt')).toContain('score 10')
 	})
 
-	describe('on web', () => {
-		beforeEach(() => {
-			spyOn(Capacitor, 'isNativePlatform').and.returnValue(false)
-		})
+	it('shares the current score through the shared post-play service', async () => {
+		await component.shareGameResult()
 
-		it('copies score PNG image to clipboard when share is clicked', async () => {
-			const privateApi = component as unknown as GameResultDialogPrivateApi
-			spyOn(privateApi, 'copyScoreImageToClipboard').and.resolveTo(true)
-
-			await component.shareGameResult()
-
-			expect(privateApi.copyScoreImageToClipboard).toHaveBeenCalledWith(getScorePngPath(10))
-			expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Score image copied to clipboard!', 3000)
-		})
-
-		it('shows failure snackbar when clipboard copy fails', async () => {
-			const privateApi = component as unknown as GameResultDialogPrivateApi
-			spyOn(privateApi, 'copyScoreImageToClipboard').and.resolveTo(false)
-
-			await component.shareGameResult()
-
-			expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Failed to copy score image. Please try again.', 5000)
-		})
+		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(10)
 	})
 
-	describe('on native', () => {
-		beforeEach(() => {
-			spyOn(Capacitor, 'isNativePlatform').and.returnValue(true)
-		})
+	it('renders daily share and review actions', () => {
+		const buttons = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).map((button) =>
+			button.textContent?.trim(),
+		)
 
-		it('opens native share sheet when share is clicked', async () => {
-			const privateApi = component as unknown as GameResultDialogPrivateApi
-			spyOn(privateApi, 'shareScoreImageNatively').and.resolveTo(true)
-
-			await component.shareGameResult()
-
-			expect(privateApi.shareScoreImageNatively).toHaveBeenCalledWith(getScorePngPath(10))
-			expect(snackbarService.showSnackbar).not.toHaveBeenCalled()
-		})
-
-		it('shows failure snackbar when native share fails', async () => {
-			const privateApi = component as unknown as GameResultDialogPrivateApi
-			spyOn(privateApi, 'shareScoreImageNatively').and.resolveTo(false)
-
-			await component.shareGameResult()
-
-			expect(snackbarService.showSnackbar).toHaveBeenCalledWith('Failed to share score image. Please try again.', 5000)
-		})
-
-		it('writes PNG to cache and opens share sheet via Capacitor plugins', async () => {
-			const privateApi = component as unknown as GameResultDialogPrivateApi
-			const base64Data = 'aGVsbG8='
-			spyOn(privateApi, 'renderImageToBase64Png').and.resolveTo(base64Data)
-			spyOn(Filesystem, 'writeFile').and.resolveTo({ uri: '' })
-			spyOn(Filesystem, 'getUri').and.resolveTo({ uri: 'file:///cache/triads-score.png' })
-			spyOn(Share, 'share').and.resolveTo({ activityType: '' })
-
-			const result = await privateApi.shareScoreImageNatively('/images/score-pngs/score-10.png')
-
-			expect(privateApi.renderImageToBase64Png).toHaveBeenCalledWith('/images/score-pngs/score-10.png')
-			expect(Filesystem.writeFile).toHaveBeenCalledWith(
-				jasmine.objectContaining({ path: 'triads-score.png', data: base64Data, directory: Directory.Cache }),
-			)
-			expect(Share.share).toHaveBeenCalledWith(jasmine.objectContaining({ files: ['file:///cache/triads-score.png'] }))
-			expect(result).toBe(true)
-		})
-
-		it('returns false when native share throws', async () => {
-			const privateApi = component as unknown as GameResultDialogPrivateApi
-			spyOn(privateApi, 'renderImageToBase64Png').and.rejectWith(new Error('load failed'))
-
-			const result = await privateApi.shareScoreImageNatively('/images/score-pngs/score-10.png')
-
-			expect(result).toBe(false)
-		})
+		expect(buttons).toContain('Share')
+		expect(buttons).toContain('Review')
 	})
 
-	it('copies PNG image to clipboard via canvas and navigator.clipboard.write', async () => {
-		const privateApi = component as unknown as GameResultDialogPrivateApi
-		const pngBlob = new Blob([], { type: 'image/png' })
-		spyOn(privateApi, 'renderImageToPngBlob').and.resolveTo(pngBlob)
-		const clipboardWriteSpy = spyOn(navigator.clipboard, 'write').and.resolveTo()
+	it('opens the review dialog immediately when daily review data is already available', async () => {
+		await component.openDailyReview()
 
-		const result = await privateApi.copyScoreImageToClipboard('/images/score-pngs/score-10.png')
-
-		expect(privateApi.renderImageToPngBlob).toHaveBeenCalledWith('/images/score-pngs/score-10.png')
-		expect(clipboardWriteSpy).toHaveBeenCalled()
-		expect(result).toBe(true)
+		expect(component.reviewDialogOpen()).toBeTrue()
+		expect(dailyPostPlayService.loadReviewTriads).not.toHaveBeenCalled()
 	})
 
-	it('returns false when image rendering fails', async () => {
-		const privateApi = component as unknown as GameResultDialogPrivateApi
-		spyOn(privateApi, 'renderImageToPngBlob').and.rejectWith(new Error('load failed'))
+	it('loads review data before opening when daily triads are not cached yet', async () => {
+		mockStore.dailyReviewTriads.and.returnValue(null)
+		mockStore.solvedTriads.and.returnValue([])
+		mockStore.unsolvedTriads.and.returnValue(null)
+		fixture = TestBed.createComponent(GameResultDialog)
+		component = fixture.componentInstance
+		fixture.componentRef.setInput('result', 'WON')
+		fixture.detectChanges()
 
-		const result = await privateApi.copyScoreImageToClipboard('/images/score-pngs/score-10.png')
+		await component.openDailyReview()
 
-		expect(result).toBe(false)
-	})
-
-	it('returns false when navigator.clipboard.write is not available', async () => {
-		const privateApi = component as unknown as GameResultDialogPrivateApi
-		const originalClipboard = navigator.clipboard
-		;(navigator as { clipboard?: Clipboard }).clipboard = undefined
-
-		const result = await privateApi.copyScoreImageToClipboard('/images/score-pngs/score-10.png')
-
-		;(navigator as { clipboard?: Clipboard }).clipboard = originalClipboard
-		expect(result).toBe(false)
+		expect(dailyPostPlayService.loadReviewTriads).toHaveBeenCalledWith(42)
+		expect(mockStore.setDailyReviewTriads).toHaveBeenCalled()
+		expect(component.reviewDialogOpen()).toBeTrue()
 	})
 })

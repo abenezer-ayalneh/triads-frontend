@@ -1,5 +1,6 @@
 export const WRONG_MESSAGES = ['Oops!', 'Nope', 'Incorrect', 'Missed it!', 'Try Again', 'Error']
 
+// TODO: create a daily version of these message
 export const GAME_END_MESSAGES: Record<number, string> = {
 	15: 'WOW! You did it! A perfect score!',
 	12: 'Nice one! Think you can do even better?',

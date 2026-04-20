@@ -1,0 +1,36 @@
+<app-dialog title="Daily Review" (whenClosed)="onClose()">
+	<div class="flex flex-col gap-4 bg-base-100 text-base-content">
+		<div class="rounded-2xl border border-base-300 bg-base-200/60 p-4 text-center">
+			<p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/60">Today's result</p>
+			<p class="mt-2 text-2xl font-bold" [class.text-success]="summary().result === 'WON'" [class.text-error]="summary().result === 'LOST'">
+				{{ summary().result === 'WON' ? 'Solved' : 'Not solved' }}
+			</p>
+			<p class="mt-1 text-sm text-base-content/70">Score: {{ summary().score }}</p>
+			@if (summary().nextPuzzleAt) {
+				<p class="mt-2 text-xs text-base-content/70">Next puzzle opens: {{ summary().nextPuzzleAt | date: 'medium' }} (your local time)</p>
+			}
+		</div>
+
+		<div class="flex flex-col gap-3">
+			<p class="text-sm font-semibold text-base-content">All four triads</p>
+			<div class="flex flex-col gap-3">
+				@for (triad of summary().triads; track triad.id) {
+					<div class="rounded-2xl border border-base-300 bg-base-100 p-4 shadow-sm">
+						<div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+							<div>
+								<p class="text-xs font-semibold uppercase tracking-[0.15em] text-base-content/50">Key</p>
+								<p class="text-lg font-bold text-base-content">{{ triad.keyword }}</p>
+							</div>
+							<p class="text-xs text-base-content/50">Triad {{ $index + 1 }}</p>
+						</div>
+						<ul class="mt-3 flex list-none flex-col gap-2 p-0 text-sm text-base-content/80">
+							@for (phrase of triad.fullPhrases; track phrase) {
+								<li class="rounded-xl bg-base-200/70 px-3 py-2">{{ phrase }}</li>
+							}
+						</ul>
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+</app-dialog>

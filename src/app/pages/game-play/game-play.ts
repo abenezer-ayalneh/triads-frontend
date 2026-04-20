@@ -11,6 +11,7 @@ import { Intro } from '../../shared/components/intro/intro'
 import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { AssetPreloadService } from '../../shared/services/asset-preload.service'
+import { DailyPostPlayService } from '../../shared/services/daily-post-play.service'
 import { DifficultyService } from '../../shared/services/difficulty.service'
 import { GlobalStore } from '../../state/global.store'
 import { AnswerDialog } from './components/answer-dialog/answer-dialog'
@@ -105,6 +106,8 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private readonly assetPreloadService = inject(AssetPreloadService)
 
+	private readonly dailyPostPlayService = inject(DailyPostPlayService)
+
 	private readonly router = inject(Router)
 
 	private subscriptions$ = new Subscription()
@@ -141,6 +144,7 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.noTriadsMessage.set('')
 		this.store.setDailyNoScheduleMessage(null)
 		this.store.setDailyStandaloneResult(false)
+		this.store.setDailyReviewTriads(null)
 		this.subscriptions$.add(
 			this.gamePlayApi.getDailyCues().subscribe({
 				next: (response) => {
@@ -156,6 +160,7 @@ export class GamePlay implements OnInit, OnDestroy {
 						this.store.setGameScore(response.score ?? 0)
 						this.store.setDailyStandaloneResult(true)
 						this.store.setGamePlayState(response.attemptStatus === 'WON' ? GamePlayState.WON : GamePlayState.LOST)
+						this.prefetchDailyReviewTriads(response.triadGroupId)
 						this.cueFetchingState.set(RequestState.IDLE)
 						return
 					}
@@ -360,6 +365,7 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.noTriadsMessage.set('')
 		this.store.setDailyNoScheduleMessage(null)
 		this.store.setDailyStandaloneResult(false)
+		this.store.setDailyReviewTriads(null)
 		this.showWelcomeDialog.set(false)
 		this.welcomeDialogTotalPoints.set(0)
 		// Reset GamePlayLogic BehaviorSubjects
@@ -382,6 +388,13 @@ export class GamePlay implements OnInit, OnDestroy {
 			RANDOM: 'Mixed (complete)',
 		}
 		return labels[difficulty] || difficulty
+	}
+
+	private prefetchDailyReviewTriads(triadGroupId: string | number) {
+		void this.dailyPostPlayService.loadReviewTriads(triadGroupId).then(
+			(triads) => this.store.setDailyReviewTriads(triads),
+			() => this.store.setDailyReviewTriads(null),
+		)
 	}
 
 	private async animateSolvedTriadAppearance(solvedArea: HTMLElement) {
