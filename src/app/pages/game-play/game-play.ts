@@ -12,6 +12,7 @@ import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
 import { AssetPreloadService } from '../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../shared/services/daily-post-play.service'
+import { DailyRolloverService } from '../../shared/services/daily-rollover.service'
 import { DifficultyService } from '../../shared/services/difficulty.service'
 import { GlobalStore } from '../../state/global.store'
 import { AnswerDialog } from './components/answer-dialog/answer-dialog'
@@ -108,11 +109,15 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private readonly dailyPostPlayService = inject(DailyPostPlayService)
 
+	private readonly dailyRolloverService = inject(DailyRolloverService)
+
 	private readonly router = inject(Router)
 
 	private subscriptions$ = new Subscription()
 
 	private readonly solutionSectionRef = viewChild<SolutionSection>('solutionSection')
+
+	private stopEasternDayWatcher: (() => void) | null = null
 
 	constructor() {
 		// Watch for game completion to check if welcome dialog should be shown
@@ -128,6 +133,11 @@ export class GamePlay implements OnInit, OnDestroy {
 		// Initialize selected difficulty with current setting
 		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
 		if (this.store.gameMode() === 'daily') {
+			this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher(() => {
+				if (this.shouldRefreshDailyGameForRollover()) {
+					this.restartGame()
+				}
+			})
 			this.initializeDailyGame()
 		} else {
 			this.initializeGame()
@@ -135,6 +145,8 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy() {
+		this.stopEasternDayWatcher?.()
+		this.stopEasternDayWatcher = null
 		// Reset game state when navigating away from the gameplay page
 		this.resetGameState()
 	}
@@ -240,11 +252,11 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	restartGame() {
 		if (this.store.gameMode() === 'daily') {
+			this.resetGameState()
+			this.initializeDailyGame()
 			return
 		}
-		// Reset all game state
 		this.resetGameState()
-		// Reinitialize the game
 		this.initializeGame()
 	}
 
@@ -395,6 +407,18 @@ export class GamePlay implements OnInit, OnDestroy {
 			(triads) => this.store.setDailyReviewTriads(triads),
 			() => this.store.setDailyReviewTriads(null),
 		)
+	}
+
+	private shouldRefreshDailyGameForRollover(): boolean {
+		if (this.store.gameMode() !== 'daily') {
+			return false
+		}
+
+		const gameState = this.store.gamePlayState()
+		const canRefreshCompletedState = gameState === GamePlayState.WON || gameState === GamePlayState.LOST
+		const canRefreshUnavailableState = this.cueFetchingState() === RequestState.EMPTY || this.cueFetchingState() === RequestState.ERROR
+
+		return canRefreshCompletedState || canRefreshUnavailableState
 	}
 
 	private async animateSolvedTriadAppearance(solvedArea: HTMLElement) {

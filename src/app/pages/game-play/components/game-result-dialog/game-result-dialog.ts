@@ -42,6 +42,8 @@ export class GameResultDialog {
 
 	countdownLabel = signal('')
 
+	nextDailyPuzzleAvailable = signal(false)
+
 	readonly scoreGifPath = computed(() => {
 		this.assetPreloadService.imageVersion()
 		return this.assetPreloadService.getImageUrl(getScoreGifPath(this.store.gameScore()))
@@ -87,15 +89,18 @@ export class GameResultDialog {
 			const isDaily = this.store.gameMode() === 'daily'
 			const target = this.store.dailyNextPuzzleAt()
 			if (!isDaily || !target) {
+				this.nextDailyPuzzleAvailable.set(false)
 				this.countdownLabel.set('')
 				return
 			}
 			const tick = () => {
 				const diff = new Date(target).getTime() - Date.now()
 				if (diff <= 0) {
-					this.countdownLabel.set('The next puzzle is available now (refresh the page).')
+					this.nextDailyPuzzleAvailable.set(true)
+					this.countdownLabel.set('The next puzzle is available now.')
 					return
 				}
+				this.nextDailyPuzzleAvailable.set(false)
 				const h = Math.floor(diff / 3600000)
 				const m = Math.floor((diff % 3600000) / 60000)
 				const s = Math.floor((diff % 60000) / 1000)
@@ -140,6 +145,10 @@ export class GameResultDialog {
 				}
 			}
 		})
+	}
+
+	playNow() {
+		this.restartGame()
 	}
 
 	restartGame() {

@@ -10,6 +10,7 @@ import { GamePlayApi } from '../../../pages/game-play/services/game-play-api'
 import { UserInfoDialog } from '../../../pages/home/components/user-info-dialog/user-info-dialog'
 import { AssetPreloadService } from '../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../shared/services/daily-post-play.service'
+import { DailyRolloverService } from '../../../shared/services/daily-rollover.service'
 import { SnackbarService } from '../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../state/global.store'
 import { DAILY_CHALLENGE_NUMBER_OFFSET, DAILY_LANDING_TAGLINE } from '../../constants/daily-landing.constants'
@@ -55,6 +56,8 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 
 	private readonly dailyPostPlayService = inject(DailyPostPlayService)
 
+	private readonly dailyRolloverService = inject(DailyRolloverService)
+
 	private readonly snackbarService = inject(SnackbarService)
 
 	private readonly destroy$ = new Subject<void>()
@@ -62,6 +65,8 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 	private timers: ReturnType<typeof setTimeout>[] = []
 
 	private completedDailySummaryRequest: Promise<DailyReviewSummary | null> | null = null
+
+	private stopEasternDayWatcher: (() => void) | null = null
 
 	readonly playLabel = viewChild<ElementRef<HTMLSpanElement>>('playLabel')
 
@@ -98,6 +103,7 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 
 	ngOnInit() {
 		this.loadTodayInfo()
+		this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher(() => this.loadTodayInfo())
 
 		this.router.events
 			.pipe(
@@ -112,6 +118,8 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 	ngOnDestroy() {
 		this.clearTimers()
 		this.removeParticles()
+		this.stopEasternDayWatcher?.()
+		this.stopEasternDayWatcher = null
 		this.destroy$.next()
 		this.destroy$.complete()
 	}
