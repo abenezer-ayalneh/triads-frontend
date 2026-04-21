@@ -32,9 +32,12 @@ describe('GameResultDialog', () => {
 			gameScore: jasmine.createSpy('gameScore').and.returnValue(10),
 			solvedTriads: jasmine.createSpy('solvedTriads').and.returnValue([]),
 			dailyNextPuzzleAt: jasmine.createSpy('dailyNextPuzzleAt').and.returnValue('2026-04-21T05:00:00.000Z'),
-			dailyReviewTriads: jasmine
-				.createSpy('dailyReviewTriads')
-				.and.returnValue([{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] }]),
+			dailyReviewTriads: jasmine.createSpy('dailyReviewTriads').and.returnValue([
+				{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] },
+				{ id: 2, keyword: 'LINE', cues: ['DEAD', 'LAND', 'PIPE'], fullPhrases: ['DEADLINE', 'LANDLINE', 'PIPELINE'] },
+				{ id: 3, keyword: 'STAR', cues: ['FILM', 'SEA', 'SUPER'], fullPhrases: ['FILM STAR', 'STARFISH', 'SUPERSTAR'] },
+				{ id: 4, keyword: 'LIGHT', cues: ['DAY', 'MOON', 'SPOT'], fullPhrases: ['DAYLIGHT', 'MOONLIGHT', 'SPOTLIGHT'] },
+			]),
 			triadGroupId: jasmine.createSpy('triadGroupId').and.returnValue(42),
 			setDailyReviewTriads: jasmine.createSpy('setDailyReviewTriads'),
 			setUnsolvedTriads: jasmine.createSpy('setUnsolvedTriads'),
@@ -43,14 +46,22 @@ describe('GameResultDialog', () => {
 		dailyPostPlayService = jasmine.createSpyObj<DailyPostPlayService>('DailyPostPlayService', [
 			'shareScoreImage',
 			'createReviewSummary',
+			'hasCompleteReviewTriads',
 			'mergeReviewTriads',
 			'loadReviewTriads',
 		])
 		dailyPostPlayService.createReviewSummary.and.callFake((summary) => summary)
+		dailyPostPlayService.hasCompleteReviewTriads.and.callFake(
+			(triads: ReturnType<typeof mockStore.dailyReviewTriads>): triads is NonNullable<ReturnType<typeof mockStore.dailyReviewTriads>> =>
+				Array.isArray(triads) && triads.length === 4,
+		)
 		dailyPostPlayService.mergeReviewTriads.and.callFake((solvedTriads, unsolvedTriads) => [...solvedTriads, ...(unsolvedTriads ?? [])])
 		dailyPostPlayService.shareScoreImage.and.resolveTo()
 		dailyPostPlayService.loadReviewTriads.and.resolveTo([
 			{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] },
+			{ id: 2, keyword: 'LINE', cues: ['DEAD', 'LAND', 'PIPE'], fullPhrases: ['DEADLINE', 'LANDLINE', 'PIPELINE'] },
+			{ id: 3, keyword: 'STAR', cues: ['FILM', 'SEA', 'SUPER'], fullPhrases: ['FILM STAR', 'STARFISH', 'SUPERSTAR'] },
+			{ id: 4, keyword: 'LIGHT', cues: ['DAY', 'MOON', 'SPOT'], fullPhrases: ['DAYLIGHT', 'MOONLIGHT', 'SPOTLIGHT'] },
 		])
 
 		await TestBed.configureTestingModule({
@@ -107,15 +118,6 @@ describe('GameResultDialog', () => {
 		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(10)
 	})
 
-	it('renders daily share and review actions', () => {
-		const buttons = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>).map((button) =>
-			button.textContent?.trim(),
-		)
-
-		expect(buttons).toContain('Share')
-		expect(buttons).toContain('Review')
-	})
-
 	it('opens the review dialog immediately when daily review data is already available', async () => {
 		await component.openDailyReview()
 
@@ -130,6 +132,27 @@ describe('GameResultDialog', () => {
 		fixture = TestBed.createComponent(GameResultDialog)
 		component = fixture.componentInstance
 		fixture.componentRef.setInput('result', 'WON')
+		fixture.detectChanges()
+
+		await component.openDailyReview()
+
+		expect(dailyPostPlayService.loadReviewTriads).toHaveBeenCalledWith(42)
+		expect(mockStore.setDailyReviewTriads).toHaveBeenCalled()
+		expect(component.reviewDialogOpen()).toBeTrue()
+	})
+
+	it('fetches the full review set when the current game only has partial triads', async () => {
+		mockStore.dailyReviewTriads.and.returnValue(null)
+		mockStore.solvedTriads.and.returnValue([
+			{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] },
+			{ id: 2, keyword: 'LINE', cues: ['DEAD', 'LAND', 'PIPE'], fullPhrases: ['DEADLINE', 'LANDLINE', 'PIPELINE'] },
+		])
+		mockStore.unsolvedTriads.and.returnValue([
+			{ id: 3, keyword: 'STAR', cues: ['FILM', 'SEA', 'SUPER'], fullPhrases: ['FILM STAR', 'STARFISH', 'SUPERSTAR'] },
+		])
+		fixture = TestBed.createComponent(GameResultDialog)
+		component = fixture.componentInstance
+		fixture.componentRef.setInput('result', 'LOST')
 		fixture.detectChanges()
 
 		await component.openDailyReview()

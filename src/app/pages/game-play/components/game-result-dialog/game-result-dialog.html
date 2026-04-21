@@ -50,11 +50,6 @@
 							</button>
 						</div>
 					}
-					@if (store.dailyNextPuzzleAt(); as nextAt) {
-						<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/80">
-							Next puzzle opens: {{ nextAt | date: 'medium' }} (your local time)
-						</p>
-					}
 					<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/90 font-medium">{{ countdownLabel() }}</p>
 				</div>
 			} @else {

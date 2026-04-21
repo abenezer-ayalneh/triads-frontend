@@ -10,6 +10,8 @@ import { SolvedTriad } from '../../pages/game-play/interfaces/triad.interface'
 import { GamePlayApi } from '../../pages/game-play/services/game-play-api'
 import { SnackbarService } from './snackbar.service'
 
+const REVIEW_TRIAD_COUNT = 4
+
 @Injectable({
 	providedIn: 'root',
 })
@@ -62,6 +64,10 @@ export class DailyPostPlayService {
 			...summary,
 			triads: this.mergeReviewTriads(summary.triads, null),
 		}
+	}
+
+	hasCompleteReviewTriads(triads: SolvedTriad[] | null | undefined): triads is SolvedTriad[] {
+		return Array.isArray(triads) && triads.length === REVIEW_TRIAD_COUNT
 	}
 
 	mergeReviewTriads(solvedTriads: SolvedTriad[], unsolvedTriads: SolvedTriad[] | null) {

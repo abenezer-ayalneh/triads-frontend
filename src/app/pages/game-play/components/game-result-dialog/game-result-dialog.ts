@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common'
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core'
 import { Router } from '@angular/router'
 import { IonModal } from '@ionic/angular/standalone'
@@ -16,7 +15,7 @@ const CELEBRATION_SOUND_PATH = 'sounds/ta-dah.mp3'
 
 @Component({
 	selector: 'app-game-result-dialog',
-	imports: [DatePipe, DailyReviewDialog, IonModal, SolutionReveal],
+	imports: [DailyReviewDialog, IonModal, SolutionReveal],
 	templateUrl: './game-result-dialog.html',
 	styleUrl: './game-result-dialog.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,14 +27,6 @@ export class GameResultDialog {
 
 	readonly store = inject(GlobalStore)
 
-	private readonly router = inject(Router)
-
-	private readonly assetPreloadService = inject(AssetPreloadService)
-
-	private readonly dailyPostPlayService = inject(DailyPostPlayService)
-
-	private readonly snackbarService = inject(SnackbarService)
-
 	showPlayAgainButton = signal(false)
 
 	readonly isDailyMode = computed(() => this.store.gameMode() === 'daily')
@@ -44,14 +35,20 @@ export class GameResultDialog {
 
 	nextDailyPuzzleAvailable = signal(false)
 
+	readonly reviewDialogOpen = signal(false)
+
+	readonly reviewLoading = signal(false)
+
+	private readonly router = inject(Router)
+
+	private readonly assetPreloadService = inject(AssetPreloadService)
+
 	readonly scoreGifPath = computed(() => {
 		this.assetPreloadService.imageVersion()
 		return this.assetPreloadService.getImageUrl(getScoreGifPath(this.store.gameScore()))
 	})
 
-	readonly reviewDialogOpen = signal(false)
-
-	readonly reviewLoading = signal(false)
+	private readonly dailyPostPlayService = inject(DailyPostPlayService)
 
 	readonly reviewSummary = computed<DailyReviewSummary | null>(() => {
 		if (!this.isDailyMode()) {
@@ -62,7 +59,7 @@ export class GameResultDialog {
 		const score = this.store.gameScore()
 		const nextPuzzleAt = this.store.dailyNextPuzzleAt()
 		const dailyReviewTriads = this.store.dailyReviewTriads()
-		if (dailyReviewTriads && dailyReviewTriads.length > 0) {
+		if (this.dailyPostPlayService.hasCompleteReviewTriads(dailyReviewTriads)) {
 			return this.dailyPostPlayService.createReviewSummary({
 				result,
 				score,
@@ -72,7 +69,7 @@ export class GameResultDialog {
 		}
 
 		const currentGameTriads = this.dailyPostPlayService.mergeReviewTriads(this.store.solvedTriads(), this.store.unsolvedTriads())
-		if (currentGameTriads.length === 0) {
+		if (!this.dailyPostPlayService.hasCompleteReviewTriads(currentGameTriads)) {
 			return null
 		}
 
@@ -83,6 +80,8 @@ export class GameResultDialog {
 			triads: currentGameTriads,
 		})
 	})
+
+	private readonly snackbarService = inject(SnackbarService)
 
 	constructor() {
 		effect((onCleanup) => {

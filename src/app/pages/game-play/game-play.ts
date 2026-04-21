@@ -24,7 +24,7 @@ import { SolutionSection } from './components/solution-section/solution-section'
 import { SolvedTriad } from './components/solved-triad/solved-triad'
 import { TurnsBox } from './components/turns-box/turns-box'
 import { WelcomeDialog } from './components/welcome-dialog/welcome-dialog'
-import { GAME_END_MESSAGES, WRONG_MESSAGES } from './constants/game-play.constant'
+import { GAME_END_MESSAGES_CLASSIC, GAME_END_MESSAGES_DAILY, WRONG_MESSAGES } from './constants/game-play.constant'
 import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad as SolvedTriadInterface } from './interfaces/triad.interface'
 import { GamePlayApi } from './services/game-play-api'
@@ -328,7 +328,8 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	generateGameResultMessage() {
 		const gameScore = this.store.gameScore()
-		return GAME_END_MESSAGES[gameScore]
+		const gameEndMessages = this.store.gameMode() === 'daily' ? GAME_END_MESSAGES_DAILY : GAME_END_MESSAGES_CLASSIC
+		return gameEndMessages[gameScore]
 	}
 
 	checkAndShowWelcomeDialog() {
