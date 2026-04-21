@@ -1,5 +1,5 @@
-import { Component, computed, ElementRef, inject, model, OnInit, viewChild } from '@angular/core'
-import { FormsModule } from '@angular/forms'
+import { Component, computed, ElementRef, inject, model, OnInit, signal, viewChild } from '@angular/core'
+import { FormsModule, NgForm } from '@angular/forms'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
@@ -18,9 +18,18 @@ const PLAY_BUTTON_LOTTIE_PATH = 'lotties/play-button-lottie.json'
 export class UserInfoDialog implements OnInit {
 	readonly store = inject(GlobalStore)
 
+	readonly logoUrl = computed(() => {
+		this.assetPreloadService.imageVersion()
+		return this.assetPreloadService.getImageUrl('images/triads-logo-animated.svg')
+	})
+
 	usernameInput = viewChild.required<ElementRef<HTMLInputElement>>('usernameInput')
 
 	usernameModel = model<string | null>(null)
+
+	nameAccepted = signal(false)
+
+	showAcceptNameHint = signal(false)
 
 	generatedUsername: string | null = null
 
@@ -45,12 +54,40 @@ export class UserInfoDialog implements OnInit {
 		this.usernameInput().nativeElement.focus()
 	}
 
-	onSubmit() {
+	onSubmit(usernameForm: NgForm) {
+		if (usernameForm.form.invalid) {
+			this.nameAccepted.set(false)
+			return
+		}
+
+		if (!this.nameAccepted()) {
+			this.showAcceptNameHint.set(true)
+			return
+		}
+
 		const username = this.usernameModel()
 		if (username) {
 			this.userService.setUser({ username, scores: { 15: 0, 12: 0, 10: 0, 8: 0, 6: 0, 3: 0, 0: 0 }, firstGameDate: null })
 			this.store.setUser({ username, scores: { 15: 0, 12: 0, 10: 0, 8: 0, 6: 0, 3: 0, 0: 0 }, firstGameDate: null })
 		}
+	}
+
+	acceptName(usernameForm: NgForm) {
+		if (usernameForm.form.invalid) {
+			this.nameAccepted.set(false)
+			return
+		}
+
+		this.nameAccepted.set(true)
+		this.showAcceptNameHint.set(false)
+	}
+
+	onUsernameModelChange(username: string | null) {
+		const hasValidLength = typeof username === 'string' && username.trim().length >= 3
+		if (!hasValidLength) {
+			this.nameAccepted.set(false)
+		}
+		this.showAcceptNameHint.set(false)
 	}
 
 	toggleHowToPlay() {
@@ -61,5 +98,7 @@ export class UserInfoDialog implements OnInit {
 		const generatedUsername = this.userService.generateUsername()
 		this.generatedUsername = generatedUsername
 		this.usernameModel.set(generatedUsername)
+		this.nameAccepted.set(false)
+		this.showAcceptNameHint.set(false)
 	}
 }

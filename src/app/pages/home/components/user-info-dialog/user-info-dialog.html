@@ -2,33 +2,48 @@
 	class="w-screen h-screen bg-neutral-900/50 backdrop-blur-sm flex justify-center items-center px-2 landscape:max-md:px-2 md:px-4 fixed z-50 inset-0 overflow-y-auto">
 	<form
 		#usernameForm="ngForm"
-		(ngSubmit)="onSubmit()"
+		(ngSubmit)="onSubmit(usernameForm)"
 		class="w-full landscape:max-md:w-[95%] md:w-fit h-fit flex flex-col justify-start items-center gap-1.5 landscape:max-md:gap-1.5 md:gap-2 py-4 landscape:max-md:py-4 md:py-6 px-4 landscape:max-md:px-4 md:px-32 lg:px-48 bg-base-100 rounded-lg relative max-h-[95vh] landscape:max-md:max-h-[98vh] overflow-y-auto">
 		<!--    <h3 class="text-3xl text-center font-bold">Welcome to <span class="text-error italic">Triads!</span></h3>-->
 
-		<h1 class="text-4xl landscape:max-md:text-4xl md:text-7xl font-black text-center triads-logo-text">
-			<span class="inline-block transform -rotate-6 text-[#f87171]">T</span>
-			<span class="inline-block transform rotate-6 text-[#facc15]">r</span>
-			<span class="inline-block transform -rotate-3 text-[#22c55e]">i</span>
-			<span class="inline-block transform rotate-3 text-[#3b82f6]">a</span>
-			<span class="inline-block transform -rotate-6 text-[#f87171]">d</span>
-			<span class="inline-block transform rotate-6 text-[#facc15]">s</span>
-			<span class="inline-block exclamation">!</span>
-		</h1>
+		<!--		<h1 class="text-4xl landscape:max-md:text-4xl md:text-7xl font-black text-center triads-logo-text">-->
+		<!--			<span class="inline-block transform -rotate-6 text-[#f87171]">T</span>-->
+		<!--			<span class="inline-block transform rotate-6 text-[#facc15]">r</span>-->
+		<!--			<span class="inline-block transform -rotate-3 text-[#22c55e]">i</span>-->
+		<!--			<span class="inline-block transform rotate-3 text-[#3b82f6]">a</span>-->
+		<!--			<span class="inline-block transform -rotate-6 text-[#f87171]">d</span>-->
+		<!--			<span class="inline-block transform rotate-6 text-[#facc15]">s</span>-->
+		<!--			<span class="inline-block exclamation">!</span>-->
+		<!--		</h1>-->
+		<img [src]="logoUrl()" alt="Triads" decoding="async" class="mx-auto h-auto w-full max-w-70 object-contain scale-150" width="280" height="200" />
 		<p class="text-sm landscape:max-md:text-sm md:text-xl text-center font-medium">Easy to learn, hard to quit.</p>
 
 		<br class="landscape:max-md:hidden md:block" />
 
 		<p class="text-xs landscape:max-md:text-xs md:text-base text-center">First, give yourself a game name</p>
-		<input
-			#usernameInput
-			type="text"
-			name="username"
-			required
-			minlength="3"
-			[(ngModel)]="usernameModel"
-			placeholder="Username"
-			class="input text-center text-sm landscape:max-md:text-sm md:text-xl font-medium input-sm landscape:max-md:input-sm md:input-md w-full landscape:max-md:w-full md:w-auto" />
+		<div class="username-input-wrapper w-full landscape:max-md:w-full md:w-auto">
+			<input
+				#usernameInput
+				type="text"
+				name="username"
+				required
+				minlength="3"
+				[(ngModel)]="usernameModel"
+				(ngModelChange)="onUsernameModelChange($event)"
+				placeholder="Username"
+				class="input username-input text-center text-sm landscape:max-md:text-sm md:text-xl font-medium input-sm landscape:max-md:input-sm md:input-md w-full landscape:max-md:w-full md:w-auto" />
+			<button
+				type="button"
+				class="accept-name-action"
+				[class.accept-name-action--accepted]="nameAccepted()"
+				[disabled]="usernameForm.form.invalid"
+				(click)="acceptName(usernameForm)">
+				{{ nameAccepted() ? 'Name Accepted' : 'Accept Name' }}
+			</button>
+		</div>
+		@if (showAcceptNameHint()) {
+			<p class="text-xs text-info text-center -mt-0.5">Tap Accept Name first, then press Play.</p>
+		}
 
 		<button type="submit" [disabled]="usernameForm.form.invalid" title="Got it! Let's get going" class="disabled:opacity-20">
 			<div class="w-16 h-16 landscape:max-md:w-16 landscape:max-md:h-16 md:w-24 md:h-24">
@@ -37,7 +52,10 @@
 		</button>
 
 		<div class="info-hint-wrapper flex flex-row-reverse md:flex-col items-center self-start mt-2 md:absolute md:left-0 md:bottom-0 md:mt-0">
-			<p class="info-hint-text text-center">Click here if you want to learn how to play. You can also use the "?" button anytime later.</p>
+			<p class="info-hint-text text-center">
+				Click here if you want to learn how to play. You can also use the "{{ store.gameMode() === 'daily' ? 'Directions' : '?' }}" button anytime
+				later.
+			</p>
 			<span class="info-hint-arrow" aria-hidden="true"></span>
 			<button type="button" (click)="toggleHowToPlay()" class="shrink-0">
 				<div class="w-12 h-12 landscape:max-md:w-12 landscape:max-md:h-12 md:w-16 md:h-16">

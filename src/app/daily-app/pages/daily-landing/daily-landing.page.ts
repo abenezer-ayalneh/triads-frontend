@@ -7,9 +7,11 @@ import { filter, skip, Subject, takeUntil } from 'rxjs'
 import { DailyReviewDialog } from '../../../pages/game-play/components/daily-review-dialog/daily-review-dialog'
 import { DailyReviewSummary } from '../../../pages/game-play/interfaces/daily-review.interface'
 import { GamePlayApi } from '../../../pages/game-play/services/game-play-api'
+import { UserInfoDialog } from '../../../pages/home/components/user-info-dialog/user-info-dialog'
 import { AssetPreloadService } from '../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../shared/services/daily-post-play.service'
 import { SnackbarService } from '../../../shared/services/snackbar.service'
+import { GlobalStore } from '../../../state/global.store'
 import { DAILY_CHALLENGE_NUMBER_OFFSET, DAILY_LANDING_TAGLINE } from '../../constants/daily-landing.constants'
 
 const LIGHT_GREY = '#01fac0'
@@ -35,12 +37,14 @@ const LETTER_SHARD = ['h', 'o', 't', 'H', 'O', 'T', 'h', 'o', 't', 'H', 'O', 'T'
 
 @Component({
 	selector: 'app-daily-landing',
-	imports: [DailyReviewDialog, IonModal],
+	imports: [DailyReviewDialog, IonModal, UserInfoDialog],
 	templateUrl: './daily-landing.page.html',
 	styleUrl: './daily-landing.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DailyLandingPage implements OnInit, OnDestroy {
+	readonly store = inject(GlobalStore)
+
 	private readonly gamePlayApi = inject(GamePlayApi)
 
 	private readonly router = inject(Router)
@@ -165,6 +169,7 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 	}
 
 	private loadTodayInfo() {
+		this.resetPlayButtonVisualState()
 		this.challengeLoading.set(true)
 		this.gamePlayApi.getDailyTodayInfo().subscribe({
 			next: (res) => {
@@ -368,5 +373,45 @@ export class DailyLandingPage implements OnInit, OnDestroy {
 
 	private removeParticles() {
 		this.document.querySelectorAll('[data-daily-play-particle="1"]').forEach((p) => p.remove())
+	}
+
+	private resetPlayButtonVisualState() {
+		this.clearTimers()
+		this.removeParticles()
+		this.playAnimationRunning.set(false)
+
+		const play = this.playLabel()?.nativeElement
+		if (play) {
+			play.style.opacity = '1'
+			play.style.pointerEvents = ''
+		}
+
+		const bt1 = this.bt1()?.nativeElement
+		if (bt1) {
+			bt1.style.transition = 'none'
+			bt1.style.opacity = '0'
+			bt1.style.color = '#bbbbbb'
+		}
+
+		const bt2 = this.bt2()?.nativeElement
+		if (bt2) {
+			bt2.style.transition = 'none'
+			bt2.style.opacity = '0'
+		}
+
+		const bHot = this.bHot()?.nativeElement
+		if (bHot) {
+			bHot.style.transition = 'none'
+			bHot.style.color = MID_GREY
+			bHot.style.fontSize = `${BASE_FONT_PX}px`
+			bHot.classList.remove('daily-play-hot--shimmer')
+		}
+
+		const bPrefix = this.bPrefix()?.nativeElement
+		if (bPrefix) {
+			bPrefix.style.transition = 'none'
+			bPrefix.style.color = MID_GREY
+			bPrefix.style.fontSize = `${BASE_FONT_PX}px`
+		}
 	}
 }

@@ -49,37 +49,37 @@
 	</ion-modal>
 
 	<div class="w-fit flex justify-end items-center gap-4">
-		@if (store.gameMode() !== 'daily') {
-			<div class="relative">
-				<button
-					id="username-dropdown-trigger"
-					(click)="toggleUsernameDropdown($event)"
-					class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
-					<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
-				</button>
-				<ion-popover
-					trigger="username-dropdown-trigger"
-					triggerAction="click"
-					side="bottom"
-					alignment="end"
-					[showBackdrop]="false"
-					(willPresent)="onUsernamePopoverWillPresent()"
-					(didDismiss)="onUsernamePopoverDidDismiss()">
-					<ng-template>
-						<div
-							class="w-full bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 landscape:max-md:p-2 md:p-3 flex flex-col gap-1 landscape:max-md:gap-1 md:gap-1.5">
-							<button
-								type="button"
-								(click)="openStats()"
-								class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-								Check your stats
-							</button>
-							<button
-								type="button"
-								(click)="openNewIdentity()"
-								class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-								New identity
-							</button>
+		<div class="relative">
+			<button
+				id="username-dropdown-trigger"
+				(click)="toggleUsernameDropdown($event)"
+				class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
+				<p class="text-xs md:text-base xl:text-lg text-primary-content font-semibold">{{ store.user()?.username ?? '-' }}</p>
+			</button>
+			<ion-popover
+				trigger="username-dropdown-trigger"
+				triggerAction="click"
+				side="bottom"
+				alignment="end"
+				[showBackdrop]="false"
+				(willPresent)="onUsernamePopoverWillPresent()"
+				(didDismiss)="onUsernamePopoverDidDismiss()">
+				<ng-template>
+					<div
+						class="w-full bg-base-100 rounded-lg shadow-lg border border-base-300 p-2 landscape:max-md:p-2 md:p-3 flex flex-col gap-1 landscape:max-md:gap-1 md:gap-1.5">
+						<button
+							type="button"
+							(click)="openStats()"
+							class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+							Check your stats
+						</button>
+						<button
+							type="button"
+							(click)="openNewIdentity()"
+							class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+							New identity
+						</button>
+						@if (store.gameMode() !== 'daily') {
 							<div class="username-popover__divider"></div>
 							<div class="username-popover__section">
 								<label
@@ -98,29 +98,29 @@
 									<option [value]="Difficulty.RANDOM">Mixed (complete)</option>
 								</select>
 							</div>
-							@if (showAdminOption()) {
-								<div class="username-popover__divider"></div>
-								@if (isAdminAuthenticated()) {
-									<button
-										type="button"
-										(click)="navigateToManageTriads()"
-										class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-										Manage Triads
-									</button>
-								} @else {
-									<button
-										type="button"
-										(click)="openAdminPasswordDialog()"
-										class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
-										Admin
-									</button>
-								}
+						}
+						@if (showAdminOption()) {
+							<div class="username-popover__divider"></div>
+							@if (isAdminAuthenticated()) {
+								<button
+									type="button"
+									(click)="navigateToManageTriads()"
+									class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+									Manage Triads
+								</button>
+							} @else {
+								<button
+									type="button"
+									(click)="openAdminPasswordDialog()"
+									class="w-full pl-4 text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
+									Admin
+								</button>
 							}
-						</div>
-					</ng-template>
-				</ion-popover>
-			</div>
-		}
+						}
+					</div>
+				</ng-template>
+			</ion-popover>
+		</div>
 		@if (store.gameMode() === 'daily') {
 			<button
 				type="button"

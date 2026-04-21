@@ -3,6 +3,52 @@
 	font-weight: 900;
 }
 
+.username-input-wrapper {
+	position: relative;
+}
+
+.username-input {
+	padding-right: 7.5rem;
+}
+
+.accept-name-action {
+	position: absolute;
+	right: 0.5rem;
+	top: 50%;
+	transform: translateY(-50%);
+	border: none;
+	background: transparent;
+	font-size: 0.72rem;
+	font-weight: 600;
+	color: #2563eb;
+	padding: 0.15rem 0.35rem;
+	border-radius: 0.35rem;
+	transition:
+		color 140ms ease,
+		background-color 140ms ease;
+
+	&:disabled {
+		color: #94a3b8;
+		cursor: not-allowed;
+	}
+
+	&:not(:disabled):hover {
+		background-color: rgba(37, 99, 235, 0.1);
+	}
+
+	@media (min-width: 768px) {
+		font-size: 0.78rem;
+	}
+}
+
+.accept-name-action--accepted {
+	color: #0f766e;
+
+	&:not(:disabled):hover {
+		background-color: rgba(15, 118, 110, 0.1);
+	}
+}
+
 .info-hint-wrapper {
 	padding-left: 0.5rem;
 	padding-bottom: 0.5rem;
