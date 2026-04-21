@@ -27,10 +27,34 @@ import { WelcomeDialog } from './components/welcome-dialog/welcome-dialog'
 import { GAME_END_MESSAGES_CLASSIC, GAME_END_MESSAGES_DAILY, WRONG_MESSAGES } from './constants/game-play.constant'
 import { GamePlayState } from './enums/game-play.enum'
 import { SolvedTriad as SolvedTriadInterface } from './interfaces/triad.interface'
+import { TurnAndHint } from './interfaces/turn-and-hint.interface'
 import { GamePlayApi } from './services/game-play-api'
 import { GamePlayLogic } from './services/game-play-logic'
 
 const LOADING_LOTTIE_PATH = 'lotties/loading-lottie.json'
+const DAILY_GAME_SESSION_STORAGE_KEY = 'triads_daily_game_session_v1'
+
+interface DailyGameSessionSnapshot {
+	puzzleDate: string
+	triadGroupId: string | number
+	cues: string[] | null
+	finalTriadCues: string[] | null
+	selectedCues: string[]
+	turns: TurnAndHint[]
+	hints: TurnAndHint[]
+	gamePlayState: GamePlayState
+	triadsStep: 'INITIAL' | 'FINAL'
+	keywordLengthHint: number | null
+	firstLetterHint: string | null
+	activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null
+	usedHintTypes: ('KEYWORD_LENGTH' | 'FIRST_LETTER')[]
+	solvedTriads: SolvedTriadInterface[]
+	hintUsed: boolean
+	hintUsedWithOneTurnRemaining: boolean
+	gameScore: number
+	unsolvedTriads: SolvedTriadInterface[] | null
+	dailyNextPuzzleAt: string | null
+}
 
 @Component({
 	selector: 'app-game-play',
@@ -127,6 +151,49 @@ export class GamePlay implements OnInit, OnDestroy {
 				this.checkAndShowWelcomeDialog()
 			}
 		})
+
+		// Persist daily session progress so players can resume the same puzzle.
+		effect(() => {
+			if (this.store.gameMode() !== 'daily') {
+				return
+			}
+
+			if (this.cueFetchingState() !== RequestState.READY && this.cueFetchingState() !== RequestState.IDLE) {
+				return
+			}
+
+			const triadGroupId = this.store.triadGroupId()
+			if (!triadGroupId) {
+				return
+			}
+
+			const puzzleDate = this.getSavedDailySession()?.puzzleDate
+			if (!puzzleDate) {
+				return
+			}
+
+			this.saveDailySession({
+				puzzleDate,
+				triadGroupId,
+				cues: this.store.cues(),
+				finalTriadCues: this.store.finalTriadCues(),
+				selectedCues: this.store.selectedCues(),
+				turns: this.store.turns(),
+				hints: this.store.hints(),
+				gamePlayState: this.store.gamePlayState(),
+				triadsStep: this.store.triadsStep(),
+				keywordLengthHint: this.store.keywordLengthHint(),
+				firstLetterHint: this.store.firstLetterHint(),
+				activeHintType: this.store.activeHintType(),
+				usedHintTypes: this.store.usedHintTypes(),
+				solvedTriads: this.store.solvedTriads(),
+				hintUsed: this.store.hintUsed(),
+				hintUsedWithOneTurnRemaining: this.store.hintUsedWithOneTurnRemaining(),
+				gameScore: this.store.gameScore(),
+				unsolvedTriads: this.store.unsolvedTriads(),
+				dailyNextPuzzleAt: this.store.dailyNextPuzzleAt(),
+			})
+		})
 	}
 
 	ngOnInit() {
@@ -148,7 +215,9 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.stopEasternDayWatcher?.()
 		this.stopEasternDayWatcher = null
 		// Reset game state when navigating away from the gameplay page
-		this.resetGameState()
+		if (this.store.gameMode() !== 'daily') {
+			this.resetGameState()
+		}
 	}
 
 	initializeDailyGame() {
@@ -161,12 +230,14 @@ export class GamePlay implements OnInit, OnDestroy {
 			this.gamePlayApi.getDailyCues().subscribe({
 				next: (response) => {
 					if (!response.scheduled) {
+						this.clearDailySession()
 						this.store.setDailyNoScheduleMessage(response.message)
 						this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)
 						this.cueFetchingState.set(RequestState.EMPTY)
 						return
 					}
 					if (response.alreadyCompleted) {
+						this.clearDailySession()
 						this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)
 						this.store.setTriadGroupId(response.triadGroupId)
 						this.store.setGameScore(response.score ?? 0)
@@ -176,9 +247,38 @@ export class GamePlay implements OnInit, OnDestroy {
 						this.cueFetchingState.set(RequestState.IDLE)
 						return
 					}
+
+					const restoredSession = this.getSavedDailySession()
+					const canRestoreSession = restoredSession?.puzzleDate === response.puzzleDate && restoredSession?.triadGroupId === response.triadGroupId
+					if (canRestoreSession && restoredSession) {
+						this.applyDailySession(restoredSession)
+						return
+					}
+
 					this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)
 					this.store.setCues(response.cues)
 					this.store.setTriadGroupId(response.triadGroupId)
+					this.saveDailySession({
+						puzzleDate: response.puzzleDate,
+						triadGroupId: response.triadGroupId,
+						cues: response.cues,
+						finalTriadCues: null,
+						selectedCues: [],
+						turns: this.store.turns(),
+						hints: this.store.hints(),
+						gamePlayState: GamePlayState.PLAYING,
+						triadsStep: 'INITIAL',
+						keywordLengthHint: null,
+						firstLetterHint: null,
+						activeHintType: null,
+						usedHintTypes: [],
+						solvedTriads: [],
+						hintUsed: false,
+						hintUsedWithOneTurnRemaining: false,
+						gameScore: 0,
+						unsolvedTriads: null,
+						dailyNextPuzzleAt: response.nextPuzzleAt,
+					})
 					this.cueFetchingState.set(RequestState.READY)
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
@@ -420,6 +520,57 @@ export class GamePlay implements OnInit, OnDestroy {
 		const canRefreshUnavailableState = this.cueFetchingState() === RequestState.EMPTY || this.cueFetchingState() === RequestState.ERROR
 
 		return canRefreshCompletedState || canRefreshUnavailableState
+	}
+
+	private applyDailySession(session: DailyGameSessionSnapshot) {
+		this.store.resetGameState()
+		this.store.setDailyNextPuzzleAt(session.dailyNextPuzzleAt)
+		this.store.setCues(session.cues ?? [])
+		this.store.setTriadGroupId(session.triadGroupId)
+		this.store.setFinalTriadCues(session.finalTriadCues)
+		this.store.setSelectedCues(session.selectedCues)
+		this.store.setTurns(session.turns)
+		this.store.setHints(session.hints)
+		this.store.setGamePlayState(session.gamePlayState)
+		this.store.updateTriadStep(session.triadsStep)
+		this.store.setKeywordLengthHint(session.keywordLengthHint)
+		this.store.setFirstLetterHint(session.firstLetterHint)
+		this.store.setActiveHintType(session.activeHintType)
+		this.store.resetUsedHintTypes()
+		for (const hintType of session.usedHintTypes) {
+			this.store.addUsedHintType(hintType)
+		}
+		this.store.setHintUsage(session.hintUsed)
+		this.store.setHintUsedWithOneTurnRemaining(session.hintUsedWithOneTurnRemaining)
+		this.store.setGameScore(session.gameScore)
+		this.store.setUnsolvedTriads(session.unsolvedTriads)
+		this.store.setDailyStandaloneResult(session.gamePlayState === GamePlayState.WON || session.gamePlayState === GamePlayState.LOST)
+		for (const solvedTriad of session.solvedTriads) {
+			this.store.addSolvedTriad(solvedTriad)
+		}
+		this.cueFetchingState.set(RequestState.READY)
+	}
+
+	private getSavedDailySession(): DailyGameSessionSnapshot | null {
+		const rawSnapshot = localStorage.getItem(DAILY_GAME_SESSION_STORAGE_KEY)
+		if (!rawSnapshot) {
+			return null
+		}
+
+		try {
+			return JSON.parse(rawSnapshot) as DailyGameSessionSnapshot
+		} catch {
+			this.clearDailySession()
+			return null
+		}
+	}
+
+	private saveDailySession(session: DailyGameSessionSnapshot) {
+		localStorage.setItem(DAILY_GAME_SESSION_STORAGE_KEY, JSON.stringify(session))
+	}
+
+	private clearDailySession() {
+		localStorage.removeItem(DAILY_GAME_SESSION_STORAGE_KEY)
 	}
 
 	private async animateSolvedTriadAppearance(solvedArea: HTMLElement) {
