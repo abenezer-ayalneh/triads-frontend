@@ -25,7 +25,7 @@ The game features beautiful physics-based bubble animations, smooth gameplay, an
 
 ### The Basics
 
-You're given **9 bubbles** containing words or phrases called **cues**. Your goal is to find **3 cues** that share a common **key word** to form a **3-word Triad**. A key is a stand-alone word uniquely shared by the 3 cues.
+You're given **9 bubbles** containing words or phrases called **cues**. Your goal is to find **3 cues** that share a common **key word** to form a **3-word Triad**. a key is always a stand-alone word uniquely shared by the 3 cues.
 
 **Example:** `SECOND-`, `POKER`, `SHAKE` → The key word is **"HAND"**, completing:
 
