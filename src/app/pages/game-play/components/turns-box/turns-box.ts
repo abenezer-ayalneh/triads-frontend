@@ -1,12 +1,17 @@
-import { NgClass } from '@angular/common'
 import { Component, computed, inject } from '@angular/core'
 
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { GlobalStore } from '../../../../state/global.store'
+import { TurnHintService } from '../../services/turn-hint.service'
+
+const TURN_IMAGE_BY_AVAILABLE_COUNT: Record<1 | 2 | 3, string> = {
+	3: 'images/turn-three.png',
+	2: 'images/turn-two.png',
+	1: 'images/turn-one.png',
+}
 
 @Component({
 	selector: 'app-turns-box',
-	imports: [NgClass],
 	templateUrl: './turns-box.html',
 	styleUrl: './turns-box.scss',
 })
@@ -15,32 +20,20 @@ export class TurnsBox {
 
 	private readonly assetPreloadService = inject(AssetPreloadService)
 
-	readonly turns = computed(() => {
+	private readonly turnHintService = inject(TurnHintService)
+
+	readonly displayTurnIconUrl = computed(() => {
 		this.assetPreloadService.imageVersion()
-		return this.store.turns().map((turn) => ({
-			...turn,
-			iconUrl: turn.icon ? this.assetPreloadService.getImageUrl(turn.icon) : '',
-		}))
+		const n = this.turnHintService.numberOfAvailableTurns(this.store.turns())
+		if (n < 1 || n > 3) {
+			return null
+		}
+		const path = TURN_IMAGE_BY_AVAILABLE_COUNT[n as 1 | 2 | 3]
+		return this.assetPreloadService.getImageUrl(path)
 	})
 
 	readonly isLastTurnAndNoHints = computed(() => {
-		const turns = this.store.turns()
-		const hints = this.store.hints()
-
-		const availableTurns = turns.filter((turn) => turn.available).length
-		const availableHints = hints.filter((hint) => hint.available).length
-
-		return availableTurns === 1 && availableHints === 0
-	})
-
-	readonly lastAvailableTurnId = computed(() => {
-		const turns = this.store.turns()
-		const availableTurns = turns.filter((turn) => turn.available)
-
-		if (availableTurns.length === 0) {
-			return null
-		}
-
-		return availableTurns[availableTurns.length - 1]!.id
+		const availableHints = this.store.hints().filter((hint) => hint.available).length
+		return this.turnHintService.numberOfAvailableTurns(this.store.turns()) === 1 && availableHints === 0
 	})
 }
