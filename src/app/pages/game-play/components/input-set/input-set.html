@@ -1,12 +1,5 @@
 <form [formGroup]="inputSetFormGroup" class="w-full h-full flex justify-center items-center gap-2 md:gap-4">
-	<div
-		#eraseHost
-		appReverseErase
-		[preserveFirst]="firstLetter() !== null"
-		(letterErased)="onLetterErased($event)"
-		(finished)="onReverseEraseFinished()"
-		class="w-fit h-full flex justify-center items-center gap-3"
-		formArrayName="inputBoxes">
+	<div class="w-fit h-full flex justify-center items-center gap-3" formArrayName="inputBoxes">
 		@for (inputBox of inputBoxes.controls; track $index; let i = $index) {
 			<input
 				#inputBoxRef

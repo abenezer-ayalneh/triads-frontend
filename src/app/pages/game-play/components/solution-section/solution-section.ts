@@ -422,8 +422,16 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 								this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
 								this.shouldFocusAnswerField = !this.isErasing
 							} else {
-								this.store.setGamePlayState(GamePlayState.PLAYING)
-								this.store.setSelectedCues([])
+								const letterHintsStillEntitled =
+									(this.store.keywordLengthHint() !== null || this.store.firstLetterHint() !== null) && this.store.selectedCues().length === 3
+								if (letterHintsStillEntitled) {
+									// Do not clear selectedCues: that would wipe letter-hint state in the store.
+									this.store.setGamePlayState(GamePlayState.ACCEPT_ANSWER)
+									this.shouldFocusAnswerField = !this.isErasing
+								} else {
+									this.store.setGamePlayState(GamePlayState.PLAYING)
+									this.store.setSelectedCues([])
+								}
 							}
 						} else {
 							if (forcedSelection && forcedSelection.length === 3) {

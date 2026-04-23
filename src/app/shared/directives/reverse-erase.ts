@@ -73,10 +73,21 @@ export class ReverseErase {
 			}
 
 			await Promise.all(perLetterPromises)
+			// fill:forwards keeps opacity in the animation stack; clearing style alone is not enough.
+			for (let i = stopIndex; i <= lastIndex; i++) {
+				this.clearEraseEffect(targets[i])
+			}
 			this.finished.emit()
 		} finally {
 			this.isPlaying = false
 		}
+	}
+
+	/** Drop WAAPI fill and inline opacity so targets become visible again for the next attempt. */
+	private clearEraseEffect(element: HTMLElement): void {
+		element.getAnimations().forEach((animation) => animation.cancel())
+		element.style.removeProperty('opacity')
+		element.removeAttribute('aria-hidden')
 	}
 
 	private animateElementAway(element: HTMLElement): Promise<void> {

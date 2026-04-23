@@ -1,9 +1,11 @@
-import { AfterViewChecked, AfterViewInit, Component, effect, ElementRef, input, OnDestroy, output, viewChild, viewChildren } from '@angular/core'
+import { AfterViewChecked, AfterViewInit, Component, effect, ElementRef, input, OnDestroy, output, viewChildren } from '@angular/core'
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 import { Subscription } from 'rxjs'
 
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
-import { ReverseErase } from '../../../../shared/directives/reverse-erase'
+
+/** Step pacing aligned with the plain answer field reverse-erase animation. */
+const LETTER_ERASE_STEP_MS = 80
 
 @Component({
 	selector: 'app-input-set',
@@ -11,7 +13,7 @@ import { ReverseErase } from '../../../../shared/directives/reverse-erase'
 	styleUrls: ['./input-set.scss'],
 
 	standalone: true,
-	imports: [ReactiveFormsModule, AutoCapitalize, ReverseErase],
+	imports: [ReactiveFormsModule, AutoCapitalize],
 })
 export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	subscriptions$ = new Subscription()
@@ -33,8 +35,6 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	whenSubmitClicked = output<string>()
 
 	inputRefs = viewChildren<ElementRef<HTMLInputElement>>('inputBoxRef')
-
-	private readonly reverseEraser = viewChild(ReverseErase)
 
 	isErasing = false
 
@@ -217,35 +217,66 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	}
 
 	/**
-	 * Animates the letter boxes disappearing from the last to the first. When a first-letter hint is
-	 * active, the first box (index 0) is preserved. Resolves when the sequence is complete, at which
-	 * point focus has been restored to the appropriate box via {@link focusForRetry}.
+	 * Clears letters from last box to first (same rhythm as the plain-field reverse erase). Boxes stay
+	 * visible; only values are removed. When a first-letter hint is active, index 0 is left unchanged.
 	 */
 	async playReverseErase(): Promise<void> {
-		const eraser = this.reverseEraser()
-		if (!eraser) {
+		if (this.isErasing || this.inputBoxes.length === 0) {
 			return
 		}
 		this.isErasing = true
-		const targets = this.inputRefs().map((ref) => ref.nativeElement as HTMLElement)
-		await eraser.play(targets)
-	}
+		const stopIndex = this.firstLetter() ? 1 : 0
+		const lastIndex = this.inputBoxes.length - 1
 
-	onLetterErased(index: number): void {
-		const control = this.inputBoxes.at(index)
-		if (control) {
-			control.reset()
+		if (lastIndex < stopIndex) {
+			this.isErasing = false
+			this.focusForRetry()
+			return
 		}
-	}
 
-	onReverseEraseFinished(): void {
-		this.inputRefs().forEach((ref) => {
-			const input = ref.nativeElement
-			input.style.opacity = ''
-			input.removeAttribute('aria-hidden')
-		})
+		if (this.prefersReducedLetterEraseMotion()) {
+			for (let i = lastIndex; i >= stopIndex; i--) {
+				this.clearLetterBoxAt(i)
+			}
+			this.isErasing = false
+			this.focusForRetry()
+			return
+		}
+
+		for (let i = lastIndex; i >= stopIndex; i--) {
+			this.clearLetterBoxAt(i)
+			if (i > stopIndex) {
+				await this.delayForLetterErase(LETTER_ERASE_STEP_MS)
+			}
+		}
 		this.isErasing = false
 		this.focusForRetry()
+	}
+
+	private clearLetterBoxAt(index: number): void {
+		const control = this.inputBoxes.at(index)
+		if (!control) {
+			return
+		}
+		if (index === 0 && this.firstLetter()) {
+			control.setValue(this.firstLetter())
+			return
+		}
+		control.setValue(null)
+	}
+
+	private delayForLetterErase(ms: number): Promise<void> {
+		return new Promise((resolve) => {
+			const id = window.setTimeout(resolve, ms)
+			this.timeoutIds.push(id)
+		})
+	}
+
+	private prefersReducedLetterEraseMotion(): boolean {
+		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+			return false
+		}
+		return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 	}
 
 	/**
