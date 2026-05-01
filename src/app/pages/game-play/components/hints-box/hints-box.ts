@@ -1,6 +1,6 @@
 import { Component, computed, ElementRef, inject, OnDestroy, viewChild } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
-import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
+import { delay, filter, firstValueFrom, Subscription, tap, timer } from 'rxjs'
 
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
@@ -69,12 +69,43 @@ export class HintsBox implements OnDestroy {
 		// 3. Only 3 cues remain (final triad)
 		const shouldShowChoice = availableHints === 1 || selectedCues.length === 3 || availableCues?.length === 3
 
-		if (availableCues && availableCues.length > 0) {
-			if (shouldShowChoice) {
-				this.hintChoiceModalRef()?.nativeElement.showModal()
-			} else {
-				this.useHint()
-			}
+		if (!availableCues || availableCues.length === 0) {
+			return
+		}
+
+		// Three selected cues that are not a real triad: penalize and show WRONG_TRIAD before any hint-type modal
+		if (selectedCues.length === 3) {
+			this.store.setIsFetchingHint(true)
+			this.subscriptions$.add(
+				this.gamePlayApi.checkTriad(selectedCues).subscribe({
+					next: (validTriad) => {
+						this.store.setIsFetchingHint(false)
+						if (!validTriad) {
+							this.store.setHintUsage(true)
+							if (this.turnHintService.numberOfAvailableTurns(this.store.turns()) === 1) {
+								this.store.setHintUsedWithOneTurnRemaining(true)
+							}
+							this.applyHintFailureForNonTriadSelection()
+							return
+						}
+						if (shouldShowChoice) {
+							this.hintChoiceModalRef()?.nativeElement.showModal()
+						} else {
+							this.useHint()
+						}
+					},
+					error: () => {
+						this.store.setIsFetchingHint(false)
+					},
+				}),
+			)
+			return
+		}
+
+		if (shouldShowChoice) {
+			this.hintChoiceModalRef()?.nativeElement.showModal()
+		} else {
+			this.useHint()
 		}
 	}
 
@@ -110,9 +141,18 @@ export class HintsBox implements OnDestroy {
 				firstValueFrom(this.turnHintService.getHint(availableCues, hintExtra))
 					.then((triadsForHint) => {
 						const hints = this.store.hints()
-						const updatedHints = this.turnHintService.useHintToken(hints)
+						const hasHintCues = Boolean(triadsForHint?.hint?.length)
 
-						if (triadsForHint && triadsForHint.hint) {
+						if (hadThreeSelected && !hasHintCues) {
+							this.hintChoiceModalRef()?.nativeElement.close()
+							this.applyHintFailureForNonTriadSelection()
+							this.store.setIsFetchingHint(false)
+							return
+						}
+
+						if (triadsForHint?.hint && triadsForHint.hint.length > 0) {
+							const updatedHints = this.turnHintService.useHintToken(hints)
+							const hintCues = triadsForHint.hint
 							// When the player uses a hint with an extra value, show a special hint
 							if (triadsForHint.with === 'KEYWORD_LENGTH') {
 								// Set keyword length hint, but preserve first letter if it exists
@@ -155,7 +195,7 @@ export class HintsBox implements OnDestroy {
 							// This preserves the user's selection when they request a hint for their selected triad
 							if (!hadThreeSelected) {
 								// Show the hint cues as selected on the UI
-								this.store.setSelectedCues(triadsForHint.hint)
+								this.store.setSelectedCues(hintCues)
 							}
 
 							// Update the hints and keep turns as-is; the turn cost
@@ -175,6 +215,47 @@ export class HintsBox implements OnDestroy {
 				this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
 			}
 		}
+	}
+
+	/**
+	 * Hint was used (flags already set) but the three cues are not a valid triad.
+	 * Consumes a hint, applies hint+fail turn rules, shows WRONG_TRIAD, then resets after delay.
+	 */
+	private applyHintFailureForNonTriadSelection() {
+		this.hintChoiceModalRef()?.nativeElement.close()
+
+		const hints = this.store.hints()
+		const updatedHints = this.turnHintService.useHintToken(hints)
+		const { turns, hints: hintsAfterOutcome, gameEnds } = this.turnHintService.applyHintOutcome(this.store.turns(), updatedHints, 'FAIL')
+		this.store.setTurns(turns)
+		this.store.setHints(hintsAfterOutcome)
+
+		if (gameEnds) {
+			this.gamePlayLogic.handleGameLost()
+		} else {
+			this.store.setGamePlayState(GamePlayState.WRONG_TRIAD)
+		}
+
+		this.subscriptions$.add(
+			timer(2000)
+				.pipe(
+					tap(() => {
+						if (
+							this.store.gamePlayState() !== GamePlayState.WON &&
+							this.store.gamePlayState() !== GamePlayState.LOST &&
+							this.turnHintService.numberOfAvailableTurns(this.store.turns()) > 0
+						) {
+							this.store.setGamePlayState(GamePlayState.PLAYING)
+							this.store.setSelectedCues([])
+							this.store.setHintUsage(false)
+							this.store.setHintUsedWithOneTurnRemaining(false)
+						} else if (this.turnHintService.numberOfAvailableTurns(this.store.turns()) === 0) {
+							this.gamePlayLogic.handleGameLost()
+						}
+					}),
+				)
+				.subscribe(),
+		)
 	}
 
 	checkTriad() {
@@ -225,6 +306,8 @@ export class HintsBox implements OnDestroy {
 							) {
 								this.store.setGamePlayState(GamePlayState.PLAYING)
 								this.store.setSelectedCues([])
+								this.store.setHintUsage(false)
+								this.store.setHintUsedWithOneTurnRemaining(false)
 							} else if (this.turnHintService.numberOfAvailableTurns(this.store.turns()) === 0) {
 								// If turns are exhausted, ensure game lost state is set
 								this.gamePlayLogic.handleGameLost()
