@@ -1,4 +1,4 @@
-import { inject,Injectable } from '@angular/core'
+import { inject, Injectable } from '@angular/core'
 import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
@@ -102,13 +102,17 @@ export class DailyPostPlayService {
 	}
 
 	private async copyScoreImageToClipboard(scorePngPath: string): Promise<boolean> {
-		if (!navigator.clipboard?.write) {
+		if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
 			return false
 		}
 
 		try {
-			const pngBlob = await this.renderImageToPngBlob(scorePngPath)
-			await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })])
+			// Safari requires deferred blob via Promise; awaiting the blob before write drops transient user activation.
+			await navigator.clipboard.write([
+				new ClipboardItem({
+					'image/png': this.renderImageToPngBlob(scorePngPath),
+				}),
+			])
 			return true
 		} catch (error) {
 			console.warn('Failed to copy score image to clipboard:', error)
