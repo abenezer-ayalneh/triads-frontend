@@ -1,0 +1,81 @@
+:host {
+	display: block;
+	width: 100%;
+}
+
+.brain-play-inner {
+	position: relative;
+	display: inline-flex;
+	min-height: 3rem;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	color: var(--color-primary-content);
+}
+
+.brain-play-spacer {
+	visibility: hidden;
+	white-space: nowrap;
+	font-size: 1.25rem;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+}
+
+.brain-play-label {
+	position: absolute;
+	z-index: 1;
+	left: 50%;
+	transform: translateX(-50%);
+	white-space: nowrap;
+	pointer-events: none;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	transition: opacity 0.3s ease;
+}
+
+.brain-play-text {
+	position: absolute;
+	z-index: 2;
+	left: 50%;
+	transform: translateX(-50%);
+	white-space: nowrap;
+	pointer-events: none;
+	display: flex;
+	align-items: center;
+	font-size: 1.25rem;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+}
+
+.brain-play-prefix,
+.brain-play-hot {
+	display: inline-block;
+	vertical-align: middle;
+	line-height: 1;
+	flex-shrink: 0;
+}
+
+.brain-play-hot {
+	margin-left: 0.28em;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+}
+
+@keyframes brain-play-shimmer {
+	0% {
+		opacity: 1;
+	}
+
+	50% {
+		opacity: 0.25;
+	}
+
+	100% {
+		opacity: 1;
+	}
+}
+
+.brain-play-hot--shimmer {
+	animation: brain-play-shimmer 0.15s ease-in-out infinite;
+}
