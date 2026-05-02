@@ -19,3 +19,13 @@ export const GAME_END_MESSAGES_DAILY: Record<number, string> = {
 	3: 'Some seem easy, but not this one.',
 	0: 'That was tough! Try again tomorrow.',
 }
+
+export const GAME_END_MESSAGES_REVIEW: Record<number, string> = {
+	15: 'You did it! A perfect score!',
+	12: 'Excellent! Near perfect!',
+	10: 'Success by a whisker.',
+	8: '3 out of 4. Not bad!',
+	6: 'Close, but no cigar.',
+	3: 'Tough one. Keep at it!',
+	0: 'Better luck tomorrow.',
+}

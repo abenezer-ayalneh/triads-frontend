@@ -90,6 +90,34 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 				this.answerFormControl.enable()
 			}
 		})
+
+		// Clear stale answer/hint field state when fewer than three bubbles are selected (field is hidden in PLAYING).
+		effect(() => {
+			const len = this.store.selectedCues().length
+			if (len >= 3) {
+				return
+			}
+			this.answerFormControl.reset('', { emitEvent: false })
+			this.gamePlayLogic.resetAnswerFieldState()
+		})
+
+		// Re-apply first-letter-only hint to the plain input after the same triad is re-selected (snapshot restore).
+		effect(() => {
+			const gameState = this.store.gamePlayState()
+			const cues = this.store.selectedCues()
+			const keywordLen = this.store.keywordLengthHint()
+			const firstLetter = this.store.firstLetterHint()
+			if (gameState !== GamePlayState.ACCEPT_ANSWER || cues.length !== 3) {
+				return
+			}
+			if (keywordLen !== null || !firstLetter) {
+				return
+			}
+			const current = this.answerFormControl.value ?? ''
+			if (current !== firstLetter) {
+				this.answerFormControl.setValue(firstLetter, { emitEvent: false })
+			}
+		})
 	}
 
 	ngOnInit() {
@@ -315,6 +343,7 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		if (response && typeof response !== 'boolean') {
 			// Reset deferred turn flag on correct answer (turn was not consumed)
 			this.store.setHintUsedWithOneTurnRemaining(false)
+			this.store.clearTriadHintSnapshotForCues(response.cues)
 			this.bubblePopAudio.playbackRate = 0.7
 			this.bubblePopAudio.play()
 			this.store.addSolvedTriad(response)

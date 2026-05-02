@@ -16,6 +16,54 @@ function selectedCueSetsEqual(a: readonly string[], b: readonly string[]): boole
 	return sa.every((v, i) => v === sb[i])
 }
 
+function cueSetKey(cues: readonly string[]): string {
+	return [...cues].sort((a, b) => a.localeCompare(b)).join('|')
+}
+
+function activeLetterHintsPresent(state: { keywordLengthHint: number | null; firstLetterHint: string | null }): boolean {
+	return state.keywordLengthHint !== null || state.firstLetterHint !== null
+}
+
+function stashSnapshotIfNeeded(
+	snapshots: GlobalState['triadHintSnapshots'],
+	prevThree: string[],
+	state: { keywordLengthHint: number | null; firstLetterHint: string | null; activeHintType: GlobalState['activeHintType'] },
+): GlobalState['triadHintSnapshots'] {
+	if (!activeLetterHintsPresent(state)) {
+		return snapshots
+	}
+	return {
+		...snapshots,
+		[cueSetKey(prevThree)]: {
+			keywordLengthHint: state.keywordLengthHint,
+			firstLetterHint: state.firstLetterHint,
+			activeHintType: state.activeHintType,
+		},
+	}
+}
+
+function restoredHintsForSelection(
+	snapshots: GlobalState['triadHintSnapshots'],
+	next: string[],
+): {
+	keywordLengthHint: number | null
+	firstLetterHint: string | null
+	activeHintType: GlobalState['activeHintType']
+} {
+	if (next.length !== 3) {
+		return { keywordLengthHint: null, firstLetterHint: null, activeHintType: null }
+	}
+	const snap = snapshots[cueSetKey(next)]
+	if (!snap) {
+		return { keywordLengthHint: null, firstLetterHint: null, activeHintType: null }
+	}
+	return {
+		keywordLengthHint: snap.keywordLengthHint,
+		firstLetterHint: snap.firstLetterHint,
+		activeHintType: snap.activeHintType,
+	}
+}
+
 const initialState: GlobalState = {
 	user: null,
 	showHowToPlay: false,
@@ -36,6 +84,7 @@ const initialState: GlobalState = {
 	keywordLengthHint: null,
 	firstLetterHint: null,
 	activeHintType: null,
+	triadHintSnapshots: {},
 	usedHintTypes: [],
 	solvedTriads: [],
 	hintUsed: false,
@@ -85,13 +134,22 @@ export const GlobalStore = signalStore(
 				if (selectedCueSetsEqual(prev, next)) {
 					return { ...state, selectedCues: next }
 				}
+
+				let snapshots = state.triadHintSnapshots
+				if (prev.length === 3 && activeLetterHintsPresent(state)) {
+					snapshots = stashSnapshotIfNeeded(snapshots, prev, state)
+				}
+
+				const { keywordLengthHint, firstLetterHint, activeHintType } = restoredHintsForSelection(snapshots, next)
 				const switchedToDifferentThree = prev.length === 3 && next.length === 3 && !selectedCueSetsEqual(prev, next)
+
 				return {
 					...state,
 					selectedCues: next,
-					keywordLengthHint: null,
-					firstLetterHint: null,
-					activeHintType: null,
+					triadHintSnapshots: snapshots,
+					keywordLengthHint,
+					firstLetterHint,
+					activeHintType,
 					...(switchedToDifferentThree ? { usedHintTypes: [] as GlobalState['usedHintTypes'] } : {}),
 				}
 			})
@@ -103,12 +161,21 @@ export const GlobalStore = signalStore(
 				if (selectedCueSetsEqual(prev, next)) {
 					return { ...state, selectedCues: next }
 				}
+
+				let snapshots = state.triadHintSnapshots
+				if (prev.length === 3 && activeLetterHintsPresent(state)) {
+					snapshots = stashSnapshotIfNeeded(snapshots, prev, state)
+				}
+
+				const { keywordLengthHint, firstLetterHint, activeHintType } = restoredHintsForSelection(snapshots, next)
+
 				return {
 					...state,
 					selectedCues: next,
-					keywordLengthHint: null,
-					firstLetterHint: null,
-					activeHintType: null,
+					triadHintSnapshots: snapshots,
+					keywordLengthHint,
+					firstLetterHint,
+					activeHintType,
 				}
 			})
 		},
@@ -119,13 +186,33 @@ export const GlobalStore = signalStore(
 				if (selectedCueSetsEqual(prev, next)) {
 					return { ...state, selectedCues: next }
 				}
+
+				let snapshots = state.triadHintSnapshots
+				if (prev.length === 3 && activeLetterHintsPresent(state)) {
+					snapshots = stashSnapshotIfNeeded(snapshots, prev, state)
+				}
+
+				const { keywordLengthHint, firstLetterHint, activeHintType } = restoredHintsForSelection(snapshots, next)
+
 				return {
 					...state,
 					selectedCues: next,
-					keywordLengthHint: null,
-					firstLetterHint: null,
-					activeHintType: null,
+					triadHintSnapshots: snapshots,
+					keywordLengthHint,
+					firstLetterHint,
+					activeHintType,
 				}
+			})
+		},
+		clearTriadHintSnapshotForCues: (cues: string[]) => {
+			patchState(store, (state) => {
+				const key = cueSetKey(cues)
+				if (!(key in state.triadHintSnapshots)) {
+					return state
+				}
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const { [key]: _removed, ...rest } = state.triadHintSnapshots
+				return { ...state, triadHintSnapshots: rest }
 			})
 		},
 		setTurns: (turns: TurnAndHint[]) => {
@@ -148,6 +235,9 @@ export const GlobalStore = signalStore(
 		},
 		setActiveHintType: (activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null) => {
 			patchState(store, (state) => ({ ...state, activeHintType }))
+		},
+		setTriadHintSnapshots: (triadHintSnapshots: GlobalState['triadHintSnapshots']) => {
+			patchState(store, (state) => ({ ...state, triadHintSnapshots: { ...triadHintSnapshots } }))
 		},
 		addUsedHintType: (hintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER') => {
 			patchState(store, (state) => {
@@ -213,6 +303,7 @@ export const GlobalStore = signalStore(
 				keywordLengthHint: null,
 				firstLetterHint: null,
 				activeHintType: null,
+				triadHintSnapshots: {},
 				usedHintTypes: [],
 				solvedTriads: [],
 				hintUsed: false,

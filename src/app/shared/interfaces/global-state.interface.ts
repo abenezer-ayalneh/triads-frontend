@@ -3,6 +3,13 @@ import { SolvedTriad } from '../../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../../pages/game-play/interfaces/turn-and-hint.interface'
 import { User } from './user.interface'
 
+/** Letter/length hints for a specific trio of cues (keyed by sorted cue set in the store). */
+export interface TriadHintSnapshot {
+	keywordLengthHint: number | null
+	firstLetterHint: string | null
+	activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null
+}
+
 export interface GlobalState {
 	user: User | null
 	showHowToPlay: boolean
@@ -20,6 +27,8 @@ export interface GlobalState {
 	keywordLengthHint: number | null
 	firstLetterHint: string | null
 	activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null
+	/** Hints keyed by `sorted cues` joined with `|` so they can be restored if the player re-selects the same three bubbles. */
+	triadHintSnapshots: Record<string, TriadHintSnapshot>
 	usedHintTypes: ('KEYWORD_LENGTH' | 'FIRST_LETTER')[]
 	solvedTriads: SolvedTriad[]
 	hintUsed: boolean

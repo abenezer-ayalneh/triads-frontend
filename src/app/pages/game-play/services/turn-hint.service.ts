@@ -50,18 +50,13 @@ export class TurnHintService {
 	useHintToken(hints: TurnAndHint[]) {
 		const updatedHints = hints.map((hint) => ({ ...hint }))
 
-		let currentHintIndex = -1
-		updatedHints.forEach((hint, index) => {
-			if (hint.available) {
-				currentHintIndex = index
-			}
-		})
+		const indexToConsume = updatedHints.findIndex((hint) => hint.available)
 
-		if (currentHintIndex === -1) {
+		if (indexToConsume === -1) {
 			throw new Error('No available hints to use')
 		}
 
-		updatedHints[currentHintIndex].available = false
+		updatedHints[indexToConsume].available = false
 		return updatedHints
 	}
 

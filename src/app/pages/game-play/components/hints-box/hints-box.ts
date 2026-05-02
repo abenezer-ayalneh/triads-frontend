@@ -16,7 +16,7 @@ const LIFESAVER_IMAGE_PATH = 'images/lifesaver.svg'
 	selector: 'app-hints-box',
 	imports: [ReactiveFormsModule],
 	templateUrl: './hints-box.html',
-	styleUrl: './hints-box.scss',
+	styleUrls: ['./hints-box.scss'],
 })
 export class HintsBox implements OnDestroy {
 	readonly store = inject(GlobalStore)

@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs'
 import { Intro } from '../../shared/components/intro/intro'
 import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
+import { TriadHintSnapshot } from '../../shared/interfaces/global-state.interface'
 import { AssetPreloadService } from '../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../shared/services/daily-post-play.service'
 import { DailyRolloverService } from '../../shared/services/daily-rollover.service'
@@ -48,6 +49,7 @@ interface DailyGameSessionSnapshot {
 	firstLetterHint: string | null
 	activeHintType: 'KEYWORD_LENGTH' | 'FIRST_LETTER' | null
 	usedHintTypes: ('KEYWORD_LENGTH' | 'FIRST_LETTER')[]
+	triadHintSnapshots: Record<string, TriadHintSnapshot>
 	solvedTriads: SolvedTriadInterface[]
 	hintUsed: boolean
 	hintUsedWithOneTurnRemaining: boolean
@@ -186,6 +188,7 @@ export class GamePlay implements OnInit, OnDestroy {
 				firstLetterHint: this.store.firstLetterHint(),
 				activeHintType: this.store.activeHintType(),
 				usedHintTypes: this.store.usedHintTypes(),
+				triadHintSnapshots: this.store.triadHintSnapshots(),
 				solvedTriads: this.store.solvedTriads(),
 				hintUsed: this.store.hintUsed(),
 				hintUsedWithOneTurnRemaining: this.store.hintUsedWithOneTurnRemaining(),
@@ -272,6 +275,7 @@ export class GamePlay implements OnInit, OnDestroy {
 						firstLetterHint: null,
 						activeHintType: null,
 						usedHintTypes: [],
+						triadHintSnapshots: {},
 						solvedTriads: [],
 						hintUsed: false,
 						hintUsedWithOneTurnRemaining: false,
@@ -540,6 +544,7 @@ export class GamePlay implements OnInit, OnDestroy {
 		for (const hintType of session.usedHintTypes) {
 			this.store.addUsedHintType(hintType)
 		}
+		this.store.setTriadHintSnapshots(session.triadHintSnapshots ?? {})
 		this.store.setHintUsage(session.hintUsed)
 		this.store.setHintUsedWithOneTurnRemaining(session.hintUsedWithOneTurnRemaining)
 		this.store.setGameScore(session.gameScore)

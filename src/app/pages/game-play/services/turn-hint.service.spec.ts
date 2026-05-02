@@ -144,6 +144,20 @@ describe('TurnHintService (turns & hints table)', () => {
 			expect(service.canUseHint(turns, hints)).toBe(false)
 			expect(() => service.useHintToken(hints)).toThrowError('No available hints to use')
 		})
+
+		it('useHintToken consumes the leftmost (first) available hint so UI dims left to right', () => {
+			const hints: TurnAndHint[] = [
+				{ id: 1, available: true },
+				{ id: 2, available: true },
+			]
+			const afterFirst = service.useHintToken(hints)
+			expect(afterFirst[0].available).toBe(false)
+			expect(afterFirst[1].available).toBe(true)
+
+			const afterSecond = service.useHintToken(afterFirst)
+			expect(afterSecond[0].available).toBe(false)
+			expect(afterSecond[1].available).toBe(false)
+		})
 	})
 
 	describe('Full state transition table (screenshot spec)', () => {

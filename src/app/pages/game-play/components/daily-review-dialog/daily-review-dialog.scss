@@ -1,0 +1,14 @@
+/* Scrollable triad list: hide scrollbars while keeping mouse/touch scroll (modal already implies overflow). */
+.daily-review-scroll {
+	scrollbar-width: none;
+
+	&::-webkit-scrollbar {
+		width: 0;
+		height: 0;
+	}
+}
+
+/* Softer bounce on the “more below” chevron */
+.daily-review-more-hint svg {
+	animation-duration: 1.35s;
+}

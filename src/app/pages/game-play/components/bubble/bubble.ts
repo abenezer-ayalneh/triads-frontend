@@ -4,6 +4,7 @@ import { AnimationOptions, LottieDirective } from 'ngx-lottie'
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
+import { GamePlayLogic } from '../../services/game-play-logic'
 
 const BUBBLE_IMAGE_PATH = 'images/bubble.png'
 const BUBBLE_POP_LOTTIE_PATH = 'lotties/bubble-explosion.json'
@@ -16,6 +17,8 @@ const BUBBLE_POP_LOTTIE_PATH = 'lotties/bubble-explosion.json'
 })
 export class Bubble {
 	readonly store = inject(GlobalStore)
+
+	private readonly gamePlayLogic = inject(GamePlayLogic)
 
 	private readonly assetPreloadService = inject(AssetPreloadService)
 
@@ -57,6 +60,7 @@ export class Bubble {
 		const selectedCuesLength = this.store.selectedCues().length
 		if (this.selected()) {
 			this.store.removeSelectedCue(this.cue())
+			this.gamePlayLogic.resetAnswerFieldState()
 			this.store.setGamePlayState(GamePlayState.PLAYING)
 		} else if (selectedCuesLength < 3) {
 			this.store.addSelectedCue(this.cue())
