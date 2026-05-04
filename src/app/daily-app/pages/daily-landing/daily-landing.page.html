@@ -54,3 +54,7 @@
 		</ng-template>
 	</ion-modal>
 }
+
+@if (!store.introShownPerSession()) {
+	<app-intro />
+}

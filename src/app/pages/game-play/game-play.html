@@ -146,7 +146,7 @@
 	}
 
 	<!--Game Intro Dialog-->
-	@if (!store.introShownPerSession() && store.gameMode() !== 'daily') {
+	@if (!store.introShownPerSession()) {
 		<app-intro />
 	}
 

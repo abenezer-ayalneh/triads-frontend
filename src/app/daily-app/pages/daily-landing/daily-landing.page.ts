@@ -8,6 +8,7 @@ import { DailyReviewSummary } from '../../../pages/game-play/interfaces/daily-re
 import { GamePlayApi } from '../../../pages/game-play/services/game-play-api'
 import { UserInfoDialog } from '../../../pages/home/components/user-info-dialog/user-info-dialog'
 import { BrainWarmingPlayButton } from '../../../shared/components/brain-warming-play-button/brain-warming-play-button'
+import { Intro } from '../../../shared/components/intro/intro'
 import { AssetPreloadService } from '../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../shared/services/daily-post-play.service'
 import { DailyRolloverService } from '../../../shared/services/daily-rollover.service'
@@ -19,7 +20,7 @@ const TRIADS_LOGO_IMAGE_PATH = 'images/triads-logo-animated.svg'
 
 @Component({
 	selector: 'app-daily-landing',
-	imports: [BrainWarmingPlayButton, DailyReviewDialog, IonModal, UserInfoDialog],
+	imports: [BrainWarmingPlayButton, DailyReviewDialog, Intro, IonModal, UserInfoDialog],
 	templateUrl: './daily-landing.page.html',
 	styleUrl: './daily-landing.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
