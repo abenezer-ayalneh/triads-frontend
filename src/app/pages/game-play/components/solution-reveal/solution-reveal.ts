@@ -1,4 +1,5 @@
-import { Component, computed, inject } from '@angular/core'
+import { DOCUMENT } from '@angular/common'
+import { Component, computed, DestroyRef, effect, ElementRef, inject, signal, viewChild } from '@angular/core'
 
 import { HighlightKeyPipe } from '../../../../shared/pipes/highlight-key.pipe'
 import { GlobalStore } from '../../../../state/global.store'
@@ -12,10 +13,52 @@ import { GlobalStore } from '../../../../state/global.store'
 export class SolutionReveal {
 	readonly store = inject(GlobalStore)
 
-	unsolvedTriads = computed(() => this.store.unsolvedTriads())
+	private readonly document = inject(DOCUMENT)
 
-	hasUnsolvedTriads = computed(() => {
+	private readonly destroyRef = inject(DestroyRef)
+
+	private readonly cardsContainer = viewChild<ElementRef<HTMLElement>>('cardsContainer')
+
+	private readonly dismissed = signal(false)
+
+	readonly unsolvedTriads = computed(() => this.store.unsolvedTriads())
+
+	private readonly unsolvedTriadsKey = computed(() => {
 		const triads = this.unsolvedTriads()
-		return triads !== null && triads.length > 0
+		if (!triads?.length) {
+			return ''
+		}
+		return triads.map((triad) => triad.id).join(',')
 	})
+
+	readonly showSolutionReveal = computed(() => {
+		const triads = this.unsolvedTriads()
+		return triads !== null && triads.length > 0 && !this.dismissed()
+	})
+
+	constructor() {
+		effect(() => {
+			this.unsolvedTriadsKey()
+			this.dismissed.set(false)
+		})
+
+		const onPointerDown = (event: Event) => {
+			const triads = this.unsolvedTriads()
+			if (triads === null || triads.length === 0 || this.dismissed()) {
+				return
+			}
+			const root = this.cardsContainer()?.nativeElement
+			if (!root) {
+				return
+			}
+			const target = event.target
+			if (target instanceof Node && root.contains(target)) {
+				return
+			}
+			this.dismissed.set(true)
+		}
+
+		this.document.addEventListener('pointerdown', onPointerDown, true)
+		this.destroyRef.onDestroy(() => this.document.removeEventListener('pointerdown', onPointerDown, true))
+	}
 }

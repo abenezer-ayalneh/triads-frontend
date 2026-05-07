@@ -1,5 +1,6 @@
-@if (hasUnsolvedTriads()) {
+@if (showSolutionReveal()) {
 	<div
+		#cardsContainer
 		class="w-full h-full pointer-events-none flex flex-row landscape:max-lg:flex-col items-start justify-center landscape:max-lg:justify-start gap-4 px-4 pb-2 overflow-auto max-md:px-3 max-md:pt-4 max-md:gap-3 max-md:justify-start landscape:max-md:px-2 landscape:max-md:pb-1 landscape:max-md:gap-2 landscape:max-md:justify-start">
 		@for (triad of unsolvedTriads(); track triad.id) {
 			<div
