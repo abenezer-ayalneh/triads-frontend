@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core'
-import { Router } from '@angular/router'
 import { IonModal } from '@ionic/angular/standalone'
 
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
@@ -39,8 +38,6 @@ export class GameResultDialog {
 
 	readonly reviewLoading = signal(false)
 
-	private readonly router = inject(Router)
-
 	private readonly assetPreloadService = inject(AssetPreloadService)
 
 	readonly scoreGifPath = computed(() => {
@@ -51,34 +48,52 @@ export class GameResultDialog {
 	private readonly dailyPostPlayService = inject(DailyPostPlayService)
 
 	readonly reviewSummary = computed<DailyReviewSummary | null>(() => {
-		if (!this.isDailyMode()) {
+		const result = this.result()
+		const score = this.store.gameScore()
+		const nextPuzzleAt = this.isDailyMode() ? this.store.dailyNextPuzzleAt() : null
+
+		const dailyReviewTriads = this.store.dailyReviewTriads()
+		const currentGameTriads = this.dailyPostPlayService.mergeReviewTriads(this.store.solvedTriads(), this.store.unsolvedTriads())
+
+		if (this.isDailyMode()) {
+			if (this.dailyPostPlayService.hasCompleteReviewTriads(dailyReviewTriads)) {
+				return this.dailyPostPlayService.createReviewSummary({
+					result,
+					score,
+					nextPuzzleAt,
+					triads: dailyReviewTriads,
+				})
+			}
+			if (this.dailyPostPlayService.hasCompleteReviewTriads(currentGameTriads)) {
+				return this.dailyPostPlayService.createReviewSummary({
+					result,
+					score,
+					nextPuzzleAt,
+					triads: currentGameTriads,
+				})
+			}
 			return null
 		}
 
-		const result = this.result()
-		const score = this.store.gameScore()
-		const nextPuzzleAt = this.store.dailyNextPuzzleAt()
-		const dailyReviewTriads = this.store.dailyReviewTriads()
+		if (this.dailyPostPlayService.hasCompleteReviewTriads(currentGameTriads)) {
+			return this.dailyPostPlayService.createReviewSummary({
+				result,
+				score,
+				nextPuzzleAt: null,
+				triads: currentGameTriads,
+			})
+		}
+
 		if (this.dailyPostPlayService.hasCompleteReviewTriads(dailyReviewTriads)) {
 			return this.dailyPostPlayService.createReviewSummary({
 				result,
 				score,
-				nextPuzzleAt,
+				nextPuzzleAt: null,
 				triads: dailyReviewTriads,
 			})
 		}
 
-		const currentGameTriads = this.dailyPostPlayService.mergeReviewTriads(this.store.solvedTriads(), this.store.unsolvedTriads())
-		if (!this.dailyPostPlayService.hasCompleteReviewTriads(currentGameTriads)) {
-			return null
-		}
-
-		return this.dailyPostPlayService.createReviewSummary({
-			result,
-			score,
-			nextPuzzleAt,
-			triads: currentGameTriads,
-		})
+		return null
 	})
 
 	private readonly snackbarService = inject(SnackbarService)
@@ -160,16 +175,6 @@ export class GameResultDialog {
 		this.restartRequested.emit()
 	}
 
-	quitGame() {
-		this.store.setUnsolvedTriads(null)
-		this.store.resetGameState()
-		this.showPlayAgainButton.set(false)
-		if (this.store.gameMode() === 'daily') {
-			return
-		}
-		this.router.navigate(['/home'])
-	}
-
 	async shareGameResult() {
 		await this.dailyPostPlayService.shareScoreImage(this.store.gameScore())
 	}
@@ -183,7 +188,7 @@ export class GameResultDialog {
 
 		const triadGroupId = this.store.triadGroupId()
 		if (!triadGroupId) {
-			this.snackbarService.showSnackbar('Unable to load your daily review. Please try again.', 5000)
+			this.snackbarService.showSnackbar('Unable to load review. Please try again.', 5000)
 			return
 		}
 
@@ -193,7 +198,7 @@ export class GameResultDialog {
 			this.store.setDailyReviewTriads(triads)
 			this.reviewDialogOpen.set(true)
 		} catch {
-			this.snackbarService.showSnackbar('Unable to load your daily review. Please try again.', 5000)
+			this.snackbarService.showSnackbar('Unable to load review. Please try again.', 5000)
 		} finally {
 			this.reviewLoading.set(false)
 		}

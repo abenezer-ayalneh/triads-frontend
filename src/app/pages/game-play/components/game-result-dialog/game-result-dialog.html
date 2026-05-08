@@ -73,13 +73,14 @@
 					</button>
 					<button
 						(click)="restartGame()"
-						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-success flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
+						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg md:text-base text-base-100 hover:bg-success flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
 						Play Again
 					</button>
 					<button
-						(click)="quitGame()"
-						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-error text-xs landscape:max-lg:text-xs md:text-base">
-						Quit Now
+						(click)="openDailyReview()"
+						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info text-xs landscape:max-lg:text-xs md:text-base"
+						[disabled]="reviewLoading()">
+						<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
 					</button>
 				</div>
 			}

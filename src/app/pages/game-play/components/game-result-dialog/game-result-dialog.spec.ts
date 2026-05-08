@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
-import { Router } from '@angular/router'
 
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../../shared/services/daily-post-play.service'
@@ -86,10 +85,6 @@ describe('GameResultDialog', () => {
 				{
 					provide: SnackbarService,
 					useValue: jasmine.createSpyObj<SnackbarService>('SnackbarService', ['showSnackbar']),
-				},
-				{
-					provide: Router,
-					useValue: jasmine.createSpyObj<Router>('Router', ['navigate']),
 				},
 			],
 		}).compileComponents()

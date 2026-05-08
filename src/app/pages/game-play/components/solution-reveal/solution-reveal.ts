@@ -55,7 +55,8 @@ export class SolutionReveal {
 			if (target instanceof Node && root.contains(target)) {
 				return
 			}
-			this.dismissed.set(true)
+			// Defer dismissal so the current click target still receives its action.
+			queueMicrotask(() => this.dismissed.set(true))
 		}
 
 		this.document.addEventListener('pointerdown', onPointerDown, true)
