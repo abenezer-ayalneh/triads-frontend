@@ -104,6 +104,18 @@ describe('GameResultDialog', () => {
 		expect(component).toBeTruthy()
 	})
 
+	it('plays celebration sound on daily win with perfect score', () => {
+		const playSoundSpy = TestBed.inject(AssetPreloadService).playSound as jasmine.Spy
+		playSoundSpy.calls.reset()
+		mockStore.gameScore.and.returnValue(15)
+
+		fixture = TestBed.createComponent(GameResultDialog)
+		fixture.componentRef.setInput('result', 'WON')
+		fixture.detectChanges()
+
+		expect(playSoundSpy).toHaveBeenCalledWith('sounds/ta-dah.mp3', { volume: 0.7 })
+	})
+
 	it('renders score-specific GIF in result dialog', () => {
 		const renderedImage = fixture.nativeElement.querySelector('img')
 

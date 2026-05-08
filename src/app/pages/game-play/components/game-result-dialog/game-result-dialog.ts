@@ -118,6 +118,9 @@ export class GameResultDialog {
 
 			if (this.store.gameMode() === 'daily') {
 				this.showPlayAgainButton.set(true)
+				if (result === 'WON' && gameScore === 15) {
+					this.assetPreloadService.playSound(CELEBRATION_SOUND_PATH, { volume: 0.7 })
+				}
 				return
 			}
 
