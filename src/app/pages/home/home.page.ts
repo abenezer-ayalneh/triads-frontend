@@ -4,13 +4,12 @@ import { NavigationEnd, Router } from '@angular/router'
 import { filter, skip, Subject, takeUntil } from 'rxjs'
 
 import { BrainWarmingPlayButton } from '../../shared/components/brain-warming-play-button/brain-warming-play-button'
-import { Intro } from '../../shared/components/intro/intro'
 import { GlobalStore } from '../../state/global.store'
 import { UserInfoDialog } from './components/user-info-dialog/user-info-dialog'
 
 @Component({
 	selector: 'app-home',
-	imports: [FormsModule, UserInfoDialog, Intro, BrainWarmingPlayButton],
+	imports: [FormsModule, UserInfoDialog, BrainWarmingPlayButton],
 	templateUrl: './home.page.html',
 	styleUrl: './home.page.scss',
 })
