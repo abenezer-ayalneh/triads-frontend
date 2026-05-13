@@ -1,16 +1,19 @@
 <button
+	#playButton
 	type="button"
 	[class]="buttonClasses()"
+	[class.brain-play-button--animating]="animationRunning()"
 	[class.pointer-events-none]="animationRunning()"
 	[attr.aria-busy]="animationRunning() ? 'true' : null"
 	(click)="onPlayClicked()">
 	<span class="brain-play-inner">
-		<span class="brain-play-spacer" aria-hidden="true">brain warming up . . .</span>
+		<span class="brain-play-spacer" aria-hidden="true">Brain warming up!</span>
 		<span #playLabelSpan class="brain-play-label">{{ playLabelText() }}</span>
-		<span #bt1Span class="brain-play-text" style="color: #bbbbbb; opacity: 0">brain warming up . . .</span>
-		<span #bt2Span class="brain-play-text" style="opacity: 0">
-			<span #bPrefixSpan class="brain-play-prefix">brain getting</span>
-			<span #bHotSpan class="brain-play-hot">hot</span>
+		<span class="brain-play-warmup" [class.brain-play-warmup--visible]="warmupVisible()" aria-hidden="true">
+			<span class="brain-play-brain-wrap">
+				<span class="brain-play-brain">Brain</span>
+			</span>
+			<span class="brain-play-wu">warming up!</span>
 		</span>
 	</span>
 </button>
