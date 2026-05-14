@@ -19,6 +19,7 @@ export const dailyRoutes: Routes = [
 				component: TriadManagementPage,
 				canActivate: [adminGuard],
 			},
+			{ path: '**', redirectTo: '' },
 		],
 	},
 ]

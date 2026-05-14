@@ -3,6 +3,7 @@ import { CanActivateFn, RedirectCommand, Router } from '@angular/router'
 import { catchError, map, of } from 'rxjs'
 
 import { GamePlayApi } from '../../pages/game-play/services/game-play-api'
+import { DailyPlayRouteIntentService } from '../../shared/services/daily-play-route-intent.service'
 import { UserService } from '../../shared/services/user.service'
 import { GlobalStore } from '../../state/global.store'
 
@@ -11,9 +12,17 @@ export const dailyPlayGuard: CanActivateFn = () => {
 	const router = inject(Router)
 	const gamePlayApi = inject(GamePlayApi)
 	const userService = inject(UserService)
+	const dailyPlayRouteIntent = inject(DailyPlayRouteIntentService)
 
 	if (store.gameMode() !== 'daily') {
 		return true
+	}
+
+	if (!dailyPlayRouteIntent.consumePending()) {
+		return new RedirectCommand(router.parseUrl('/'), {
+			replaceUrl: true,
+			onSameUrlNavigation: 'ignore',
+		})
 	}
 
 	if (!userService.getUser()) {

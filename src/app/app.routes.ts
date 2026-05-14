@@ -26,6 +26,7 @@ export const routes: Routes = [
 				canActivate: [adminGuard],
 			},
 			{ path: '', redirectTo: 'home', pathMatch: 'full' },
+			{ path: '**', redirectTo: 'home' },
 		],
 	},
 ]

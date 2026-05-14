@@ -2,6 +2,8 @@ import { DOCUMENT } from '@angular/common'
 import { Component, ElementRef, inject, input, OnDestroy, signal, viewChild } from '@angular/core'
 import { Router } from '@angular/router'
 
+import { DailyPlayRouteIntentService } from '../../services/daily-play-route-intent.service'
+
 const PLAY_HIDE_DELAY_MS = 300
 const BURST_AT_MS = 5500
 const CONFETTI_MAX_DELAY_MS = 80
@@ -39,6 +41,9 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 	readonly navigateCommands = input<readonly string[]>(['/play'])
 
+	/** When true, authorizes the next `/play` navigation for the daily app guard (Play Now only). */
+	readonly authorizeNextDailyPlayNavigation = input(false)
+
 	readonly animationRunning = signal(false)
 
 	readonly warmupVisible = signal(false)
@@ -46,6 +51,8 @@ export class BrainWarmingPlayButton implements OnDestroy {
 	private readonly router = inject(Router)
 
 	private readonly document = inject(DOCUMENT)
+
+	private readonly dailyPlayRouteIntent = inject(DailyPlayRouteIntentService)
 
 	private timers: ReturnType<typeof setTimeout>[] = []
 
@@ -98,6 +105,9 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 		const navigateAt = PLAY_HIDE_DELAY_MS + BURST_AT_MS + NAV_AFTER_BURST_MS
 		this.after(navigateAt, () => {
+			if (this.authorizeNextDailyPlayNavigation()) {
+				this.dailyPlayRouteIntent.markPending()
+			}
 			void this.router.navigate(this.navigateCommands()).then((didNavigate) => {
 				if (!didNavigate) {
 					this.resetVisualState()
