@@ -98,11 +98,11 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 		const navigateAt = PLAY_HIDE_DELAY_MS + BURST_AT_MS + NAV_AFTER_BURST_MS
 		this.after(navigateAt, () => {
-			void this.router.navigate(this.navigateCommands()).then((didNavigate) => {
-				if (!didNavigate) {
-					this.resetVisualState()
-				}
-			})
+			// void this.router.navigate(this.navigateCommands()).then((didNavigate) => {
+			// 	if (!didNavigate) {
+			// 		this.resetVisualState()
+			// 	}
+			// })
 		})
 	}
 
