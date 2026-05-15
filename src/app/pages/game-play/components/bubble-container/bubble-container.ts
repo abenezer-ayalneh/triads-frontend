@@ -328,15 +328,22 @@ export class BubbleContainer implements AfterViewInit, OnDestroy {
 		this.setupResizeHandling()
 		this.runSimulation()
 
-		// Start the creation interval
-		this.bubbleCreationInterval = setInterval(() => {
-			if (this.bubbleCreationQueue.length > 0) {
-				const bubbleComponent = this.bubbleCreationQueue.shift()
-				this.createSingleBubble(bubbleComponent!)
-			} else {
-				clearInterval(this.bubbleCreationInterval)
-			}
-		}, this.bubbleCreationDelay)
+		// Spawn the first bubble immediately; stagger the rest
+		if (this.bubbleCreationQueue.length > 0) {
+			const firstBubble = this.bubbleCreationQueue.shift()!
+			this.createSingleBubble(firstBubble)
+		}
+
+		if (this.bubbleCreationQueue.length > 0) {
+			this.bubbleCreationInterval = setInterval(() => {
+				if (this.bubbleCreationQueue.length > 0) {
+					const bubbleComponent = this.bubbleCreationQueue.shift()
+					this.createSingleBubble(bubbleComponent!)
+				} else {
+					clearInterval(this.bubbleCreationInterval)
+				}
+			}, this.bubbleCreationDelay)
+		}
 	}
 
 	/**

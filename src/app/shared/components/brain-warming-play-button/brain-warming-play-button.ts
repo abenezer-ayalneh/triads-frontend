@@ -3,6 +3,7 @@ import { Component, ElementRef, inject, input, OnDestroy, signal, viewChild } fr
 import { Router } from '@angular/router'
 
 import { DailyPlayRouteIntentService } from '../../services/daily-play-route-intent.service'
+import { GameCuePrefetchService } from '../../services/game-cue-prefetch.service'
 
 const PLAY_HIDE_DELAY_MS = 300
 const BURST_AT_MS = 5500
@@ -54,6 +55,8 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 	private readonly dailyPlayRouteIntent = inject(DailyPlayRouteIntentService)
 
+	private readonly gameCuePrefetch = inject(GameCuePrefetchService)
+
 	private timers: ReturnType<typeof setTimeout>[] = []
 
 	private readonly playButton = viewChild<ElementRef<HTMLButtonElement>>('playButton')
@@ -69,6 +72,7 @@ export class BrainWarmingPlayButton implements OnDestroy {
 	resetVisualState() {
 		this.clearTimers()
 		this.removeParticles()
+		this.gameCuePrefetch.clear()
 		this.animationRunning.set(false)
 		this.warmupVisible.set(false)
 
@@ -88,6 +92,7 @@ export class BrainWarmingPlayButton implements OnDestroy {
 			return
 		}
 		this.animationRunning.set(true)
+		this.gameCuePrefetch.startPrefetch()
 
 		play.style.opacity = '0'
 		play.style.pointerEvents = 'none'

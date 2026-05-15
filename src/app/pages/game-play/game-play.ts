@@ -15,6 +15,7 @@ import { AssetPreloadService } from '../../shared/services/asset-preload.service
 import { DailyPostPlayService } from '../../shared/services/daily-post-play.service'
 import { DailyRolloverService } from '../../shared/services/daily-rollover.service'
 import { DifficultyService } from '../../shared/services/difficulty.service'
+import { GameCuePrefetchService } from '../../shared/services/game-cue-prefetch.service'
 import { GlobalStore } from '../../state/global.store'
 import { AnswerDialog } from './components/answer-dialog/answer-dialog'
 import { BackgroundBubbles } from './components/background-bubbles/background-bubbles'
@@ -137,6 +138,8 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private readonly dailyRolloverService = inject(DailyRolloverService)
 
+	private readonly gameCuePrefetch = inject(GameCuePrefetchService)
+
 	private readonly router = inject(Router)
 
 	private subscriptions$ = new Subscription()
@@ -229,8 +232,9 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.store.setDailyNoScheduleMessage(null)
 		this.store.setDailyStandaloneResult(false)
 		this.store.setDailyReviewTriads(null)
+		const dailyCues$ = this.gameCuePrefetch.consumeDailyCues() ?? this.gamePlayApi.getDailyCues()
 		this.subscriptions$.add(
-			this.gamePlayApi.getDailyCues().subscribe({
+			dailyCues$.subscribe({
 				next: (response) => {
 					if (!response.scheduled) {
 						this.clearDailySession()
@@ -298,8 +302,9 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.cueFetchingState.set(RequestState.LOADING)
 		this.noTriadsMessage.set('')
 		const difficulty = this.difficultyService.getDifficulty()
+		const classicCues$ = this.gameCuePrefetch.consumeClassicCues(difficulty) ?? this.gamePlayApi.getCues(difficulty)
 		this.subscriptions$.add(
-			this.gamePlayApi.getCues(difficulty).subscribe({
+			classicCues$.subscribe({
 				next: (response) => {
 					// Check if cues is null or empty array (backend returns null when no triads found)
 					if (!response.cues || response.cues.length === 0) {
