@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router'
 
 import { adminGuard } from './layouts/main-layout/guards/admin-guard'
+import { classicPlayGuard } from './layouts/main-layout/guards/classic-play.guard'
 import { usernameGuard } from './layouts/main-layout/guards/username-guard'
 import { MainLayout } from './layouts/main-layout/main-layout'
 import { GamePlay } from './pages/game-play/game-play'
@@ -18,7 +19,7 @@ export const routes: Routes = [
 			{
 				path: 'play',
 				component: GamePlay,
-				canActivate: [usernameGuard],
+				canActivate: [classicPlayGuard, usernameGuard],
 			},
 			{
 				path: 'manage-triads',

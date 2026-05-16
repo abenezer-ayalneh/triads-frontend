@@ -2,8 +2,8 @@ import { DOCUMENT } from '@angular/common'
 import { Component, ElementRef, inject, input, OnDestroy, signal, viewChild } from '@angular/core'
 import { Router } from '@angular/router'
 
-import { DailyPlayRouteIntentService } from '../../services/daily-play-route-intent.service'
 import { GameCuePrefetchService } from '../../services/game-cue-prefetch.service'
+import { PlayRouteIntentService } from '../../services/play-route-intent.service'
 
 const PLAY_HIDE_DELAY_MS = 300
 const BURST_AT_MS = 5500
@@ -42,8 +42,8 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 	readonly navigateCommands = input<readonly string[]>(['/play'])
 
-	/** When true, authorizes the next `/play` navigation for the daily app guard (Play Now only). */
-	readonly authorizeNextDailyPlayNavigation = input(false)
+	/** When true, authorizes the next `/play` navigation for the play route guard (Play Now only). */
+	readonly authorizeNextPlayNavigation = input(false)
 
 	readonly animationRunning = signal(false)
 
@@ -53,7 +53,7 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 	private readonly document = inject(DOCUMENT)
 
-	private readonly dailyPlayRouteIntent = inject(DailyPlayRouteIntentService)
+	private readonly playRouteIntent = inject(PlayRouteIntentService)
 
 	private readonly gameCuePrefetch = inject(GameCuePrefetchService)
 
@@ -110,8 +110,8 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 		const navigateAt = PLAY_HIDE_DELAY_MS + BURST_AT_MS + NAV_AFTER_BURST_MS
 		this.after(navigateAt, () => {
-			if (this.authorizeNextDailyPlayNavigation()) {
-				this.dailyPlayRouteIntent.markPending()
+			if (this.authorizeNextPlayNavigation()) {
+				this.playRouteIntent.markPending()
 			}
 			void this.router.navigate(this.navigateCommands()).then((didNavigate) => {
 				if (!didNavigate) {
