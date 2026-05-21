@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core'
 import { IonModal } from '@ionic/angular/standalone'
 
+import { isApiError, parseApiError } from '../../../../shared/errors/api-error.util'
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../../shared/services/daily-post-play.service'
-import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { getScoreGifPath } from '../../constants/share.constant'
 import { DailyReviewSummary } from '../../interfaces/daily-review.interface'
@@ -37,6 +37,8 @@ export class GameResultDialog {
 	readonly reviewDialogOpen = signal(false)
 
 	readonly reviewLoading = signal(false)
+
+	readonly reviewError = signal<string | null>(null)
 
 	private readonly assetPreloadService = inject(AssetPreloadService)
 
@@ -95,8 +97,6 @@ export class GameResultDialog {
 
 		return null
 	})
-
-	private readonly snackbarService = inject(SnackbarService)
 
 	constructor() {
 		effect((onCleanup) => {
@@ -180,6 +180,7 @@ export class GameResultDialog {
 	}
 
 	async openDailyReview() {
+		this.reviewError.set(null)
 		const summary = this.reviewSummary()
 		if (summary) {
 			this.reviewDialogOpen.set(true)
@@ -188,7 +189,7 @@ export class GameResultDialog {
 
 		const triadGroupId = this.store.triadGroupId()
 		if (!triadGroupId) {
-			this.snackbarService.showSnackbar('Unable to load review. Please try again.', 5000)
+			this.reviewError.set('Unable to load review. Please try again.')
 			return
 		}
 
@@ -197,8 +198,10 @@ export class GameResultDialog {
 			const triads = await this.dailyPostPlayService.loadReviewTriads(triadGroupId)
 			this.store.setDailyReviewTriads(triads)
 			this.reviewDialogOpen.set(true)
-		} catch {
-			this.snackbarService.showSnackbar('Unable to load review. Please try again.', 5000)
+		} catch (error) {
+			const apiError = isApiError(error) ? error : parseApiError(error)
+			apiError.markHandled()
+			this.reviewError.set(apiError.userMessage)
 		} finally {
 			this.reviewLoading.set(false)
 		}

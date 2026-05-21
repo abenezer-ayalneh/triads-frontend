@@ -37,6 +37,9 @@
 			</button>
 		}
 	</div>
+	@if (serverError(); as message) {
+		<p class="text-center text-xs text-error">{{ message }}</p>
+	}
 </div>
 
 <!-- Hint Choice Modal -->

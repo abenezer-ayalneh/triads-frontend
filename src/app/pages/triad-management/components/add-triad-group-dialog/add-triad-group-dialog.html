@@ -1,10 +1,13 @@
-<app-dialog #dialogBody title="Add Triad Group" (whenClosed)="onClose()">
+<app-dialog title="Add Triad Group" (whenClosed)="onClose()">
 	<form [formGroup]="formGroup" (ngSubmit)="onSubmit()" class="space-y-4 landscape:max-md:space-y-4 md:space-y-6">
 		<!-- Validation Errors -->
-		@if (validationErrors().length > 0) {
-			<div class="bg-red-50 border border-red-200 rounded-lg p-3 landscape:max-md:p-3 md:p-4">
+		@if (clientValidationErrors().length > 0 || serverErrors().length > 0) {
+			<div #errorBanner class="scroll-mt-16 bg-red-50 border border-red-200 rounded-lg p-3 landscape:max-md:p-3 md:p-4">
 				<ul class="list-disc list-inside text-red-700 text-xs landscape:max-md:text-xs md:text-sm space-y-1">
-					@for (error of validationErrors(); track $index) {
+					@for (error of clientValidationErrors(); track $index) {
+						<li>{{ error }}</li>
+					}
+					@for (error of serverErrors(); track $index) {
 						<li>{{ error }}</li>
 					}
 				</ul>
@@ -28,6 +31,7 @@
 				<option [value]="Difficulty.MEDIUM">Medium</option>
 				<option [value]="Difficulty.HARD">Hard</option>
 			</select>
+			<app-form-error-message [control]="formGroup.get('difficulty')" />
 		</div>
 
 		<!-- Triad 1 -->
@@ -43,6 +47,7 @@
 						appAutoCapitalize
 						class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 						[class.border-red-500]="triad1Group.get('keyword')?.invalid && triad1Group.get('keyword')?.touched" />
+					<app-form-error-message [control]="triad1Group.get('keyword')" />
 				</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-2 landscape:max-md:gap-2 md:gap-4">
 					<div>
@@ -56,6 +61,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad1Group.get('fullPhrase1')?.invalid && triad1Group.get('fullPhrase1')?.touched" />
+						<app-form-error-message [control]="triad1Group.get('fullPhrase1')" />
 					</div>
 					<div>
 						<label for="add-triad1-fullPhrase2" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -68,6 +74,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad1Group.get('fullPhrase2')?.invalid && triad1Group.get('fullPhrase2')?.touched" />
+						<app-form-error-message [control]="triad1Group.get('fullPhrase2')" />
 					</div>
 					<div>
 						<label for="add-triad1-fullPhrase3" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -80,6 +87,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad1Group.get('fullPhrase3')?.invalid && triad1Group.get('fullPhrase3')?.touched" />
+						<app-form-error-message [control]="triad1Group.get('fullPhrase3')" />
 					</div>
 				</div>
 			</div>
@@ -98,6 +106,7 @@
 						appAutoCapitalize
 						class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 						[class.border-red-500]="triad2Group.get('keyword')?.invalid && triad2Group.get('keyword')?.touched" />
+					<app-form-error-message [control]="triad2Group.get('keyword')" />
 				</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-2 landscape:max-md:gap-2 md:gap-4">
 					<div>
@@ -111,6 +120,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad2Group.get('fullPhrase1')?.invalid && triad2Group.get('fullPhrase1')?.touched" />
+						<app-form-error-message [control]="triad2Group.get('fullPhrase1')" />
 					</div>
 					<div>
 						<label for="add-triad2-fullPhrase2" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -123,6 +133,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad2Group.get('fullPhrase2')?.invalid && triad2Group.get('fullPhrase2')?.touched" />
+						<app-form-error-message [control]="triad2Group.get('fullPhrase2')" />
 					</div>
 					<div>
 						<label for="add-triad2-fullPhrase3" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -135,6 +146,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad2Group.get('fullPhrase3')?.invalid && triad2Group.get('fullPhrase3')?.touched" />
+						<app-form-error-message [control]="triad2Group.get('fullPhrase3')" />
 					</div>
 				</div>
 			</div>
@@ -153,6 +165,7 @@
 						appAutoCapitalize
 						class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 						[class.border-red-500]="triad3Group.get('keyword')?.invalid && triad3Group.get('keyword')?.touched" />
+					<app-form-error-message [control]="triad3Group.get('keyword')" />
 				</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-2 landscape:max-md:gap-2 md:gap-4">
 					<div>
@@ -166,6 +179,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad3Group.get('fullPhrase1')?.invalid && triad3Group.get('fullPhrase1')?.touched" />
+						<app-form-error-message [control]="triad3Group.get('fullPhrase1')" />
 					</div>
 					<div>
 						<label for="add-triad3-fullPhrase2" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -178,6 +192,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad3Group.get('fullPhrase2')?.invalid && triad3Group.get('fullPhrase2')?.touched" />
+						<app-form-error-message [control]="triad3Group.get('fullPhrase2')" />
 					</div>
 					<div>
 						<label for="add-triad3-fullPhrase3" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -190,6 +205,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad3Group.get('fullPhrase3')?.invalid && triad3Group.get('fullPhrase3')?.touched" />
+						<app-form-error-message [control]="triad3Group.get('fullPhrase3')" />
 					</div>
 				</div>
 			</div>
@@ -208,6 +224,7 @@
 						appAutoCapitalize
 						class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 						[class.border-red-500]="triad4Group.get('keyword')?.invalid && triad4Group.get('keyword')?.touched" />
+					<app-form-error-message [control]="triad4Group.get('keyword')" />
 				</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-2 landscape:max-md:gap-2 md:gap-4">
 					<div>
@@ -221,6 +238,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad4Group.get('fullPhrase1')?.invalid && triad4Group.get('fullPhrase1')?.touched" />
+						<app-form-error-message [control]="triad4Group.get('fullPhrase1')" />
 					</div>
 					<div>
 						<label for="add-triad4-fullPhrase2" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -233,6 +251,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad4Group.get('fullPhrase2')?.invalid && triad4Group.get('fullPhrase2')?.touched" />
+						<app-form-error-message [control]="triad4Group.get('fullPhrase2')" />
 					</div>
 					<div>
 						<label for="add-triad4-fullPhrase3" class="block text-xs landscape:max-md:text-xs md:text-sm font-medium text-gray-700 mb-1"
@@ -245,6 +264,7 @@
 							appAutoCapitalize
 							class="w-full px-2 landscape:max-md:px-2 md:px-3 py-1.5 landscape:max-md:py-1.5 md:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-xs landscape:max-md:text-xs md:text-base"
 							[class.border-red-500]="triad4Group.get('fullPhrase3')?.invalid && triad4Group.get('fullPhrase3')?.touched" />
+						<app-form-error-message [control]="triad4Group.get('fullPhrase3')" />
 					</div>
 				</div>
 			</div>
@@ -257,9 +277,9 @@
 			</button>
 			<button
 				type="submit"
-				[disabled]="formGroup.invalid || validationErrors().length > 0"
+				[disabled]="isSubmitting()"
 				class="btn btn-xs landscape:max-md:btn-xs md:btn-md btn-primary px-3 landscape:max-md:px-3 md:px-6 disabled:opacity-50 disabled:cursor-not-allowed">
-				Create
+				{{ isSubmitting() ? 'Creating...' : 'Create' }}
 			</button>
 		</div>
 	</form>

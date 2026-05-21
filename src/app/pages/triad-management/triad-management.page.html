@@ -70,14 +70,22 @@
 	<!-- Add Dialog -->
 	<ion-modal [isOpen]="showAddDialog()" (didDismiss)="onAddDialogCanceled()">
 		<ng-template>
-			<app-add-triad-group-dialog (whenCreated)="onAddDialogCreated($event)" (whenCanceled)="onAddDialogCanceled()" />
+			<app-add-triad-group-dialog
+				[apiError]="addDialogApiError()"
+				[isSubmitting]="addDialogSubmitting()"
+				(whenCreated)="onAddDialogCreated($event)"
+				(whenCanceled)="onAddDialogCanceled()" />
 		</ng-template>
 	</ion-modal>
 
 	<!-- Edit Dialog -->
 	<ion-modal [isOpen]="Boolean(showEditDialog() && selectedTriadGroup() !== null)" (didDismiss)="onEditDialogCanceled()">
 		<ng-template>
-			<app-edit-triad-group-dialog [triadGroup]="selectedTriadGroup()!" (whenSaved)="onEditDialogSaved($event)" (whenCanceled)="onEditDialogCanceled()" />
+			<app-edit-triad-group-dialog
+				[triadGroup]="selectedTriadGroup()!"
+				[apiError]="editDialogApiError()"
+				(whenSaved)="onEditDialogSaved($event)"
+				(whenCanceled)="onEditDialogCanceled()" />
 		</ng-template>
 	</ion-modal>
 

@@ -9,7 +9,10 @@
 			@if (!challengeLoading() && challengeLine(); as line) {
 				<p class="text-lg font-semibold leading-snug text-base-content md:text-xl">{{ line }}</p>
 			}
-			@if (!challengeLoading() && !dailyScheduled()) {
+			@if (!challengeLoading() && loadErrorMessage(); as errorMessage) {
+				<p class="text-sm leading-snug text-error md:text-base">{{ errorMessage }}</p>
+			}
+			@if (!challengeLoading() && !dailyScheduled() && !loadErrorMessage()) {
 				<p class="text-sm leading-snug text-base-content/70 md:text-base">No daily game is scheduled for today. Please check back later.</p>
 			}
 			<!--		<p class="text-sm text-base-content/80 md:text-base">{{ attribution }}</p>-->

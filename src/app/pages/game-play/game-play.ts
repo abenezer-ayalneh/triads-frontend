@@ -10,6 +10,7 @@ import { Subscription } from 'rxjs'
 import { Intro } from '../../shared/components/intro/intro'
 import { Difficulty } from '../../shared/enums/difficulty.enum'
 import { RequestState } from '../../shared/enums/request-state.enum'
+import { isApiError, parseApiError } from '../../shared/errors/api-error.util'
 import { TriadHintSnapshot } from '../../shared/interfaces/global-state.interface'
 import { AssetPreloadService } from '../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../shared/services/daily-post-play.service'
@@ -290,8 +291,10 @@ export class GamePlay implements OnInit, OnDestroy {
 					this.cueFetchingState.set(RequestState.READY)
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
-				error: () => {
-					this.noTriadsMessage.set('Unable to load today’s puzzle. Please try again later.')
+				error: (error) => {
+					const apiError = isApiError(error) ? error : parseApiError(error)
+					apiError.markHandled()
+					this.noTriadsMessage.set(apiError.userMessage)
 					this.cueFetchingState.set(RequestState.ERROR)
 				},
 			}),
@@ -323,11 +326,10 @@ export class GamePlay implements OnInit, OnDestroy {
 					this.cueFetchingState.set(RequestState.READY)
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
-				error: () => {
-					const difficultyLabel = this.getDifficultyLabel(difficulty)
-					this.noTriadsMessage.set(
-						`Unable to load triads for ${difficultyLabel} difficulty. Please try again or select a different difficulty level.`,
-					)
+				error: (error) => {
+					const apiError = isApiError(error) ? error : parseApiError(error)
+					apiError.markHandled()
+					this.noTriadsMessage.set(apiError.userMessage)
 					this.selectedDifficulty.set(difficulty)
 					this.cueFetchingState.set(RequestState.ERROR)
 				},

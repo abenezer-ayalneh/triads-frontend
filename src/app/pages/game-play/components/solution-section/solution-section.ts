@@ -1,10 +1,11 @@
-import { AfterViewChecked, ChangeDetectorRef, Component, effect, ElementRef, inject, OnDestroy, OnInit, output, viewChild } from '@angular/core'
+import { AfterViewChecked, ChangeDetectorRef, Component, effect, ElementRef, inject, OnDestroy, OnInit, output, signal, viewChild } from '@angular/core'
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
+import { FormErrorMessageComponent } from '../../../../shared/components/form-error-message/form-error-message.component'
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 import { ReverseErase } from '../../../../shared/directives/reverse-erase'
-import { SnackbarService } from '../../../../shared/services/snackbar.service'
+import { isApiError, parseApiError } from '../../../../shared/errors/api-error.util'
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
 import { SolvedTriad } from '../../interfaces/triad.interface'
@@ -17,7 +18,7 @@ const REVERSE_ERASE_START_DELAY_MS = 250
 
 @Component({
 	selector: 'app-solution-section',
-	imports: [InputSet, ReactiveFormsModule, AutoCapitalize, ReverseErase],
+	imports: [InputSet, ReactiveFormsModule, AutoCapitalize, ReverseErase, FormErrorMessageComponent],
 	templateUrl: './solution-section.html',
 	styleUrl: './solution-section.scss',
 })
@@ -27,6 +28,8 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	readonly store = inject(GlobalStore)
 
 	answerFormControl = new FormControl<string>('', { validators: [Validators.required] })
+
+	serverError = signal<string | null>(null)
 
 	// Flag to track if we need to focus the answer field or not
 	shouldFocusAnswerField = false
@@ -51,8 +54,6 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	private readonly gamePlayLogic = inject(GamePlayLogic)
 
 	private readonly turnHintService = inject(TurnHintService)
-
-	private readonly snackbarService = inject(SnackbarService)
 
 	private readonly cdr = inject(ChangeDetectorRef)
 
@@ -223,8 +224,9 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 						}),
 					)
 					.subscribe({
-						error: () => {
+						error: (error) => {
 							this.store.setIsCheckingTriad(false)
+							this.handleApiError(error)
 						},
 					}),
 			)
@@ -241,8 +243,9 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 						this.handleAnswerResponse(response)
 						this.store.setIsCheckingAnswer(false)
 					},
-					error: () => {
+					error: (error) => {
 						this.store.setIsCheckingAnswer(false)
+						this.handleApiError(error)
 					},
 				}),
 			)
@@ -412,9 +415,8 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 									this.store.setGamePlayState(GamePlayState.CHECK_SOLUTION)
 								}
 							})
-							.catch(() => {
-								// Error handling for fourth triad fetch failure
-								this.snackbarService.showSnackbar('Error fetching final triad cues')
+							.catch((error) => {
+								this.handleApiError(error)
 							})
 							.finally(() => {
 								this.store.setIsFetchingFinalTriadCues(false)
@@ -479,6 +481,27 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 		this.timeoutIds.push(timeoutId)
 	}
 
+	private handleApiError(error: unknown): void {
+		const apiError = isApiError(error) ? error : parseApiError(error)
+		apiError.markHandled()
+
+		const answerMessages = apiError.fieldErrors.get('answer')
+		if (apiError.isValidation && answerMessages?.[0]) {
+			this.answerFormControl.setErrors({ server: answerMessages[0] })
+			this.answerFormControl.markAsDirty()
+			this.serverError.set(null)
+			return
+		}
+
+		if (this.answerFormControl.errors?.['server']) {
+			const remainingErrors = { ...this.answerFormControl.errors }
+			delete remainingErrors['server']
+			this.answerFormControl.setErrors(Object.keys(remainingErrors).length > 0 ? remainingErrors : null)
+		}
+
+		this.serverError.set(apiError.userMessage)
+	}
+
 	private applyOrganicFail() {
 		try {
 			const { turns, hints, gameEnds } = this.turnHintService.applyFailure(this.store.turns(), this.store.hints())
@@ -488,8 +511,8 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 			if (gameEnds) {
 				this.gamePlayLogic.handleGameLost()
 			}
-		} catch (error) {
-			this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
+		} catch {
+			this.serverError.set('Something went wrong. Please try again.')
 		}
 	}
 

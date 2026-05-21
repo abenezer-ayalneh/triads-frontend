@@ -1,0 +1,11 @@
+.form-error-message {
+	margin-top: 0.25rem;
+	font-size: 0.75rem;
+	color: #dc2626;
+}
+
+@media (min-width: 768px) {
+	.form-error-message {
+		font-size: 0.875rem;
+	}
+}

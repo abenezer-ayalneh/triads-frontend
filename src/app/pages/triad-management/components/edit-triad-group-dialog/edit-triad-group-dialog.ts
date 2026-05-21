@@ -1,16 +1,25 @@
-import { ChangeDetectionStrategy, Component, effect, ElementRef, input, output, signal, ViewChild } from '@angular/core'
+import { afterNextRender, ChangeDetectionStrategy, Component, effect, ElementRef, inject, Injector, input, output, signal, ViewChild } from '@angular/core'
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms'
 
 import { Dialog } from '../../../../shared/components/dialog/dialog'
+import { FormErrorMessageComponent } from '../../../../shared/components/form-error-message/form-error-message.component'
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 import { Difficulty } from '../../../../shared/enums/difficulty.enum'
+import { ApiError } from '../../../../shared/errors/api-error.model'
+import {
+	applyFieldErrors,
+	clearServerErrors,
+	collectFieldErrorMessages,
+	hasValidatorErrors,
+	TRIAD_GROUP_FIELD_MAP,
+} from '../../../../shared/errors/api-error.util'
 import { TriadGroup, TriadGroupFormData } from '../../interfaces/triad-group.interface'
 import { TriadValidationService } from '../../services/triad-validation.service'
 
 @Component({
 	selector: 'app-edit-triad-group-dialog',
 	standalone: true,
-	imports: [ReactiveFormsModule, AutoCapitalize, Dialog],
+	imports: [ReactiveFormsModule, AutoCapitalize, Dialog, FormErrorMessageComponent],
 	templateUrl: './edit-triad-group-dialog.html',
 	styleUrl: './edit-triad-group-dialog.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -18,15 +27,21 @@ import { TriadValidationService } from '../../services/triad-validation.service'
 export class EditTriadGroupDialog {
 	triadGroup = input.required<TriadGroup>()
 
+	apiError = input<ApiError | null>(null)
+
 	whenSaved = output<TriadGroupFormData>()
 
 	whenCanceled = output<void>()
 
-	validationErrors = signal<string[]>([])
+	clientValidationErrors = signal<string[]>([])
+
+	serverErrors = signal<string[]>([])
 
 	readonly Difficulty = Difficulty
 
-	@ViewChild('dialogBody', { static: false }) dialogBodyRef?: ElementRef<HTMLDivElement>
+	@ViewChild(Dialog) dialogRef?: Dialog
+
+	@ViewChild('errorBanner') errorBannerRef?: ElementRef<HTMLElement>
 
 	formGroup = new FormGroup({
 		difficulty: new FormControl<string>('', [Validators.required]),
@@ -58,6 +73,8 @@ export class EditTriadGroupDialog {
 
 	private readonly validationService = new TriadValidationService()
 
+	private readonly injector = inject(Injector)
+
 	constructor() {
 		effect(() => {
 			const group = this.triadGroup()
@@ -66,10 +83,24 @@ export class EditTriadGroupDialog {
 			}
 		})
 
-		// Clear validation errors when form becomes valid after user fixes issues
+		effect(() => {
+			const error = this.apiError()
+			if (!error) {
+				return
+			}
+
+			this.applyApiError(error)
+		})
+
 		this.formGroup.valueChanges.subscribe(() => {
-			if (this.formGroup.valid && this.validationErrors().length > 0) {
-				this.validationErrors.set([])
+			clearServerErrors(this.formGroup)
+
+			if (this.serverErrors().length > 0) {
+				this.serverErrors.set([])
+			}
+
+			if (this.formGroup.valid && this.clientValidationErrors().length > 0) {
+				this.clientValidationErrors.set([])
 			}
 		})
 	}
@@ -116,8 +147,8 @@ export class EditTriadGroupDialog {
 
 	onSubmit() {
 		if (this.formGroup.invalid) {
-			this.validationErrors.set(['Please fill in all required fields'])
-			this.scrollToTop()
+			this.clientValidationErrors.set(['Please fill in all required fields'])
+			this.scrollToErrors()
 			return
 		}
 
@@ -160,20 +191,47 @@ export class EditTriadGroupDialog {
 
 		const validation = this.validationService.validateTriadGroup(formData)
 		if (!validation.valid) {
-			this.validationErrors.set(validation.errors)
-			this.scrollToTop()
+			this.clientValidationErrors.set(validation.errors)
+			this.scrollToErrors()
 			return
 		}
 
-		this.validationErrors.set([])
+		this.clientValidationErrors.set([])
+		this.serverErrors.set([])
 		this.whenSaved.emit(formData)
 	}
 
-	private scrollToTop() {
-		// Use setTimeout to ensure the DOM has updated with the error messages
-		setTimeout(() => {
-			this.dialogBodyRef?.nativeElement.scrollTo({ top: 0, behavior: 'smooth' })
-		}, 0)
+	private applyApiError(error: ApiError): void {
+		clearServerErrors(this.formGroup)
+
+		if (error.isValidation) {
+			applyFieldErrors(this.formGroup, error.fieldErrors, TRIAD_GROUP_FIELD_MAP)
+			const bannerMessages = collectFieldErrorMessages(error.fieldErrors)
+			this.serverErrors.set(bannerMessages.length > 0 ? bannerMessages : [error.userMessage])
+		} else {
+			this.serverErrors.set([error.userMessage])
+		}
+
+		this.scrollToErrors()
+	}
+
+	isSubmitDisabled(): boolean {
+		return hasValidatorErrors(this.formGroup) || this.clientValidationErrors().length > 0
+	}
+
+	private scrollToErrors(): void {
+		afterNextRender(
+			() => {
+				const errorBanner = this.errorBannerRef?.nativeElement
+				if (errorBanner) {
+					errorBanner.scrollIntoView({ behavior: 'smooth', block: 'start' })
+					return
+				}
+
+				this.dialogRef?.scrollToTop()
+			},
+			{ injector: this.injector },
+		)
 	}
 
 	get triad1Group() {

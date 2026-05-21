@@ -3,6 +3,8 @@ import { IonModal } from '@ionic/angular/standalone'
 import { Subject, takeUntil } from 'rxjs'
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators'
 
+import { ApiError } from '../../shared/errors/api-error.model'
+import { isApiError, parseApiError } from '../../shared/errors/api-error.util'
 import { DailyScheduleAdminApi, DailyScheduleRow } from '../../shared/services/daily-schedule-admin-api'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { AddTriadGroupDialog } from './components/add-triad-group-dialog/add-triad-group-dialog'
@@ -31,7 +33,13 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 
 	showAddDialog = signal<boolean>(false)
 
+	addDialogApiError = signal<ApiError | null>(null)
+
+	addDialogSubmitting = signal(false)
+
 	showEditDialog = signal<boolean>(false)
+
+	editDialogApiError = signal<ApiError | null>(null)
 
 	showDeleteConfirm = signal<boolean>(false)
 
@@ -125,7 +133,6 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 				this.isLoading.set(false)
 			},
 			error: () => {
-				this.snackbar.showSnackbar('Failed to load triad groups')
 				this.isLoading.set(false)
 			},
 		})
@@ -150,27 +157,38 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 	}
 
 	onAdd() {
+		this.addDialogApiError.set(null)
+		this.addDialogSubmitting.set(false)
 		this.showAddDialog.set(true)
 	}
 
 	onAddDialogCreated(data: TriadGroupFormData) {
+		this.addDialogSubmitting.set(true)
 		this.api.createTriadGroup(data).subscribe({
 			next: () => {
+				this.addDialogSubmitting.set(false)
 				this.snackbar.showSnackbar('Triad group created successfully')
 				this.showAddDialog.set(false)
+				this.addDialogApiError.set(null)
 				this.loadTriadGroups(true)
 			},
-			error: () => {
-				this.snackbar.showSnackbar('Failed to create triad group')
+			error: (error) => {
+				this.addDialogSubmitting.set(false)
+				const apiError = this.toApiError(error)
+				apiError.markHandled()
+				this.addDialogApiError.set(apiError)
 			},
 		})
 	}
 
 	onAddDialogCanceled() {
 		this.showAddDialog.set(false)
+		this.addDialogApiError.set(null)
+		this.addDialogSubmitting.set(false)
 	}
 
 	onEdit(triadGroup: TriadGroup) {
+		this.editDialogApiError.set(null)
 		this.selectedTriadGroup.set(triadGroup)
 		this.showEditDialog.set(true)
 	}
@@ -185,18 +203,22 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 			next: (updatedGroup) => {
 				this.snackbar.showSnackbar('Triad group updated successfully')
 				this.showEditDialog.set(false)
+				this.editDialogApiError.set(null)
 				this.selectedTriadGroup.set(null)
 				// Update the local state instead of refetching to preserve pagination
 				this.triadGroups.update((groups) => groups.map((g) => (g.id === group.id ? updatedGroup : g)))
 			},
-			error: () => {
-				this.snackbar.showSnackbar('Failed to update triad group')
+			error: (error) => {
+				const apiError = this.toApiError(error)
+				apiError.markHandled()
+				this.editDialogApiError.set(apiError)
 			},
 		})
 	}
 
 	onEditDialogCanceled() {
 		this.showEditDialog.set(false)
+		this.editDialogApiError.set(null)
 		this.selectedTriadGroup.set(null)
 	}
 
@@ -220,7 +242,7 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 				this.triadGroups.update((groups) => groups.filter((g) => g.id !== id))
 			},
 			error: () => {
-				this.snackbar.showSnackbar('Failed to delete triad group')
+				// Error message shown by HTTP interceptor
 			},
 		})
 	}
@@ -236,7 +258,7 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 				this.dailySchedules.set(rows)
 			},
 			error: () => {
-				this.snackbar.showSnackbar('Failed to load daily schedule')
+				// Error message shown by HTTP interceptor
 			},
 		})
 	}
@@ -280,7 +302,7 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 				this.triadGroups.update((groups) => groups.map((group) => (group.id === id ? { ...group, active: updatedGroup.active } : group)))
 			},
 			error: () => {
-				this.snackbar.showSnackbar('Failed to update triad group status')
+				// Error message shown by HTTP interceptor
 			},
 		})
 	}
@@ -290,6 +312,10 @@ export class TriadManagementPage implements OnInit, OnDestroy {
 			this.searchQuery.set(query)
 			this.loadTriadGroups(true)
 		})
+	}
+
+	private toApiError(error: unknown): ApiError {
+		return isApiError(error) ? error : parseApiError(error)
 	}
 
 	protected readonly Boolean = Boolean

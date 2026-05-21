@@ -51,6 +51,9 @@
 						</div>
 					}
 					<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/90 font-medium">{{ countdownLabel() }}</p>
+					@if (reviewError(); as errorMessage) {
+						<p class="text-xs text-error">{{ errorMessage }}</p>
+					}
 				</div>
 			} @else {
 				<div class="flex flex-wrap gap-2 landscape:max-lg:gap-1 md:gap-3 justify-center landscape:max-lg:w-full">
@@ -83,6 +86,9 @@
 						<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
 					</button>
 				</div>
+				@if (reviewError(); as errorMessage) {
+					<p class="text-xs text-error text-center">{{ errorMessage }}</p>
+				}
 			}
 		}
 	</div>

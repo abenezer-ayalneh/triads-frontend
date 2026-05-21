@@ -1,9 +1,9 @@
-import { Component, computed, ElementRef, inject, OnDestroy, viewChild } from '@angular/core'
+import { Component, computed, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
 import { delay, filter, firstValueFrom, Subscription, tap, timer } from 'rxjs'
 
+import { isApiError, parseApiError } from '../../../../shared/errors/api-error.util'
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
-import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { GamePlayState } from '../../enums/game-play.enum'
 import { GamePlayApi } from '../../services/game-play-api'
@@ -21,11 +21,11 @@ const LIFESAVER_IMAGE_PATH = 'images/lifesaver.svg'
 export class HintsBox implements OnDestroy {
 	readonly store = inject(GlobalStore)
 
+	serverError = signal<string | null>(null)
+
 	private readonly turnHintService = inject(TurnHintService)
 
 	private readonly assetPreloadService = inject(AssetPreloadService)
-
-	private readonly snackbarService = inject(SnackbarService)
 
 	private readonly gamePlayApi = inject(GamePlayApi)
 
@@ -94,8 +94,9 @@ export class HintsBox implements OnDestroy {
 							this.useHint()
 						}
 					},
-					error: () => {
+					error: (error) => {
 						this.store.setIsFetchingHint(false)
+						this.handleApiError(error)
 					},
 				}),
 			)
@@ -207,12 +208,13 @@ export class HintsBox implements OnDestroy {
 						}
 						this.store.setIsFetchingHint(false)
 					})
-					.catch(() => {
+					.catch((error) => {
 						this.store.setIsFetchingHint(false)
+						this.handleApiError(error)
 					})
 			} catch (error) {
 				this.store.setIsFetchingHint(false)
-				this.snackbarService.showSnackbar(`Error: ${(error as { message: string }).message ?? 'Unknown error'}`)
+				this.handleApiError(error)
 			}
 		}
 	}
@@ -315,8 +317,9 @@ export class HintsBox implements OnDestroy {
 						}),
 					)
 					.subscribe({
-						error: () => {
+						error: (error) => {
 							this.store.setIsCheckingTriad(false)
+							this.handleApiError(error)
 						},
 					}),
 			)
@@ -324,4 +327,10 @@ export class HintsBox implements OnDestroy {
 	}
 
 	// All turn and hint transitions are now handled by TurnHintService
+
+	private handleApiError(error: unknown): void {
+		const apiError = isApiError(error) ? error : parseApiError(error)
+		apiError.markHandled()
+		this.serverError.set(apiError.userMessage)
+	}
 }
