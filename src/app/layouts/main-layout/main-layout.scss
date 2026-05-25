@@ -7,10 +7,6 @@ ion-toolbar {
 	--border-color: transparent;
 }
 
-ion-header.daily-toolbar ion-toolbar {
-	--border-color: rgba(0, 0, 0, 0.06);
-}
-
 ion-header.overlay-visible,
 ion-header.overlay-visible ion-toolbar {
 	z-index: 0;

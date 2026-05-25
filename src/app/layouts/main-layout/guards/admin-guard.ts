@@ -11,7 +11,7 @@ export const adminGuard: CanActivateFn = () => {
 		return true
 	}
 
-	return new RedirectCommand(router.parseUrl('home'), {
+	return new RedirectCommand(router.parseUrl('/'), {
 		replaceUrl: true,
 		onSameUrlNavigation: 'ignore',
 	})

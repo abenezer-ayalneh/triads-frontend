@@ -7,7 +7,9 @@
 	[attr.aria-busy]="animationRunning() ? 'true' : null"
 	(click)="onPlayClicked()">
 	<span class="brain-play-inner">
+		<ng-content select="[slot=leading]" />
 		<span #playLabelSpan class="brain-play-label">{{ playLabelText() }}</span>
+		<ng-content select="[slot=trailing]" />
 		<span class="brain-play-warmup" [class.brain-play-warmup--visible]="warmupVisible()" aria-hidden="true">
 			<span class="brain-play-brain-wrap">
 				<span class="brain-play-brain">Brain</span>

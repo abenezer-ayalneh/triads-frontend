@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core'
 import { Observable, shareReplay, Subscription } from 'rxjs'
 
-import { DailyCuesResponse,GamePlayApi } from '../../pages/game-play/services/game-play-api'
+import { DailyCuesResponse, GamePlayApi } from '../../pages/game-play/services/game-play-api'
 import { GlobalStore } from '../../state/global.store'
 import { Difficulty } from '../enums/difficulty.enum'
 import { DifficultyService } from './difficulty.service'
@@ -28,7 +28,7 @@ export class GameCuePrefetchService {
 
 	private prefetchSubscription: Subscription | null = null
 
-	/** Starts fetching cues during the brain-warming animation so /play can render faster. */
+	/** Starts fetching cues during the brain-warming animation so the play route can render faster. */
 	startPrefetch(): void {
 		this.clear()
 

@@ -355,10 +355,7 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	goToHome() {
-		if (this.store.gameMode() === 'daily') {
-			return
-		}
-		this.router.navigate(['/home'])
+		this.router.navigate(['/'])
 	}
 
 	restartGame() {

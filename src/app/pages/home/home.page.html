@@ -1,17 +1,130 @@
-<div class="w-full h-full relative">
+<div class="relative h-full w-full">
 	@if (store.user()) {
 		<div class="flex h-full w-full flex-col items-center justify-center gap-3 px-4 py-6 text-center">
 			<div class="flex w-full max-w-md flex-col items-center gap-3">
-				<img [src]="logoUrl()" alt="Triads" decoding="async" class="mx-auto h-auto w-full max-w-70 object-contain scale-200" width="280" height="200" />
+				<img [src]="logoUrl()" alt="Triads" decoding="async" class="mx-auto h-auto w-full max-w-70 scale-200 object-contain" width="280" height="200" />
 
+				<!-- Daily Puzzle row -->
 				<div class="mt-2 w-80 max-w-full">
+					@if (dailyInfoLoading()) {
+						<button
+							type="button"
+							disabled
+							class="home-puzzle-button btn btn-lg w-full border-2 border-base-300/40 bg-base-100/50 font-semibold text-base-content shadow-md backdrop-blur-sm">
+							<span class="home-puzzle-button__label">Daily Puzzle</span>
+							<span class="home-puzzle-button__cell home-puzzle-button__cell--muted" aria-hidden="true">
+								<span class="home-puzzle-button__cell-month">{{ easternCalendarLabel().month }}</span>
+								<span class="home-puzzle-button__cell-day">{{ easternCalendarLabel().day }}</span>
+							</span>
+						</button>
+					} @else if (!dailyScheduled()) {
+						<button
+							type="button"
+							disabled
+							class="home-puzzle-button btn btn-lg w-full cursor-not-allowed border-2 border-base-300/40 bg-base-100/50 font-semibold text-base-content shadow-md backdrop-blur-sm">
+							<span class="home-puzzle-button__label">No game today</span>
+							<span class="home-puzzle-button__cell home-puzzle-button__cell--muted" aria-hidden="true">
+								<span class="home-puzzle-button__cell-month">{{ easternCalendarLabel().month }}</span>
+								<span class="home-puzzle-button__cell-day">{{ easternCalendarLabel().day }}</span>
+							</span>
+						</button>
+					} @else if (dailyCompleted()) {
+						<div class="home-puzzle-completed-row flex w-full flex-row items-stretch gap-2">
+							<button
+								type="button"
+								disabled
+								class="home-puzzle-button triad-gradient btn btn-lg min-w-0 flex-1 border-none text-primary-content opacity-60 shadow-md">
+								<span class="home-puzzle-button__label">Daily Puzzle</span>
+								<span class="home-puzzle-button__cell" aria-hidden="true">
+									<span class="home-puzzle-button__cell-month">{{ easternCalendarLabel().month }}</span>
+									<span class="home-puzzle-button__cell-day">{{ easternCalendarLabel().day }}</span>
+								</span>
+							</button>
+							<button
+								type="button"
+								class="home-puzzle-action-btn triad-gradient btn btn-square btn-lg border-none text-primary-content shadow-md"
+								[disabled]="completedDailySummaryLoading()"
+								(click)="onShareCompletedDaily()"
+								aria-label="Share daily result">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="h-5 w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									aria-hidden="true">
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+								</svg>
+							</button>
+							<button
+								type="button"
+								class="home-puzzle-action-btn triad-gradient btn btn-square btn-lg border-none text-primary-content shadow-md"
+								[disabled]="completedDailySummaryLoading()"
+								(click)="onReviewCompletedDaily()"
+								aria-label="Review daily result">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									class="h-5 w-5"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+									aria-hidden="true">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+								</svg>
+							</button>
+						</div>
+					} @else {
+						<app-brain-warming-play-button
+							#dailyPlayButton
+							[buttonClasses]="'home-puzzle-button triad-gradient btn btn-lg w-full border-none text-primary-content'"
+							[playLabelText]="'Daily Puzzle'"
+							[navigateCommands]="['/daily']"
+							[playMode]="'daily'"
+							[authorizeNextPlayNavigation]="true">
+							<span slot="trailing" class="home-puzzle-button__cell" aria-hidden="true">
+								<span class="home-puzzle-button__cell-month">{{ easternCalendarLabel().month }}</span>
+								<span class="home-puzzle-button__cell-day">{{ easternCalendarLabel().day }}</span>
+							</span>
+						</app-brain-warming-play-button>
+					}
+				</div>
+
+				<!-- Classic Puzzle row -->
+				<div class="w-80 max-w-full">
 					<app-brain-warming-play-button
-						[buttonClasses]="'triad-gradient btn btn-lg w-full border-none text-primary-content'"
+						#classicPlayButton
+						[buttonClasses]="'home-puzzle-button triad-gradient btn btn-lg w-full border-none text-primary-content'"
+						[playLabelText]="'Classic Puzzle'"
+						[navigateCommands]="['/classic']"
+						[playMode]="'classic'"
 						[authorizeNextPlayNavigation]="true" />
 				</div>
+
+				@if (loadErrorMessage(); as errorMessage) {
+					<p class="text-sm leading-snug text-error md:text-base">{{ errorMessage }}</p>
+				}
 			</div>
 		</div>
 	} @else {
 		<app-user-info-dialog />
 	}
 </div>
+
+@if (dailyCompleted()) {
+	<ion-modal [isOpen]="reviewDialogOpen() && completedDailySummary() !== null" (didDismiss)="closeReviewDialog()">
+		<ng-template>
+			@if (completedDailySummary(); as summary) {
+				<app-daily-review-dialog [summary]="summary" (whenClosed)="closeReviewDialog()" />
+			}
+		</ng-template>
+	</ion-modal>
+}

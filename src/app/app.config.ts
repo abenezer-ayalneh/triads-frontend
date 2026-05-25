@@ -7,6 +7,7 @@ import { provideIonicAngular } from '@ionic/angular/standalone'
 import { provideLottieOptions } from 'ngx-lottie'
 
 import { routes } from './app.routes'
+import { anonymousIdInterceptor } from './shared/interceptors/anonymous-id.interceptor'
 import { baseUrlInterceptor } from './shared/interceptors/base-url.interceptor'
 import { httpErrorsInterceptor } from './shared/interceptors/http-errors.interceptor'
 
@@ -19,7 +20,7 @@ export const appConfig: ApplicationConfig = {
 		provideAnimationsAsync(),
 		provideZoneChangeDetection({ eventCoalescing: true }),
 		provideRouter(routes),
-		provideHttpClient(withInterceptors([baseUrlInterceptor, httpErrorsInterceptor])),
+		provideHttpClient(withInterceptors([baseUrlInterceptor, anonymousIdInterceptor, httpErrorsInterceptor])),
 		provideLottieOptions({
 			player: () => import('lottie-web'),
 		}),

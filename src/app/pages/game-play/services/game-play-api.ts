@@ -13,7 +13,7 @@ export type DailyTodayInfoResponse =
 			scheduled: true
 			puzzleDate: string
 			triadGroupId: number
-			/** Stable, persisted challenge number. Displayed as `#${DAILY_CHALLENGE_NUMBER_OFFSET + challengeNumber}`. */
+			/** Stable, persisted challenge number for today's daily puzzle. */
 			challengeNumber: number
 			/** Set when the request includes x-anonymous-id; true if today’s puzzle is finished (won or lost). */
 			hasCompletedDaily?: boolean

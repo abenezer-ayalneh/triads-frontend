@@ -4,6 +4,12 @@ const EASTERN_TIME_ZONE = 'America/New_York'
 const MIN_ROLLOVER_RECHECK_DELAY_MS = 1000
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
+/** Calendar cell parts derived from a date in Eastern time (e.g. month "MAY", day "24"). */
+export interface EasternCalendarLabel {
+	month: string
+	day: string
+}
+
 @Injectable({ providedIn: 'root' })
 export class DailyRolloverService {
 	private readonly easternDateFormatter = new Intl.DateTimeFormat('en-CA', {
@@ -23,6 +29,20 @@ export class DailyRolloverService {
 		second: '2-digit',
 		hour12: false,
 	})
+
+	private readonly easternCalendarFormatter = new Intl.DateTimeFormat('en-US', {
+		timeZone: EASTERN_TIME_ZONE,
+		month: 'short',
+		day: 'numeric',
+	})
+
+	/** Returns calendar-cell parts for the given date in Eastern time (defaults to now). */
+	easternCalendarLabel(date: Date = new Date()): EasternCalendarLabel {
+		const parts = this.easternCalendarFormatter.formatToParts(date)
+		const month = parts.find((part) => part.type === 'month')?.value ?? ''
+		const day = parts.find((part) => part.type === 'day')?.value ?? ''
+		return { month: month.toUpperCase(), day }
+	}
 
 	startEasternDayWatcher(onDateChange: () => void): () => void {
 		let rolloverTimeout: ReturnType<typeof setTimeout> | null = null

@@ -18,6 +18,11 @@
 		box-shadow 320ms ease;
 }
 
+:host button.home-puzzle-button:has(.home-puzzle-button__cell) {
+	position: relative;
+	padding-right: 4.25rem;
+}
+
 :host button.brain-play-button--animating {
 	min-height: 6.75rem;
 	padding-top: 1.25rem;

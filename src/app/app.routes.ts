@@ -1,8 +1,7 @@
 import { Routes } from '@angular/router'
 
 import { adminGuard } from './layouts/main-layout/guards/admin-guard'
-import { classicPlayGuard } from './layouts/main-layout/guards/classic-play.guard'
-import { usernameGuard } from './layouts/main-layout/guards/username-guard'
+import { playGuard } from './layouts/main-layout/guards/play.guard'
 import { MainLayout } from './layouts/main-layout/main-layout'
 import { GamePlay } from './pages/game-play/game-play'
 import { TriadManagementPage } from './pages/triad-management/triad-management.page'
@@ -13,21 +12,28 @@ export const routes: Routes = [
 		component: MainLayout,
 		children: [
 			{
-				path: 'home',
+				path: '',
 				loadComponent: () => import('./pages/home/home.page').then((m) => m.HomePage),
+				pathMatch: 'full',
 			},
 			{
-				path: 'play',
+				path: 'classic',
 				component: GamePlay,
-				canActivate: [classicPlayGuard, usernameGuard],
+				data: { mode: 'classic' },
+				canActivate: [playGuard],
+			},
+			{
+				path: 'daily',
+				component: GamePlay,
+				data: { mode: 'daily' },
+				canActivate: [playGuard],
 			},
 			{
 				path: 'manage-triads',
 				component: TriadManagementPage,
 				canActivate: [adminGuard],
 			},
-			{ path: '', redirectTo: 'home', pathMatch: 'full' },
-			{ path: '**', redirectTo: 'home' },
+			{ path: '**', redirectTo: '' },
 		],
 	},
 ]

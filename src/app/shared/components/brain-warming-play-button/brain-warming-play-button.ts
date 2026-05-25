@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common'
 import { Component, ElementRef, inject, input, OnDestroy, signal, viewChild } from '@angular/core'
 import { Router } from '@angular/router'
 
+import { GlobalStore } from '../../../state/global.store'
 import { GameCuePrefetchService } from '../../services/game-cue-prefetch.service'
 import { PlayRouteIntentService } from '../../services/play-route-intent.service'
 
@@ -40,10 +41,16 @@ export class BrainWarmingPlayButton implements OnDestroy {
 
 	readonly playLabelText = input('Play Now')
 
-	readonly navigateCommands = input<readonly string[]>(['/play'])
+	readonly navigateCommands = input<readonly string[]>(['/classic'])
 
-	/** When true, authorizes the next `/play` navigation for the play route guard (Play Now only). */
+	/** When true, authorizes the next play-route navigation for the play route guard. */
 	readonly authorizeNextPlayNavigation = input(false)
+
+	/**
+	 * Optional play mode that the button activates. Setting this updates `GlobalStore.gameMode`
+	 * at click time so the brain-warming prefetch (and downstream guards) see the right mode.
+	 */
+	readonly playMode = input<'classic' | 'daily' | null>(null)
 
 	readonly animationRunning = signal(false)
 
@@ -56,6 +63,8 @@ export class BrainWarmingPlayButton implements OnDestroy {
 	private readonly playRouteIntent = inject(PlayRouteIntentService)
 
 	private readonly gameCuePrefetch = inject(GameCuePrefetchService)
+
+	private readonly store = inject(GlobalStore)
 
 	private timers: ReturnType<typeof setTimeout>[] = []
 
@@ -92,6 +101,10 @@ export class BrainWarmingPlayButton implements OnDestroy {
 			return
 		}
 		this.animationRunning.set(true)
+		const mode = this.playMode()
+		if (mode) {
+			this.store.setGameMode(mode)
+		}
 		this.gameCuePrefetch.startPrefetch()
 
 		play.style.opacity = '0'

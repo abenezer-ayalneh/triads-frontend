@@ -52,7 +52,7 @@
 		<div class="relative">
 			<button
 				id="username-dropdown-trigger"
-				(click)="toggleUsernameDropdown($event)"
+				(click)="onUsernameTriggerClick($event)"
 				class="w-fit h-5 md:h-7 xl:h-8 flex justify-center items-center px-2 md:px-4 xl:px-6 rounded-full shadow-sm triad-gradient cursor-pointer">
 				<p class="text-center text-[10px] font-semibold leading-tight text-primary-content md:text-xs xl:text-sm">
 					{{ store.user()?.username ?? '-' }}
@@ -81,7 +81,7 @@
 							class="w-full text-left px-3 landscape:max-md:px-3 md:px-4 py-1.5 landscape:max-md:py-1.5 md:py-2 text-xs landscape:max-md:text-xs md:text-sm text-base-content hover:bg-base-200 rounded-md transition-colors cursor-pointer">
 							New identity
 						</button>
-						@if (store.gameMode() !== 'daily') {
+						@if (!isDailyGameplayPage()) {
 							<div class="username-popover__divider"></div>
 							<div class="username-popover__section">
 								<label
@@ -123,21 +123,12 @@
 				</ng-template>
 			</ion-popover>
 		</div>
-		@if (store.gameMode() === 'daily') {
-			<button
-				type="button"
-				(click)="onDirectionsClick($event)"
-				title="How to play. Hold ⌘ (Mac) or Ctrl (Windows) and click for admin."
-				class="triad-gradient flex h-5 w-fit max-w-30 cursor-pointer items-center justify-center rounded-full px-2 shadow-sm md:h-7 md:max-w-none md:px-3 xl:h-8 xl:px-4">
-				<span class="text-center text-[10px] font-semibold leading-tight text-primary-content md:text-xs xl:text-sm">How To Play</span>
-			</button>
-		} @else {
-			<button
-				type="button"
-				(click)="showHowToPlay()"
-				class="flex h-5 w-fit cursor-pointer items-center justify-center rounded-full px-2 shadow-sm triad-gradient md:h-7 md:px-4 xl:h-8 xl:px-6">
-				<span class="text-center text-[10px] font-semibold leading-tight text-primary-content md:text-xs xl:text-sm">How To Play</span>
-			</button>
-		}
+		<button
+			type="button"
+			(click)="showHowToPlay()"
+			title="How to play"
+			class="triad-gradient flex h-5 w-fit cursor-pointer items-center justify-center rounded-full px-2 shadow-sm md:h-7 md:px-4 xl:h-8 xl:px-6">
+			<span class="text-center text-[10px] font-semibold leading-tight text-primary-content md:text-xs xl:text-sm">How To Play</span>
+		</button>
 	</div>
 </header>
