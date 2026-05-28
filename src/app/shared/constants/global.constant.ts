@@ -1,3 +1,7 @@
+export const STATS_SCHEMA_VERSION = 2
+
+export const STATS_SCHEMA_VERSION_KEY = 'triads_stats_schema_version'
+
 export const DAILY_CLASSIC_EXTRA_LIMIT = 3
 
 export const CLASSIC_DAILY_REQUIRED_HINT = "Complete today's Daily to unlock Classic"

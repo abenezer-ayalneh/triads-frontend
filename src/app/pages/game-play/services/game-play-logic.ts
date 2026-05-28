@@ -54,31 +54,9 @@ export class GamePlayLogic {
 		}
 
 		// User state updates
-		const user = this.store.user()
 		this.store.setGameScore(score)
 		this.store.setGamePlayState(GamePlayState.WON)
-
-		if (user && user.scores) {
-			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
-
-			// Track first 5 games
-			const totalGamesPlayed = Object.values(newScores).reduce((sum, count) => sum + count, 0)
-			const firstFiveGameScores = user.firstFiveGameScores ?? []
-
-			const updatedFirstFiveGameScores = [...firstFiveGameScores]
-			if (totalGamesPlayed <= 5) {
-				updatedFirstFiveGameScores.push(score)
-			}
-
-			const newUser = {
-				...user,
-				scores: newScores,
-				firstGameDate: user.firstGameDate ?? new Date().toISOString(),
-				firstFiveGameScores: updatedFirstFiveGameScores,
-			}
-			this.store.setUser(newUser)
-			this.userService.setUser(newUser)
-		}
+		this.persistDailyGameResult(score)
 	}
 
 	async handleGameLost() {
@@ -105,31 +83,9 @@ export class GamePlayLogic {
 		}
 
 		// User state updates
-		const user = this.store.user()
 		this.store.setGameScore(score)
 		this.store.setGamePlayState(GamePlayState.LOST)
-
-		if (user && user.scores) {
-			const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
-
-			// Track first 5 games
-			const totalGamesPlayed = Object.values(newScores).reduce((sum, count) => sum + count, 0)
-			const firstFiveGameScores = user.firstFiveGameScores ?? []
-
-			const updatedFirstFiveGameScores = [...firstFiveGameScores]
-			if (totalGamesPlayed <= 5) {
-				updatedFirstFiveGameScores.push(score)
-			}
-
-			const newUser = {
-				...user,
-				scores: newScores,
-				firstGameDate: user.firstGameDate ?? new Date().toISOString(),
-				firstFiveGameScores: updatedFirstFiveGameScores,
-			}
-			this.store.setUser(newUser)
-			this.userService.setUser(newUser)
-		}
+		this.persistDailyGameResult(score)
 
 		// Fetch and display solutions for unsolved triads
 		await this.fetchAndSetUnsolvedTriads()
@@ -178,6 +134,26 @@ export class GamePlayLogic {
 			console.error('Failed to fetch unsolved triads:', error)
 			this.store.setUnsolvedTriads(null)
 		}
+	}
+
+	private persistDailyGameResult(score: number): void {
+		if (this.store.gameMode() !== 'daily') {
+			return
+		}
+
+		const user = this.store.user()
+		if (!user?.scores) {
+			return
+		}
+
+		const newScores = { ...user.scores, [score]: (user.scores[score] ?? 0) + 1 }
+		const newUser = {
+			...user,
+			scores: newScores,
+			firstGameDate: user.firstGameDate ?? new Date().toISOString(),
+		}
+		this.store.setUser(newUser)
+		this.userService.setUser(newUser)
 	}
 
 	calculateScore() {

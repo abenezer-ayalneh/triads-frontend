@@ -14,4 +14,8 @@ export class AnonymousIdService {
 		}
 		return id
 	}
+
+	clearId(): void {
+		localStorage.removeItem(STORAGE_KEY)
+	}
 }

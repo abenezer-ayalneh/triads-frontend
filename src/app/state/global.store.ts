@@ -9,6 +9,7 @@ import { ClassicExtraQuotaInfo } from '../shared/interfaces/classic-extra.interf
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
 import { UserService } from '../shared/services/user.service'
+import { runStatsSchemaMigrationIfNeeded } from '../shared/utils/stats-schema-migration.util'
 
 function selectedCueSetsEqual(a: readonly string[], b: readonly string[]): boolean {
 	if (a.length !== b.length) return false
@@ -349,6 +350,7 @@ export const GlobalStore = signalStore(
 	})),
 	withHooks({
 		onInit(store) {
+			runStatsSchemaMigrationIfNeeded()
 			store.setUser(store.userService.getUser())
 			store.setIntroShownPerSession(localStorage.getItem(GAME_INTRO_DISMISSED_KEY) === 'true')
 		},

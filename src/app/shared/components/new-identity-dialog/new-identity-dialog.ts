@@ -1,5 +1,6 @@
 import { Component, inject, output, signal } from '@angular/core'
 
+import { AnonymousIdService } from '../../services/anonymous-id.service'
 import { UserService } from '../../services/user.service'
 import { Dialog } from '../dialog/dialog'
 
@@ -16,8 +17,11 @@ export class NewIdentityDialog {
 
 	private readonly userService = inject(UserService)
 
+	private readonly anonymousIdService = inject(AnonymousIdService)
+
 	resetData() {
 		this.userService.clearUserData()
+		this.anonymousIdService.clearId()
 		window.location.reload()
 	}
 
