@@ -79,15 +79,21 @@ describe('HomePage', () => {
 		expect(component).toBeTruthy()
 	})
 
-	it('renders share and review actions for completed daily players', () => {
+	it('renders half-width share and review actions for completed daily players', () => {
 		const buttons = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
 		const shareButton = buttons.find((button) => button.getAttribute('aria-label') === 'Share daily result')
 		const reviewButton = buttons.find((button) => button.getAttribute('aria-label') === 'Review daily result')
+		const disabledDailyButton = buttons.find((button) => button.textContent?.includes('Daily Puzzle'))
 
 		expect(shareButton).toBeTruthy()
 		expect(reviewButton).toBeTruthy()
+		expect(disabledDailyButton).toBeFalsy()
 		expect(shareButton?.disabled).toBeFalse()
 		expect(reviewButton?.disabled).toBeFalse()
+		expect(shareButton?.classList.contains('flex-1')).toBeTrue()
+		expect(reviewButton?.classList.contains('flex-1')).toBeTrue()
+		expect(shareButton?.textContent).toContain('Share')
+		expect(reviewButton?.textContent).toContain('Review')
 	})
 
 	it('opens the review dialog from the home page', async () => {

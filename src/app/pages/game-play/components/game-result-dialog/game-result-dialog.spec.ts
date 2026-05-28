@@ -25,6 +25,7 @@ describe('GameResultDialog', () => {
 		resetGameState: jasmine.Spy
 		setGameMode: jasmine.Spy
 		classicExtraQuota: jasmine.Spy
+		isFinalClassicExtraSession: jasmine.Spy
 	}
 	let dailyPostPlayService: jasmine.SpyObj<DailyPostPlayService>
 	let router: jasmine.SpyObj<Router>
@@ -55,6 +56,7 @@ describe('GameResultDialog', () => {
 				canPlayClassic: true,
 				classicBlockedReason: null,
 			}),
+			isFinalClassicExtraSession: jasmine.createSpy('isFinalClassicExtraSession').and.returnValue(false),
 		}
 		router = jasmine.createSpyObj<Router>('Router', ['navigate'])
 		router.navigate.and.resolveTo(true)
@@ -177,6 +179,31 @@ describe('GameResultDialog', () => {
 		expect(dailyPostPlayService.loadReviewTriads).toHaveBeenCalledWith(42)
 		expect(mockStore.setDailyReviewTriads).toHaveBeenCalled()
 		expect(component.reviewDialogOpen()).toBeTrue()
+	})
+
+	it('shows final classic layout without Play Again', () => {
+		mockStore.gameMode.and.returnValue('classic')
+		mockStore.isFinalClassicExtraSession.and.returnValue(true)
+		mockStore.classicExtraQuota.and.returnValue({
+			classicExtrasUsed: 3,
+			classicExtrasRemaining: 0,
+			classicExtrasLimit: 3,
+			canPlayClassic: false,
+			classicBlockedReason: 'capacity_reached',
+		})
+		fixture = TestBed.createComponent(GameResultDialog)
+		component = fixture.componentInstance
+		fixture.componentRef.setInput('result', 'WON')
+		fixture.detectChanges()
+
+		const playAgainButton = fixture.nativeElement.querySelector('button.btn.hover\\:bg-success')
+		const reviewButton = fixture.nativeElement.querySelector('button.btn.hover\\:bg-info')
+		const caption = fixture.nativeElement.textContent
+
+		expect(playAgainButton).toBeFalsy()
+		expect(reviewButton).toBeTruthy()
+		expect(caption).toContain('See you tomorrow!')
+		expect(caption).toContain("You've played all 3 bonus games today")
 	})
 
 	it('fetches the full review set when the current game only has partial triads', async () => {

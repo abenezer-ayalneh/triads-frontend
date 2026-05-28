@@ -106,6 +106,7 @@ const initialState: GlobalState = {
 	dailyNoScheduleMessage: null,
 	dailyReviewTriads: null,
 	classicExtraQuota: null,
+	isFinalClassicExtraSession: false,
 }
 
 export const GlobalStore = signalStore(
@@ -324,10 +325,14 @@ export const GlobalStore = signalStore(
 				dailyNoScheduleMessage: null,
 				dailyReviewTriads: null,
 				classicExtraQuota: null,
+				isFinalClassicExtraSession: false,
 			}))
 		},
 		setClassicExtraQuota: (classicExtraQuota: ClassicExtraQuotaInfo | null) => {
 			patchState(store, (state) => ({ ...state, classicExtraQuota }))
+		},
+		setFinalClassicExtraSession: (isFinalClassicExtraSession: boolean) => {
+			patchState(store, (state) => ({ ...state, isFinalClassicExtraSession }))
 		},
 		setIntroShownPerSession: (introShownPerSession: boolean) => {
 			patchState(store, (state) => ({ ...state, introShownPerSession }))

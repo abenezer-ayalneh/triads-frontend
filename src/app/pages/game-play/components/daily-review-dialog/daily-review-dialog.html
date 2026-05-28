@@ -1,4 +1,4 @@
-<app-dialog title="Daily Review" (whenClosed)="onClose()">
+<app-dialog [title]="dialogTitle()" (whenClosed)="onClose()">
 	<div class="daily-review-layout flex flex-col gap-4 md:gap-5 text-base-content">
 		<section class="rounded-2xl border border-base-300 bg-base-200/60 px-5 py-3.5 md:px-6 md:py-4 text-center">
 			<p

@@ -92,6 +92,11 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	availableTurns = computed(() => this.store.turns().filter((turn) => turn.available).length)
 
+	isGameOver = computed(() => {
+		const gameState = this.store.gamePlayState()
+		return gameState === GamePlayState.WON || gameState === GamePlayState.LOST
+	})
+
 	answerDialogMessage = computed(() => {
 		const gameState = this.store.gamePlayState()
 
@@ -229,6 +234,7 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	initializeDailyGame() {
+		this.store.setFinalClassicExtraSession(false)
 		this.cueFetchingState.set(RequestState.LOADING)
 		this.noTriadsMessage.set('')
 		this.store.setDailyNoScheduleMessage(null)
@@ -314,6 +320,9 @@ export class GamePlay implements OnInit, OnDestroy {
 					const quota = extractClassicExtraQuota(response)
 					if (quota) {
 						this.store.setClassicExtraQuota(quota)
+						this.store.setFinalClassicExtraSession(quota.classicExtrasRemaining === 0)
+					} else {
+						this.store.setFinalClassicExtraSession(false)
 					}
 
 					// Check if cues is null or empty array (backend returns null when no triads found)
@@ -339,6 +348,7 @@ export class GamePlay implements OnInit, OnDestroy {
 					const quota = extractClassicExtraQuota(apiError.originalResponse?.error)
 					if (quota) {
 						this.store.setClassicExtraQuota(quota)
+						this.store.setFinalClassicExtraSession(quota.classicExtrasRemaining === 0)
 					}
 					if (apiError.statusCode === 403) {
 						void this.router.navigate(['/'])
@@ -450,6 +460,9 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	generateGameResultMessage() {
+		if (this.store.gameMode() !== 'daily' && this.store.isFinalClassicExtraSession()) {
+			return ''
+		}
 		const gameScore = this.store.gameScore()
 		const gameEndMessages = this.store.gameMode() === 'daily' ? GAME_END_MESSAGES_DAILY : GAME_END_MESSAGES_CLASSIC
 		return gameEndMessages[gameScore]
@@ -521,7 +534,7 @@ export class GamePlay implements OnInit, OnDestroy {
 			EASY: 'Soft',
 			MEDIUM: 'Firm',
 			HARD: 'Hard',
-			RANDOM: 'Mixed (complete)',
+			RANDOM: 'Mixed',
 		}
 		return labels[difficulty] || difficulty
 	}

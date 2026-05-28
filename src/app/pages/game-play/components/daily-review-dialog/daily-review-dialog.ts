@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 
 import { Dialog } from '../../../../shared/components/dialog/dialog'
 import { HighlightKeyPipe } from '../../../../shared/pipes/highlight-key.pipe'
-import { GAME_END_MESSAGES_REVIEW } from '../../constants/game-play.constant'
+import { GAME_END_MESSAGES_CLASSIC, GAME_END_MESSAGES_REVIEW } from '../../constants/game-play.constant'
 import { DailyReviewSummary } from '../../interfaces/daily-review.interface'
 
 @Component({
@@ -16,11 +16,16 @@ import { DailyReviewSummary } from '../../interfaces/daily-review.interface'
 export class DailyReviewDialog {
 	summary = input.required<DailyReviewSummary>()
 
+	dialogTitle = input('Daily Review')
+
+	useClassicHeadlines = input(false)
+
 	whenClosed = output<void>()
 
 	readonly resultHeadline = computed(() => {
 		const score = this.summary().score
-		const line = GAME_END_MESSAGES_REVIEW[score as keyof typeof GAME_END_MESSAGES_REVIEW]
+		const messages = this.useClassicHeadlines() ? GAME_END_MESSAGES_CLASSIC : GAME_END_MESSAGES_REVIEW
+		const line = messages[score as keyof typeof messages]
 		if (line !== undefined) {
 			return line
 		}

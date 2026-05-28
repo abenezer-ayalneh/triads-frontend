@@ -8,6 +8,8 @@ export const CLASSIC_DAILY_REQUIRED_HINT = "Complete today's Daily to unlock Cla
 
 export const CLASSIC_CAPACITY_MESSAGE = "You've played all 3 bonus games today. Come back tomorrow!"
 
+export const CLASSIC_FINAL_CAPTION = 'See you tomorrow!'
+
 export const CLASSIC_REMAINING_SUFFIX = 'left today'
 
 export const PLAY_MORE_DIALOG_TITLE = 'Play up to 3 more Triads games!'

@@ -67,23 +67,31 @@
 				</div>
 			} @else {
 				<div class="flex flex-col gap-2 landscape:max-lg:gap-1.5 items-center text-center w-full max-w-sm">
-					<div class="flex flex-wrap gap-2 landscape:max-lg:gap-1 md:gap-3 justify-center landscape:max-lg:w-full">
-						@if (showPlayAgainButton()) {
-							<button
-								(click)="restartGame()"
-								class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg md:text-base text-base-100 hover:bg-success flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
-								{{ classicPlayAgainLabel() }}
-							</button>
-						}
+					@if (isFinalClassicExtra()) {
 						<button
 							(click)="openDailyReview()"
-							class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info text-xs landscape:max-lg:text-xs md:text-base"
+							class="btn btn-outline btn-xs min-w-0 w-full landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info flex items-center justify-center gap-1 landscape:max-lg:gap-1 md:gap-2"
 							[disabled]="reviewLoading()">
 							<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
 						</button>
-					</div>
-					@if (!showPlayAgainButton()) {
+						<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/90 font-medium">{{ classicFinalCaption }}</p>
 						<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/90 font-medium">{{ classicCapacityMessage }}</p>
+					} @else {
+						<div class="flex flex-wrap gap-2 landscape:max-lg:gap-1 md:gap-3 justify-center landscape:max-lg:w-full">
+							@if (showPlayAgainButton()) {
+								<button
+									(click)="restartGame()"
+									class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg md:text-base text-base-100 hover:bg-success flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
+									{{ classicPlayAgainLabel() }}
+								</button>
+							}
+							<button
+								(click)="openDailyReview()"
+								class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info text-xs landscape:max-lg:text-xs md:text-base"
+								[disabled]="reviewLoading()">
+								<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
+							</button>
+						</div>
 					}
 					@if (reviewError(); as errorMessage) {
 						<p class="text-xs text-error text-center">{{ errorMessage }}</p>
@@ -97,7 +105,11 @@
 @if (reviewSummary(); as summary) {
 	<ion-modal [isOpen]="reviewDialogOpen()" (didDismiss)="closeDailyReview()">
 		<ng-template>
-			<app-daily-review-dialog [summary]="summary" (whenClosed)="closeDailyReview()" />
+			<app-daily-review-dialog
+				[summary]="summary"
+				[dialogTitle]="isDailyMode() ? 'Daily Review' : 'Review'"
+				[useClassicHeadlines]="!isDailyMode()"
+				(whenClosed)="closeDailyReview()" />
 		</ng-template>
 	</ion-modal>
 }

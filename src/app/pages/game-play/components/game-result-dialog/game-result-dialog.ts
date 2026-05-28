@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core'
 import { IonModal } from '@ionic/angular/standalone'
 
-import { CLASSIC_CAPACITY_MESSAGE } from '../../../../shared/constants/global.constant'
+import { CLASSIC_CAPACITY_MESSAGE, CLASSIC_FINAL_CAPTION } from '../../../../shared/constants/global.constant'
 import { isApiError, parseApiError } from '../../../../shared/errors/api-error.util'
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../../shared/services/daily-post-play.service'
@@ -35,13 +35,17 @@ export class GameResultDialog {
 
 	readonly isDailyMode = computed(() => this.store.gameMode() === 'daily')
 
+	readonly isFinalClassicExtra = computed(() => !this.isDailyMode() && this.store.isFinalClassicExtraSession())
+
 	readonly classicCapacityMessage = CLASSIC_CAPACITY_MESSAGE
+
+	readonly classicFinalCaption = CLASSIC_FINAL_CAPTION
 
 	readonly classicExtrasRemaining = computed(() => this.store.classicExtraQuota()?.classicExtrasRemaining ?? 0)
 
 	readonly canPlayMore = computed(() => this.classicExtrasRemaining() > 0)
 
-	readonly canContinueClassic = computed(() => this.classicExtrasRemaining() > 0)
+	readonly canContinueClassic = computed(() => this.classicExtrasRemaining() > 0 && !this.isFinalClassicExtra())
 
 	readonly classicPlayAgainLabel = computed(() => {
 		const remaining = this.classicExtrasRemaining()
@@ -163,22 +167,24 @@ export class GameResultDialog {
 				return
 			}
 
+			const canPlayAgain = this.canContinueClassic()
+
 			if (result === 'LOST') {
 				// For LOST state, show actions after solutions appear (or after max 2 seconds)
 				if (unsolvedTriads && unsolvedTriads.length > 0) {
 					setTimeout(() => {
 						this.showResultActions.set(true)
-						this.showPlayAgainButton.set(this.canContinueClassic())
+						this.showPlayAgainButton.set(canPlayAgain)
 					}, 500)
 				} else {
 					setTimeout(() => {
 						this.showResultActions.set(true)
-						this.showPlayAgainButton.set(this.canContinueClassic())
+						this.showPlayAgainButton.set(canPlayAgain)
 					}, 2000)
 				}
 			} else if (result === 'WON') {
 				this.showResultActions.set(true)
-				this.showPlayAgainButton.set(this.canContinueClassic())
+				this.showPlayAgainButton.set(canPlayAgain)
 
 				// Check if perfect score (15) - trigger celebration
 				if (gameScore === 15) {

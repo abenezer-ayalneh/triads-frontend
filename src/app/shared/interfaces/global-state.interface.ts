@@ -45,4 +45,6 @@ export interface GlobalState {
 	dailyNoScheduleMessage: string | null
 	dailyReviewTriads: SolvedTriad[] | null
 	classicExtraQuota: ClassicExtraQuotaInfo | null
+	/** True when the active Classic session consumed the last daily extra slot (game 3 of 3). */
+	isFinalClassicExtraSession: boolean
 }
