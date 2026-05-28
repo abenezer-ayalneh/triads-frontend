@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing'
+import { Router } from '@angular/router'
 
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../../shared/services/daily-post-play.service'
+import { PlayRouteIntentService } from '../../../../shared/services/play-route-intent.service'
 import { SnackbarService } from '../../../../shared/services/snackbar.service'
 import { GlobalStore } from '../../../../state/global.store'
 import { getScoreGifPath } from '../../constants/share.constant'
@@ -21,8 +23,12 @@ describe('GameResultDialog', () => {
 		setDailyReviewTriads: jasmine.Spy
 		setUnsolvedTriads: jasmine.Spy
 		resetGameState: jasmine.Spy
+		setGameMode: jasmine.Spy
+		classicExtraQuota: jasmine.Spy
 	}
 	let dailyPostPlayService: jasmine.SpyObj<DailyPostPlayService>
+	let router: jasmine.SpyObj<Router>
+	let playRouteIntent: jasmine.SpyObj<PlayRouteIntentService>
 
 	beforeEach(async () => {
 		mockStore = {
@@ -41,7 +47,18 @@ describe('GameResultDialog', () => {
 			setDailyReviewTriads: jasmine.createSpy('setDailyReviewTriads'),
 			setUnsolvedTriads: jasmine.createSpy('setUnsolvedTriads'),
 			resetGameState: jasmine.createSpy('resetGameState'),
+			setGameMode: jasmine.createSpy('setGameMode'),
+			classicExtraQuota: jasmine.createSpy('classicExtraQuota').and.returnValue({
+				classicExtrasUsed: 0,
+				classicExtrasRemaining: 3,
+				classicExtrasLimit: 3,
+				canPlayClassic: true,
+				classicBlockedReason: null,
+			}),
 		}
+		router = jasmine.createSpyObj<Router>('Router', ['navigate'])
+		router.navigate.and.resolveTo(true)
+		playRouteIntent = jasmine.createSpyObj<PlayRouteIntentService>('PlayRouteIntentService', ['markPending'])
 		dailyPostPlayService = jasmine.createSpyObj<DailyPostPlayService>('DailyPostPlayService', [
 			'shareScoreImage',
 			'createReviewSummary',
@@ -86,6 +103,14 @@ describe('GameResultDialog', () => {
 					provide: SnackbarService,
 					useValue: jasmine.createSpyObj<SnackbarService>('SnackbarService', ['showSnackbar']),
 				},
+				{
+					provide: Router,
+					useValue: router,
+				},
+				{
+					provide: PlayRouteIntentService,
+					useValue: playRouteIntent,
+				},
 			],
 		}).compileComponents()
 
@@ -123,6 +148,12 @@ describe('GameResultDialog', () => {
 		await component.shareGameResult()
 
 		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(10)
+	})
+
+	it('opens play more dialog when continuing from daily result', () => {
+		component.openPlayMoreDialog()
+
+		expect(component.playMoreDialogOpen()).toBeTrue()
 	})
 
 	it('opens the review dialog immediately when daily review data is already available', async () => {

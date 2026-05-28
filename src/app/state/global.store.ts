@@ -5,6 +5,7 @@ import { GamePlayState } from '../pages/game-play/enums/game-play.enum'
 import { SolvedTriad } from '../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../pages/game-play/interfaces/turn-and-hint.interface'
 import { GAME_INTRO_DISMISSED_KEY } from '../shared/components/intro/intro-constant'
+import { ClassicExtraQuotaInfo } from '../shared/interfaces/classic-extra.interface'
 import { GlobalState } from '../shared/interfaces/global-state.interface'
 import { User } from '../shared/interfaces/user.interface'
 import { UserService } from '../shared/services/user.service'
@@ -103,6 +104,7 @@ const initialState: GlobalState = {
 	dailyStandaloneResult: false,
 	dailyNoScheduleMessage: null,
 	dailyReviewTriads: null,
+	classicExtraQuota: null,
 }
 
 export const GlobalStore = signalStore(
@@ -320,7 +322,11 @@ export const GlobalStore = signalStore(
 				dailyStandaloneResult: false,
 				dailyNoScheduleMessage: null,
 				dailyReviewTriads: null,
+				classicExtraQuota: null,
 			}))
+		},
+		setClassicExtraQuota: (classicExtraQuota: ClassicExtraQuotaInfo | null) => {
+			patchState(store, (state) => ({ ...state, classicExtraQuota }))
 		},
 		setIntroShownPerSession: (introShownPerSession: boolean) => {
 			patchState(store, (state) => ({ ...state, introShownPerSession }))

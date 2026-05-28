@@ -5,6 +5,7 @@ import { catchError, map, of } from 'rxjs'
 import { GamePlayApi } from '../../../pages/game-play/services/game-play-api'
 import { PlayRouteIntentService } from '../../../shared/services/play-route-intent.service'
 import { UserService } from '../../../shared/services/user.service'
+import { extractClassicExtraQuota } from '../../../shared/utils/classic-extra.util'
 import { GlobalStore } from '../../../state/global.store'
 
 type PlayMode = 'classic' | 'daily'
@@ -40,7 +41,19 @@ export const playGuard: CanActivateFn = (route) => {
 	}
 
 	if (mode !== 'daily') {
-		return true
+		return gamePlayApi.getDailyTodayInfo().pipe(
+			map((info) => {
+				const quota = extractClassicExtraQuota(info)
+				if (quota) {
+					store.setClassicExtraQuota(quota)
+				}
+				if (quota?.canPlayClassic === false) {
+					return redirectToHome(router)
+				}
+				return true
+			}),
+			catchError(() => of(true)),
+		)
 	}
 
 	return gamePlayApi.getDailyTodayInfo().pipe(

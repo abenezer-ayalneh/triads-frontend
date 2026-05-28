@@ -14,7 +14,7 @@
 		<div class="text-center space-y-1 landscape:max-lg:space-y-1 md:space-y-2">
 			<ng-content />
 		</div>
-		@if (showPlayAgainButton()) {
+		@if (showResultActions()) {
 			@if (isDailyMode()) {
 				<div class="flex flex-col gap-3 landscape:max-lg:gap-2 items-center text-center w-full max-w-sm">
 					@if (nextDailyPuzzleAvailable()) {
@@ -49,6 +49,16 @@
 								<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
 							</button>
 						</div>
+						<button
+							type="button"
+							(click)="openPlayMoreDialog()"
+							class="triad-gradient btn btn-xs min-w-0 w-full border-none landscape:max-lg:btn-xs md:btn-lg text-primary-content"
+							[disabled]="!canPlayMore()">
+							Play More
+						</button>
+						@if (!canPlayMore()) {
+							<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/90 font-medium">{{ classicCapacityMessage }}</p>
+						}
 					}
 					<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/90 font-medium">{{ countdownLabel() }}</p>
 					@if (reviewError(); as errorMessage) {
@@ -56,39 +66,29 @@
 					}
 				</div>
 			} @else {
-				<div class="flex flex-wrap gap-2 landscape:max-lg:gap-1 md:gap-3 justify-center landscape:max-lg:w-full">
-					<button
-						(click)="shareGameResult()"
-						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							class="h-3 w-3 landscape:max-lg:h-3 landscape:max-lg:w-3 md:h-5 md:w-5"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-						</svg>
-						<span class="text-xs landscape:max-lg:text-xs md:text-base">Share</span>
-					</button>
-					<button
-						(click)="restartGame()"
-						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg md:text-base text-base-100 hover:bg-success flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
-						Play Again
-					</button>
-					<button
-						(click)="openDailyReview()"
-						class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info text-xs landscape:max-lg:text-xs md:text-base"
-						[disabled]="reviewLoading()">
-						<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
-					</button>
+				<div class="flex flex-col gap-2 landscape:max-lg:gap-1.5 items-center text-center w-full max-w-sm">
+					<div class="flex flex-wrap gap-2 landscape:max-lg:gap-1 md:gap-3 justify-center landscape:max-lg:w-full">
+						@if (showPlayAgainButton()) {
+							<button
+								(click)="restartGame()"
+								class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg md:text-base text-base-100 hover:bg-success flex items-center gap-1 landscape:max-lg:gap-1 md:gap-2">
+								{{ classicPlayAgainLabel() }}
+							</button>
+						}
+						<button
+							(click)="openDailyReview()"
+							class="btn btn-outline btn-xs landscape:max-lg:btn-xs md:btn-lg text-base-100 hover:bg-info text-xs landscape:max-lg:text-xs md:text-base"
+							[disabled]="reviewLoading()">
+							<span class="text-xs landscape:max-lg:text-xs md:text-base">{{ reviewLoading() ? 'Loading...' : 'Review' }}</span>
+						</button>
+					</div>
+					@if (!showPlayAgainButton()) {
+						<p class="text-xs landscape:max-lg:text-[10px] md:text-sm text-base-100/90 font-medium">{{ classicCapacityMessage }}</p>
+					}
+					@if (reviewError(); as errorMessage) {
+						<p class="text-xs text-error text-center">{{ errorMessage }}</p>
+					}
 				</div>
-				@if (reviewError(); as errorMessage) {
-					<p class="text-xs text-error text-center">{{ errorMessage }}</p>
-				}
 			}
 		}
 	</div>
@@ -101,3 +101,9 @@
 		</ng-template>
 	</ion-modal>
 }
+
+<ion-modal [isOpen]="playMoreDialogOpen()" (didDismiss)="closePlayMoreDialog()">
+	<ng-template>
+		<app-play-more-dialog [remaining]="classicExtrasRemaining()" (whenClosed)="closePlayMoreDialog()" />
+	</ng-template>
+</ion-modal>

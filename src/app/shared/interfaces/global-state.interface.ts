@@ -1,6 +1,7 @@
 import { GamePlayState } from '../../pages/game-play/enums/game-play.enum'
 import { SolvedTriad } from '../../pages/game-play/interfaces/triad.interface'
 import { TurnAndHint } from '../../pages/game-play/interfaces/turn-and-hint.interface'
+import { ClassicExtraQuotaInfo } from './classic-extra.interface'
 import { User } from './user.interface'
 
 /** Letter/length hints for a specific trio of cues (keyed by sorted cue set in the store). */
@@ -43,4 +44,5 @@ export interface GlobalState {
 	dailyStandaloneResult: boolean
 	dailyNoScheduleMessage: string | null
 	dailyReviewTriads: SolvedTriad[] | null
+	classicExtraQuota: ClassicExtraQuotaInfo | null
 }

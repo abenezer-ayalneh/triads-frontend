@@ -1,20 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal } from '@angular/core'
 import { IonModal } from '@ionic/angular/standalone'
 
+import { CLASSIC_CAPACITY_MESSAGE } from '../../../../shared/constants/global.constant'
 import { isApiError, parseApiError } from '../../../../shared/errors/api-error.util'
 import { AssetPreloadService } from '../../../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../../../shared/services/daily-post-play.service'
+import { formatClassicRemainingLabel } from '../../../../shared/utils/classic-extra.util'
 import { GlobalStore } from '../../../../state/global.store'
 import { getScoreGifPath } from '../../constants/share.constant'
 import { DailyReviewSummary } from '../../interfaces/daily-review.interface'
 import { DailyReviewDialog } from '../daily-review-dialog/daily-review-dialog'
+import { PlayMoreDialog } from '../play-more-dialog/play-more-dialog'
 import { SolutionReveal } from '../solution-reveal/solution-reveal'
 
 const CELEBRATION_SOUND_PATH = 'sounds/ta-dah.mp3'
 
 @Component({
 	selector: 'app-game-result-dialog',
-	imports: [DailyReviewDialog, IonModal, SolutionReveal],
+	imports: [DailyReviewDialog, IonModal, PlayMoreDialog, SolutionReveal],
 	templateUrl: './game-result-dialog.html',
 	styleUrl: './game-result-dialog.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,13 +31,33 @@ export class GameResultDialog {
 
 	showPlayAgainButton = signal(false)
 
+	showResultActions = signal(false)
+
 	readonly isDailyMode = computed(() => this.store.gameMode() === 'daily')
+
+	readonly classicCapacityMessage = CLASSIC_CAPACITY_MESSAGE
+
+	readonly classicExtrasRemaining = computed(() => this.store.classicExtraQuota()?.classicExtrasRemaining ?? 0)
+
+	readonly canPlayMore = computed(() => this.classicExtrasRemaining() > 0)
+
+	readonly canContinueClassic = computed(() => this.classicExtrasRemaining() > 0)
+
+	readonly classicPlayAgainLabel = computed(() => {
+		const remaining = this.classicExtrasRemaining()
+		if (remaining > 1) {
+			return `Play Again${formatClassicRemainingLabel(remaining)}`
+		}
+		return 'Play Again'
+	})
 
 	countdownLabel = signal('')
 
 	nextDailyPuzzleAvailable = signal(false)
 
 	readonly reviewDialogOpen = signal(false)
+
+	readonly playMoreDialogOpen = signal(false)
 
 	readonly reviewLoading = signal(false)
 
@@ -132,6 +155,7 @@ export class GameResultDialog {
 			const gameScore = this.store.gameScore()
 
 			if (this.store.gameMode() === 'daily') {
+				this.showResultActions.set(true)
 				this.showPlayAgainButton.set(true)
 				if (result === 'WON' && gameScore === 15) {
 					this.assetPreloadService.playSound(CELEBRATION_SOUND_PATH, { volume: 0.7 })
@@ -140,21 +164,21 @@ export class GameResultDialog {
 			}
 
 			if (result === 'LOST') {
-				// For LOST state, show button after solutions appear (or after max 2 seconds)
+				// For LOST state, show actions after solutions appear (or after max 2 seconds)
 				if (unsolvedTriads && unsolvedTriads.length > 0) {
-					// Solutions are available, show button after short delay
 					setTimeout(() => {
-						this.showPlayAgainButton.set(true)
+						this.showResultActions.set(true)
+						this.showPlayAgainButton.set(this.canContinueClassic())
 					}, 500)
 				} else {
-					// No solutions yet, show button after max 2 seconds
 					setTimeout(() => {
-						this.showPlayAgainButton.set(true)
+						this.showResultActions.set(true)
+						this.showPlayAgainButton.set(this.canContinueClassic())
 					}, 2000)
 				}
 			} else if (result === 'WON') {
-				// For WON state, show button immediately
-				this.showPlayAgainButton.set(true)
+				this.showResultActions.set(true)
+				this.showPlayAgainButton.set(this.canContinueClassic())
 
 				// Check if perfect score (15) - trigger celebration
 				if (gameScore === 15) {
@@ -172,7 +196,20 @@ export class GameResultDialog {
 		this.store.setUnsolvedTriads(null)
 		this.store.resetGameState()
 		this.showPlayAgainButton.set(false)
+		this.showResultActions.set(false)
 		this.restartRequested.emit()
+	}
+
+	openPlayMoreDialog() {
+		if (!this.canPlayMore()) {
+			return
+		}
+
+		this.playMoreDialogOpen.set(true)
+	}
+
+	closePlayMoreDialog() {
+		this.playMoreDialogOpen.set(false)
 	}
 
 	async shareGameResult() {

@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core'
 import { BehaviorSubject, firstValueFrom } from 'rxjs'
 
 import { UserService } from '../../../shared/services/user.service'
+import { extractClassicExtraQuota } from '../../../shared/utils/classic-extra.util'
 import { GlobalStore } from '../../../state/global.store'
 import { GamePlayState } from '../enums/game-play.enum'
 import { SolvedTriad } from '../interfaces/triad.interface'
@@ -35,7 +36,17 @@ export class GamePlayLogic {
 
 		if (this.store.gameMode() === 'daily') {
 			this.gamePlayApi.postDailyComplete('won', score).subscribe({
-				next: (res) => this.store.setDailyNextPuzzleAt(res.nextPuzzleAt),
+				next: (res) => {
+					this.store.setDailyNextPuzzleAt(res.nextPuzzleAt)
+					this.gamePlayApi.getDailyTodayInfo().subscribe({
+						next: (info) => {
+							const quota = extractClassicExtraQuota(info)
+							if (quota) {
+								this.store.setClassicExtraQuota(quota)
+							}
+						},
+					})
+				},
 				error: () => {
 					/* non-blocking */
 				},
@@ -76,7 +87,17 @@ export class GamePlayLogic {
 
 		if (this.store.gameMode() === 'daily') {
 			this.gamePlayApi.postDailyComplete('lost', score).subscribe({
-				next: (res) => this.store.setDailyNextPuzzleAt(res.nextPuzzleAt),
+				next: (res) => {
+					this.store.setDailyNextPuzzleAt(res.nextPuzzleAt)
+					this.gamePlayApi.getDailyTodayInfo().subscribe({
+						next: (info) => {
+							const quota = extractClassicExtraQuota(info)
+							if (quota) {
+								this.store.setClassicExtraQuota(quota)
+							}
+						},
+					})
+				},
 				error: () => {
 					/* non-blocking */
 				},

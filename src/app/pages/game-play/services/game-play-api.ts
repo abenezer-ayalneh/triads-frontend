@@ -2,14 +2,17 @@ import { HttpClient, HttpParams } from '@angular/common/http'
 import { inject, Injectable } from '@angular/core'
 
 import { Difficulty } from '../../../shared/enums/difficulty.enum'
+import { ClassicExtraQuotaInfo } from '../../../shared/interfaces/classic-extra.interface'
 import { SolvedTriad } from '../interfaces/triad.interface'
 
+type ClassicExtraQuotaFields = ClassicExtraQuotaInfo
+
 export type DailyTodayInfoResponse =
-	| {
+	| ({
 			scheduled: false
 			puzzleDate: string
-	  }
-	| {
+	  } & Partial<ClassicExtraQuotaFields>)
+	| ({
 			scheduled: true
 			puzzleDate: string
 			triadGroupId: number
@@ -17,7 +20,7 @@ export type DailyTodayInfoResponse =
 			challengeNumber: number
 			/** Set when the request includes x-anonymous-id; true if today’s puzzle is finished (won or lost). */
 			hasCompletedDaily?: boolean
-	  }
+	  } & Partial<ClassicExtraQuotaFields>)
 
 export type DailyCuesResponse =
 	| {
@@ -69,7 +72,13 @@ export class GamePlayApi {
 
 	getCues(difficulty: Difficulty) {
 		const params = new HttpParams().set('difficulty', difficulty)
-		return this.httpClient.get<{ triadGroupId: string | number | null; cues: string[] | null; message?: string }>('triads/cues', { params })
+		return this.httpClient.get<
+			{
+				triadGroupId: string | number | null
+				cues: string[] | null
+				message?: string
+			} & Partial<ClassicExtraQuotaFields>
+		>('triads/cues', { params })
 	}
 
 	checkTriad(cues: string[]) {

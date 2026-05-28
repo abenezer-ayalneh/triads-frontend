@@ -17,6 +17,7 @@ import { DailyPostPlayService } from '../../shared/services/daily-post-play.serv
 import { DailyRolloverService } from '../../shared/services/daily-rollover.service'
 import { DifficultyService } from '../../shared/services/difficulty.service'
 import { GameCuePrefetchService } from '../../shared/services/game-cue-prefetch.service'
+import { extractClassicExtraQuota } from '../../shared/utils/classic-extra.util'
 import { GlobalStore } from '../../state/global.store'
 import { AnswerDialog } from './components/answer-dialog/answer-dialog'
 import { BackgroundBubbles } from './components/background-bubbles/background-bubbles'
@@ -252,6 +253,7 @@ export class GamePlay implements OnInit, OnDestroy {
 						this.store.setDailyStandaloneResult(true)
 						this.store.setGamePlayState(response.attemptStatus === 'WON' ? GamePlayState.WON : GamePlayState.LOST)
 						this.prefetchDailyReviewTriads(response.triadGroupId)
+						this.refreshClassicExtraQuota()
 						this.cueFetchingState.set(RequestState.IDLE)
 						return
 					}
@@ -309,6 +311,11 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.subscriptions$.add(
 			classicCues$.subscribe({
 				next: (response) => {
+					const quota = extractClassicExtraQuota(response)
+					if (quota) {
+						this.store.setClassicExtraQuota(quota)
+					}
+
 					// Check if cues is null or empty array (backend returns null when no triads found)
 					if (!response.cues || response.cues.length === 0) {
 						// Use backend message if available, otherwise generate a default message
@@ -329,6 +336,14 @@ export class GamePlay implements OnInit, OnDestroy {
 				error: (error) => {
 					const apiError = isApiError(error) ? error : parseApiError(error)
 					apiError.markHandled()
+					const quota = extractClassicExtraQuota(apiError.originalResponse?.error)
+					if (quota) {
+						this.store.setClassicExtraQuota(quota)
+					}
+					if (apiError.statusCode === 403) {
+						void this.router.navigate(['/'])
+						return
+					}
 					this.noTriadsMessage.set(apiError.userMessage)
 					this.selectedDifficulty.set(difficulty)
 					this.cueFetchingState.set(RequestState.ERROR)
@@ -580,6 +595,19 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private clearDailySession() {
 		localStorage.removeItem(DAILY_GAME_SESSION_STORAGE_KEY)
+	}
+
+	private refreshClassicExtraQuota() {
+		this.subscriptions$.add(
+			this.gamePlayApi.getDailyTodayInfo().subscribe({
+				next: (info) => {
+					const quota = extractClassicExtraQuota(info)
+					if (quota) {
+						this.store.setClassicExtraQuota(quota)
+					}
+				},
+			}),
+		)
 	}
 
 	private async animateSolvedTriadAppearance(solvedArea: HTMLElement) {

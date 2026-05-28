@@ -1,0 +1,30 @@
+<app-dialog [title]="dialogTitle" (whenClosed)="onClose()">
+	<div class="play-more-dialog__content">
+		<div class="play-more-dialog__body">
+			<p class="play-more-dialog__text">{{ difficultyHint }}</p>
+			<p class="play-more-dialog__text">{{ headerHint }}</p>
+			<div class="play-more-dialog__progress" [attr.aria-label]="gamesPlayed() + ' of ' + DAILY_CLASSIC_EXTRA_LIMIT + ' bonus games played'">
+				<div class="play-more-dialog__dots">
+					@for (filled of playedDots(); track $index) {
+						<span class="play-more-dialog__dot" [class.play-more-dialog__dot--filled]="filled" aria-hidden="true"></span>
+					}
+				</div>
+				<span class="play-more-dialog__progress-label" aria-hidden="true">{{ progressLabel() }}</span>
+			</div>
+		</div>
+
+		<div class="play-more-dialog__difficulty">
+			<label for="play-more-difficulty" class="play-more-dialog__difficulty-label">Difficulty</label>
+			<select id="play-more-difficulty" class="play-more-dialog__select" [ngModel]="selectedDifficulty()" (ngModelChange)="onDifficultyChange($event)">
+				<option [value]="Difficulty.EASY">Soft</option>
+				<option [value]="Difficulty.MEDIUM">Firm</option>
+				<option [value]="Difficulty.HARD">Hard</option>
+				<option [value]="Difficulty.RANDOM">Mixed (complete)</option>
+			</select>
+		</div>
+	</div>
+
+	<div class="play-more-dialog__actions">
+		<button type="button" class="btn btn-primary w-full md:w-auto" [disabled]="!canPlay()" (click)="onPlayNow()">Play Now</button>
+	</div>
+</app-dialog>

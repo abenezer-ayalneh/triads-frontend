@@ -1,16 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
-import { FormsModule } from '@angular/forms'
 import { NavigationEnd, Router } from '@angular/router'
 import { IonModal } from '@ionic/angular/standalone'
 import { filter, skip, Subject, takeUntil } from 'rxjs'
 
 import { BrainWarmingPlayButton } from '../../shared/components/brain-warming-play-button/brain-warming-play-button'
+import { CLASSIC_CAPACITY_MESSAGE } from '../../shared/constants/global.constant'
 import { isApiError, parseApiError } from '../../shared/errors/api-error.util'
+import { ClassicExtraQuotaInfo } from '../../shared/interfaces/classic-extra.interface'
 import { AssetPreloadService } from '../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../shared/services/daily-post-play.service'
 import { DailyRolloverService } from '../../shared/services/daily-rollover.service'
+import { extractClassicExtraQuota } from '../../shared/utils/classic-extra.util'
 import { GlobalStore } from '../../state/global.store'
 import { DailyReviewDialog } from '../game-play/components/daily-review-dialog/daily-review-dialog'
+import { PlayMoreDialog } from '../game-play/components/play-more-dialog/play-more-dialog'
 import { DailyReviewSummary } from '../game-play/interfaces/daily-review.interface'
 import { GamePlayApi } from '../game-play/services/game-play-api'
 import { UserInfoDialog } from './components/user-info-dialog/user-info-dialog'
@@ -19,7 +22,7 @@ const TRIADS_LOGO_IMAGE_PATH = 'images/triads-logo-animated.svg'
 
 @Component({
 	selector: 'app-home',
-	imports: [FormsModule, UserInfoDialog, BrainWarmingPlayButton, DailyReviewDialog, IonModal],
+	imports: [UserInfoDialog, BrainWarmingPlayButton, DailyReviewDialog, PlayMoreDialog, IonModal],
 	templateUrl: './home.page.html',
 	styleUrl: './home.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,8 +48,6 @@ export class HomePage implements OnInit, OnDestroy {
 
 	readonly dailyPlayButton = viewChild<BrainWarmingPlayButton>('dailyPlayButton')
 
-	readonly classicPlayButton = viewChild<BrainWarmingPlayButton>('classicPlayButton')
-
 	readonly logoUrl = computed(() => {
 		this.assetPreloadService.imageVersion()
 		return this.assetPreloadService.getImageUrl(TRIADS_LOGO_IMAGE_PATH)
@@ -64,7 +65,17 @@ export class HomePage implements OnInit, OnDestroy {
 
 	readonly reviewDialogOpen = signal(false)
 
+	readonly playMoreDialogOpen = signal(false)
+
 	readonly loadErrorMessage = signal<string | null>(null)
+
+	readonly classicExtraQuota = signal<ClassicExtraQuotaInfo | null>(null)
+
+	readonly classicExtrasRemaining = computed(() => this.classicExtraQuota()?.classicExtrasRemaining ?? 0)
+
+	readonly canPlayMore = computed(() => this.classicExtrasRemaining() > 0)
+
+	readonly classicCapacityMessage = CLASSIC_CAPACITY_MESSAGE
 
 	readonly easternCalendarLabel = signal(this.dailyRolloverService.easternCalendarLabel())
 
@@ -85,7 +96,6 @@ export class HomePage implements OnInit, OnDestroy {
 			)
 			.subscribe(() => {
 				this.dailyPlayButton()?.resetVisualState()
-				this.classicPlayButton()?.resetVisualState()
 				this.loadTodayInfo()
 			})
 	}
@@ -95,6 +105,18 @@ export class HomePage implements OnInit, OnDestroy {
 		this.stopEasternDayWatcher = null
 		this.destroy$.next()
 		this.destroy$.complete()
+	}
+
+	openPlayMoreDialog() {
+		if (!this.canPlayMore()) {
+			return
+		}
+
+		this.playMoreDialogOpen.set(true)
+	}
+
+	closePlayMoreDialog() {
+		this.playMoreDialogOpen.set(false)
 	}
 
 	async onShareCompletedDaily() {
@@ -130,6 +152,11 @@ export class HomePage implements OnInit, OnDestroy {
 		this.gamePlayApi.getDailyTodayInfo().subscribe({
 			next: (res) => {
 				this.dailyInfoLoading.set(false)
+				const quota = extractClassicExtraQuota(res)
+				this.classicExtraQuota.set(quota)
+				if (quota) {
+					this.store.setClassicExtraQuota(quota)
+				}
 				if (res.scheduled) {
 					this.dailyScheduled.set(true)
 					this.dailyCompleted.set(res.hasCompletedDaily === true)
@@ -151,6 +178,7 @@ export class HomePage implements OnInit, OnDestroy {
 				this.dailyScheduled.set(false)
 				this.dailyCompleted.set(false)
 				this.completedDailySummary.set(null)
+				this.classicExtraQuota.set(null)
 				this.loadErrorMessage.set(apiError.userMessage)
 			},
 		})

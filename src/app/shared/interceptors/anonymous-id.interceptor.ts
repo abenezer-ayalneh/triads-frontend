@@ -4,7 +4,8 @@ import { inject } from '@angular/core'
 import { AnonymousIdService } from '../services/anonymous-id.service'
 
 export const anonymousIdInterceptor: HttpInterceptorFn = (req, next) => {
-	if (!req.url.includes('/triads/daily')) {
+	const needsAnonymousId = req.url.includes('/triads/daily') || req.url.includes('/triads/cues')
+	if (!needsAnonymousId) {
 		return next(req)
 	}
 
