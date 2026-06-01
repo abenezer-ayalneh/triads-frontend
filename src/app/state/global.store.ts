@@ -102,6 +102,7 @@ const initialState: GlobalState = {
 	introShownPerSession: false,
 	gameMode: 'classic',
 	dailyNextPuzzleAt: null,
+	dailyPuzzleDate: null,
 	dailyStandaloneResult: false,
 	dailyNoScheduleMessage: null,
 	dailyReviewTriads: null,
@@ -321,6 +322,7 @@ export const GlobalStore = signalStore(
 				triadGroupId: null,
 				unsolvedTriads: null,
 				dailyNextPuzzleAt: null,
+				dailyPuzzleDate: null,
 				dailyStandaloneResult: false,
 				dailyNoScheduleMessage: null,
 				dailyReviewTriads: null,
@@ -342,6 +344,9 @@ export const GlobalStore = signalStore(
 		},
 		setDailyNextPuzzleAt: (dailyNextPuzzleAt: string | null) => {
 			patchState(store, (state) => ({ ...state, dailyNextPuzzleAt }))
+		},
+		setDailyPuzzleDate: (dailyPuzzleDate: string | null) => {
+			patchState(store, (state) => ({ ...state, dailyPuzzleDate }))
 		},
 		setDailyStandaloneResult: (dailyStandaloneResult: boolean) => {
 			patchState(store, (state) => ({ ...state, dailyStandaloneResult }))

@@ -18,6 +18,7 @@ describe('GameResultDialog', () => {
 		gameScore: jasmine.Spy
 		solvedTriads: jasmine.Spy
 		dailyNextPuzzleAt: jasmine.Spy
+		dailyPuzzleDate: jasmine.Spy
 		dailyReviewTriads: jasmine.Spy
 		triadGroupId: jasmine.Spy
 		setDailyReviewTriads: jasmine.Spy
@@ -38,6 +39,7 @@ describe('GameResultDialog', () => {
 			gameScore: jasmine.createSpy('gameScore').and.returnValue(10),
 			solvedTriads: jasmine.createSpy('solvedTriads').and.returnValue([]),
 			dailyNextPuzzleAt: jasmine.createSpy('dailyNextPuzzleAt').and.returnValue('2026-04-21T05:00:00.000Z'),
+			dailyPuzzleDate: jasmine.createSpy('dailyPuzzleDate').and.returnValue('2026-04-20'),
 			dailyReviewTriads: jasmine.createSpy('dailyReviewTriads').and.returnValue([
 				{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] },
 				{ id: 2, keyword: 'LINE', cues: ['DEAD', 'LAND', 'PIPE'], fullPhrases: ['DEADLINE', 'LANDLINE', 'PIPELINE'] },
@@ -149,7 +151,7 @@ describe('GameResultDialog', () => {
 	it('shares the current score through the shared post-play service', async () => {
 		await component.shareGameResult()
 
-		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(10)
+		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(10, '2026-04-20')
 	})
 
 	it('opens play more dialog when continuing from daily result', () => {

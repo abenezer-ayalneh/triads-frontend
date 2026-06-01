@@ -20,6 +20,14 @@ _Avoid_: Idle tab, refresh
 The Eastern calendar date recorded whenever the daily view loads any content (playable puzzle, no-schedule, error, or completed result). On re-entry, comparing today's Eastern date against this anchor determines whether the view is stale. Subsumes a loaded puzzle's `puzzleDate` as the single staleness anchor.
 _Avoid_: Loaded date, snapshot date
 
+**Score Share Image**:
+The shareable picture a player copies or sends from the daily result screen. It carries the player's score and, in the top-right corner, the Puzzle-Date Badge identifying which day's puzzle the score belongs to. Only daily games produce one.
+_Avoid_: Score card, result screenshot
+
+**Puzzle-Date Badge**:
+The tear-off-calendar element overlaid on the Score Share Image showing the puzzle's date (month, day, year). It is anchored to the puzzle's own date — not the moment of sharing — so a score always names the puzzle it came from.
+_Avoid_: Date stamp, calendar icon
+
 **Eastern Day Watcher**:
 The shared service mechanism that detects rollover. It exposes two distinct signals: a live midnight-timer rollover and a re-entry (focus/visibility) rollover, so consumers can react to each independently.
 _Avoid_: Day timer, midnight watcher

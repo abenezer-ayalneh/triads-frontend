@@ -80,6 +80,7 @@ export class GameResultDialog {
 		const result = this.result()
 		const score = this.store.gameScore()
 		const nextPuzzleAt = this.isDailyMode() ? this.store.dailyNextPuzzleAt() : null
+		const puzzleDate = this.isDailyMode() ? this.store.dailyPuzzleDate() : null
 
 		const dailyReviewTriads = this.store.dailyReviewTriads()
 		const currentGameTriads = this.dailyPostPlayService.mergeReviewTriads(this.store.solvedTriads(), this.store.unsolvedTriads())
@@ -89,6 +90,7 @@ export class GameResultDialog {
 				return this.dailyPostPlayService.createReviewSummary({
 					result,
 					score,
+					puzzleDate,
 					nextPuzzleAt,
 					triads: dailyReviewTriads,
 				})
@@ -97,6 +99,7 @@ export class GameResultDialog {
 				return this.dailyPostPlayService.createReviewSummary({
 					result,
 					score,
+					puzzleDate,
 					nextPuzzleAt,
 					triads: currentGameTriads,
 				})
@@ -108,6 +111,7 @@ export class GameResultDialog {
 			return this.dailyPostPlayService.createReviewSummary({
 				result,
 				score,
+				puzzleDate,
 				nextPuzzleAt: null,
 				triads: currentGameTriads,
 			})
@@ -117,6 +121,7 @@ export class GameResultDialog {
 			return this.dailyPostPlayService.createReviewSummary({
 				result,
 				score,
+				puzzleDate,
 				nextPuzzleAt: null,
 				triads: dailyReviewTriads,
 			})
@@ -219,7 +224,7 @@ export class GameResultDialog {
 	}
 
 	async shareGameResult() {
-		await this.dailyPostPlayService.shareScoreImage(this.store.gameScore())
+		await this.dailyPostPlayService.shareScoreImage(this.store.gameScore(), this.store.dailyPuzzleDate())
 	}
 
 	async openDailyReview() {

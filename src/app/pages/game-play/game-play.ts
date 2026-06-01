@@ -261,6 +261,7 @@ export class GamePlay implements OnInit, OnDestroy {
 						this.cueFetchingState.set(RequestState.EMPTY)
 						return
 					}
+					this.store.setDailyPuzzleDate(response.puzzleDate)
 					if (response.alreadyCompleted) {
 						this.clearDailySession()
 						this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)

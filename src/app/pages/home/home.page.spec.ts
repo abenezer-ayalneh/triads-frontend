@@ -18,6 +18,7 @@ describe('HomePage', () => {
 	const completedSummary: DailyReviewSummary = {
 		result: 'LOST',
 		score: 8,
+		puzzleDate: '2026-04-20',
 		nextPuzzleAt: '2026-04-21T05:00:00.000Z',
 		triads: [{ id: 1, keyword: 'HAND', cues: ['SECOND', 'POKER', 'SHAKE'], fullPhrases: ['SECONDHAND', 'POKER HAND', 'HANDSHAKE'] }],
 	}
@@ -106,6 +107,6 @@ describe('HomePage', () => {
 	it('shares the completed daily result from the home page', async () => {
 		await component.onShareCompletedDaily()
 
-		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(8)
+		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(8, '2026-04-20')
 	})
 })

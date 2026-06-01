@@ -131,7 +131,7 @@ export class HomePage implements OnInit, OnDestroy {
 			return
 		}
 
-		await this.dailyPostPlayService.shareScoreImage(summary.score)
+		await this.dailyPostPlayService.shareScoreImage(summary.score, summary.puzzleDate)
 	}
 
 	async onReviewCompletedDaily() {

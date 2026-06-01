@@ -41,6 +41,7 @@ export interface GlobalState {
 	introShownPerSession: boolean
 	gameMode: 'classic' | 'daily'
 	dailyNextPuzzleAt: string | null
+	dailyPuzzleDate: string | null
 	dailyStandaloneResult: boolean
 	dailyNoScheduleMessage: string | null
 	dailyReviewTriads: SolvedTriad[] | null
