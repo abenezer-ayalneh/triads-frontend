@@ -312,6 +312,11 @@ export class GamePlay implements OnInit, OnDestroy {
 	initializeGame() {
 		this.cueFetchingState.set(RequestState.LOADING)
 		this.noTriadsMessage.set('')
+		// Clear any leftover game state (e.g. solved triads from a previous daily game,
+		// which intentionally skips the reset on destroy so it can be resumed). Without
+		// this, the daily game's solved-triad chips bleed into a freshly started classic game.
+		this.store.setUnsolvedTriads(null)
+		this.store.resetGameState()
 		const difficulty = this.difficultyService.getDifficulty()
 		const classicCues$ = this.gameCuePrefetch.consumeClassicCues(difficulty) ?? this.gamePlayApi.getCues(difficulty)
 		this.subscriptions$.add(
