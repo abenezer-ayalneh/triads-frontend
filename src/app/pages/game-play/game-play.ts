@@ -155,6 +155,14 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private stopEasternDayWatcher: (() => void) | null = null
 
+	/**
+	 * Eastern-time date key for the daily content currently on screen. Recorded whenever the daily
+	 * view loads any content (playable puzzle, no-schedule, error, or completed result) so that on
+	 * tab re-entry we can tell whether a rollover has made it stale. Robust even when the live
+	 * midnight timer has already fired, and uniform across states that have no `puzzleDate`.
+	 */
+	private dailyLoadEasternDateKey: string | null = null
+
 	constructor() {
 		// Watch for game completion to check if welcome dialog should be shown
 		effect(() => {
@@ -213,10 +221,11 @@ export class GamePlay implements OnInit, OnDestroy {
 		// Initialize selected difficulty with current setting
 		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
 		if (this.store.gameMode() === 'daily') {
-			this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher(() => {
-				if (this.shouldRefreshDailyGameForRollover()) {
-					this.restartGame()
-				}
+			this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher({
+				// Intentionally no onTimerRollover: an actively-focused player must never be yanked
+				// off their board the instant midnight passes. The new puzzle is picked up only when
+				// they return to a stale tab.
+				onReentryRollover: () => this.handleDailyReentryRollover(),
 			})
 			this.initializeDailyGame()
 		} else {
@@ -244,6 +253,7 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.subscriptions$.add(
 			dailyCues$.subscribe({
 				next: (response) => {
+					this.dailyLoadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
 					if (!response.scheduled) {
 						this.clearDailySession()
 						this.store.setDailyNoScheduleMessage(response.message)
@@ -300,6 +310,7 @@ export class GamePlay implements OnInit, OnDestroy {
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
 				error: (error) => {
+					this.dailyLoadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
 					const apiError = isApiError(error) ? error : parseApiError(error)
 					apiError.markHandled()
 					this.noTriadsMessage.set(apiError.userMessage)
@@ -551,16 +562,24 @@ export class GamePlay implements OnInit, OnDestroy {
 		)
 	}
 
-	private shouldRefreshDailyGameForRollover(): boolean {
+	/**
+	 * On returning to a backgrounded daily tab, route home if a rollover has made the on-screen
+	 * puzzle stale, so the next play passes through the home brain-warming intro instead of the
+	 * board auto-populating. Applies to every daily state (in-progress, completed, no-schedule,
+	 * error); the stale localStorage session is discarded on the next load because its puzzleDate
+	 * no longer matches today.
+	 */
+	private handleDailyReentryRollover() {
 		if (this.store.gameMode() !== 'daily') {
-			return false
+			return
 		}
-
-		const gameState = this.store.gamePlayState()
-		const canRefreshCompletedState = gameState === GamePlayState.WON || gameState === GamePlayState.LOST
-		const canRefreshUnavailableState = this.cueFetchingState() === RequestState.EMPTY || this.cueFetchingState() === RequestState.ERROR
-
-		return canRefreshCompletedState || canRefreshUnavailableState
+		if (!this.dailyLoadEasternDateKey) {
+			return
+		}
+		if (this.dailyLoadEasternDateKey === this.dailyRolloverService.getEasternDateKey()) {
+			return
+		}
+		void this.router.navigate(['/'])
 	}
 
 	private applyDailySession(session: DailyGameSessionSnapshot) {

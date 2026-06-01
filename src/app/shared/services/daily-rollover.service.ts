@@ -44,15 +44,28 @@ export class DailyRolloverService {
 		return { month: month.toUpperCase(), day }
 	}
 
-	startEasternDayWatcher(onDateChange: () => void): () => void {
+	/**
+	 * Watches for the Eastern-time day changing and notifies via two distinct paths:
+	 *
+	 * - `onTimerRollover` fires when the live midnight timer crosses into a new day. Use this for
+	 *   passive updates that should happen even while the tab stays focused (e.g. the calendar label).
+	 * - `onReentryRollover` fires when the tab regains focus / becomes visible after the day has
+	 *   changed. Use this for actions that should interrupt the user only when they come back to a
+	 *   stale tab (e.g. routing a stale daily game back home) — never mid-play on the live timer.
+	 *
+	 * The two paths track independent date keys so a timer rollover can never suppress a later
+	 * re-entry rollover (and vice versa).
+	 */
+	startEasternDayWatcher(handlers: { onTimerRollover?: () => void; onReentryRollover?: () => void }): () => void {
 		let rolloverTimeout: ReturnType<typeof setTimeout> | null = null
-		let currentEasternDateKey = this.getEasternDateKey(new Date())
+		let timerEasternDateKey = this.getEasternDateKey(new Date())
+		let reentryEasternDateKey = this.getEasternDateKey(new Date())
 
-		const refreshForEasternDateRollover = () => {
+		const handleTimerRollover = () => {
 			const easternDateKey = this.getEasternDateKey(new Date())
-			if (currentEasternDateKey !== easternDateKey) {
-				currentEasternDateKey = easternDateKey
-				onDateChange()
+			if (timerEasternDateKey !== easternDateKey) {
+				timerEasternDateKey = easternDateKey
+				handlers.onTimerRollover?.()
 			}
 			scheduleEasternMidnightRefresh()
 		}
@@ -61,7 +74,11 @@ export class DailyRolloverService {
 			if (document.visibilityState !== 'visible') {
 				return
 			}
-			refreshForEasternDateRollover()
+			const easternDateKey = this.getEasternDateKey(new Date())
+			if (reentryEasternDateKey !== easternDateKey) {
+				reentryEasternDateKey = easternDateKey
+				handlers.onReentryRollover?.()
+			}
 		}
 
 		const scheduleEasternMidnightRefresh = () => {
@@ -72,7 +89,7 @@ export class DailyRolloverService {
 			const now = new Date()
 			const nextMidnightTimestamp = this.getNextEasternMidnightTimestamp(now)
 			const delayMs = Math.max(MIN_ROLLOVER_RECHECK_DELAY_MS, nextMidnightTimestamp - now.getTime())
-			rolloverTimeout = setTimeout(() => refreshForEasternDateRollover(), delayMs)
+			rolloverTimeout = setTimeout(() => handleTimerRollover(), delayMs)
 		}
 
 		scheduleEasternMidnightRefresh()
@@ -89,7 +106,8 @@ export class DailyRolloverService {
 		}
 	}
 
-	private getEasternDateKey(date: Date): string {
+	/** Eastern-time calendar date key (YYYY-MM-DD) for the given date, defaulting to now. */
+	getEasternDateKey(date: Date = new Date()): string {
 		return this.easternDateFormatter.format(date)
 	}
 

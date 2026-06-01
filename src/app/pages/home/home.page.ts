@@ -82,9 +82,15 @@ export class HomePage implements OnInit, OnDestroy {
 	ngOnInit() {
 		this.loadTodayInfo()
 
-		this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher(() => {
-			this.easternCalendarLabel.set(this.dailyRolloverService.easternCalendarLabel())
-			this.loadTodayInfo()
+		this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher({
+			onTimerRollover: () => {
+				this.easternCalendarLabel.set(this.dailyRolloverService.easternCalendarLabel())
+				this.loadTodayInfo()
+			},
+			onReentryRollover: () => {
+				this.easternCalendarLabel.set(this.dailyRolloverService.easternCalendarLabel())
+				this.loadTodayInfo()
+			},
 		})
 
 		this.router.events
