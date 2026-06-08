@@ -41,39 +41,3 @@
 		<p class="text-center text-xs text-error">{{ message }}</p>
 	}
 </div>
-
-<!-- Hint Choice Modal -->
-<dialog #hintChoiceModal class="modal modal-bottom sm:modal-middle">
-	<div class="modal-box">
-		<h3 class="text-lg font-bold">Choose your hint</h3>
-		<p class="py-2 text-sm">Pick one of the options below to help solve the Triad.</p>
-		<div class="w-full h-fit flex flex-col gap-2 mt-2">
-			<button
-				type="button"
-				class="btn btn-info text-base-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-				[disabled]="store.usedHintTypes().includes('KEYWORD_LENGTH') || store.isFetchingHint() || areHintsDisabledDueToTurns()"
-				(click)="useHint('KEYWORD_LENGTH')">
-				@if (store.isFetchingHint()) {
-					<span class="loading loading-spinner loading-sm"></span>
-				}
-				<span>Number of letters</span>
-			</button>
-			<button
-				type="button"
-				class="btn btn-primary text-base-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-				[disabled]="store.usedHintTypes().includes('FIRST_LETTER') || store.isFetchingHint() || areHintsDisabledDueToTurns()"
-				(click)="useHint('FIRST_LETTER')">
-				@if (store.isFetchingHint()) {
-					<span class="loading loading-spinner loading-sm"></span>
-				}
-				<span>1st letter of word</span>
-			</button>
-		</div>
-
-		<div class="modal-action">
-			<form method="dialog">
-				<button class="btn">Cancel</button>
-			</form>
-		</div>
-	</div>
-</dialog>

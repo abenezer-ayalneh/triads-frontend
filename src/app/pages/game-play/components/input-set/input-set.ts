@@ -141,8 +141,10 @@ export class InputSet implements AfterViewInit, AfterViewChecked, OnDestroy {
 	}
 
 	ngOnDestroy() {
+		if (document.activeElement instanceof HTMLElement) {
+			document.activeElement.blur()
+		}
 		this.subscriptions$.unsubscribe()
-		// CRITICAL: Clear all pending timeouts
 		this.timeoutIds.forEach((id) => clearTimeout(id))
 		this.timeoutIds = []
 		this.clearIonScrollSlack()

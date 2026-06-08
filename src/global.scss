@@ -32,6 +32,11 @@
 @import '@ionic/angular/css/text-transformation.css';
 @import '@ionic/angular/css/flex-utils.css';
 
+ion-action-sheet .action-sheet-disabled {
+	opacity: 0.4 !important;
+	pointer-events: none;
+}
+
 ion-modal {
 	--width: fit-content;
 	--min-width: 250px;

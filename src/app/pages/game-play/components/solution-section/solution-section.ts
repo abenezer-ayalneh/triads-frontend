@@ -70,12 +70,14 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	constructor() {
 		this.bubblePopAudio.src = 'sounds/three-pops.mp3'
 
-		// Watch for game state changes to determine when to focus the answer field
 		effect(() => {
 			const gameState = this.store.gamePlayState()
-			// When the game state changes to ACCEPT_ANSWER or WRONG_ANSWER, set the flag to focus
 			if (gameState === GamePlayState.ACCEPT_ANSWER || gameState === GamePlayState.WRONG_ANSWER) {
 				this.shouldFocusAnswerField = true
+			} else if (gameState === GamePlayState.PLAYING || gameState === GamePlayState.CHECK_SOLUTION) {
+				if (document.activeElement instanceof HTMLElement) {
+					document.activeElement.blur()
+				}
 			}
 		})
 

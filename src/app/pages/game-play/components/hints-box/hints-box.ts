@@ -1,5 +1,6 @@
-import { Component, computed, ElementRef, inject, OnDestroy, signal, viewChild } from '@angular/core'
+import { Component, computed, inject, OnDestroy, signal } from '@angular/core'
 import { ReactiveFormsModule } from '@angular/forms'
+import { ActionSheetController } from '@ionic/angular/standalone'
 import { delay, filter, firstValueFrom, Subscription, tap, timer } from 'rxjs'
 
 import { isApiError, parseApiError } from '../../../../shared/errors/api-error.util'
@@ -31,7 +32,9 @@ export class HintsBox implements OnDestroy {
 
 	private readonly gamePlayLogic = inject(GamePlayLogic)
 
-	private readonly hintChoiceModalRef = viewChild<ElementRef<HTMLDialogElement>>('hintChoiceModal')
+	private readonly actionSheetController = inject(ActionSheetController)
+
+	private activeActionSheet: HTMLIonActionSheetElement | null = null
 
 	private readonly subscriptions$ = new Subscription()
 
@@ -42,18 +45,14 @@ export class HintsBox implements OnDestroy {
 
 	ngOnDestroy() {
 		this.subscriptions$.unsubscribe()
+		this.activeActionSheet?.dismiss()
 	}
 
-	/**
-	 * Checks if hints should be disabled for the current (T, H) state.
-	 * Delegates to the TurnHintService, which follows the (T, H) table.
-	 */
 	areHintsDisabledDueToTurns(): boolean {
 		return !this.turnHintService.canUseHint(this.store.turns(), this.store.hints())
 	}
 
 	onHintClick() {
-		// Prevent hint usage if hints are disabled due to turns being used up
 		if (this.areHintsDisabledDueToTurns()) {
 			return
 		}
@@ -63,17 +62,12 @@ export class HintsBox implements OnDestroy {
 		const cues = this.store.cues()
 		const availableCues = cues && cues.length > 0 ? this.store.cues() : this.store.finalTriadCues()
 
-		// Show hint choice modal if:
-		// 1. Only 1 hint available, OR
-		// 2. 3 cues are selected (triad-forming), OR
-		// 3. Only 3 cues remain (final triad)
 		const shouldShowChoice = availableHints === 1 || selectedCues.length === 3 || availableCues?.length === 3
 
 		if (!availableCues || availableCues.length === 0) {
 			return
 		}
 
-		// Three selected cues that are not a real triad: penalize and show WRONG_TRIAD before any hint-type modal
 		if (selectedCues.length === 3) {
 			this.store.setIsFetchingHint(true)
 			this.subscriptions$.add(
@@ -89,7 +83,7 @@ export class HintsBox implements OnDestroy {
 							return
 						}
 						if (shouldShowChoice) {
-							this.hintChoiceModalRef()?.nativeElement.showModal()
+							this.showHintChoiceSheet()
 						} else {
 							this.useHint()
 						}
@@ -104,10 +98,54 @@ export class HintsBox implements OnDestroy {
 		}
 
 		if (shouldShowChoice) {
-			this.hintChoiceModalRef()?.nativeElement.showModal()
+			this.showHintChoiceSheet()
 		} else {
 			this.useHint()
 		}
+	}
+
+	private async showHintChoiceSheet() {
+		const usedTypes = this.store.usedHintTypes()
+		const keywordLengthUsed = usedTypes.includes('KEYWORD_LENGTH')
+		const firstLetterUsed = usedTypes.includes('FIRST_LETTER')
+
+		const sheet = await this.actionSheetController.create({
+			header: 'Choose your hint',
+			subHeader: 'Pick one of the options below to help solve the Triad.',
+			buttons: [
+				{
+					text: keywordLengthUsed ? 'Number of letters (Already used)' : 'Number of letters',
+					handler: () => {
+						if (!keywordLengthUsed) {
+							this.useHint('KEYWORD_LENGTH')
+						}
+						return !keywordLengthUsed
+					},
+					cssClass: keywordLengthUsed ? 'action-sheet-disabled' : '',
+				},
+				{
+					text: firstLetterUsed ? '1st letter of word (Already used)' : '1st letter of word',
+					handler: () => {
+						if (!firstLetterUsed) {
+							this.useHint('FIRST_LETTER')
+						}
+						return !firstLetterUsed
+					},
+					cssClass: firstLetterUsed ? 'action-sheet-disabled' : '',
+				},
+				{
+					text: 'Cancel',
+					role: 'cancel',
+				},
+			],
+		})
+		this.activeActionSheet = sheet
+		await sheet.present()
+	}
+
+	private dismissActionSheet() {
+		this.activeActionSheet?.dismiss()
+		this.activeActionSheet = null
 	}
 
 	useHint(hintExtra?: 'KEYWORD_LENGTH' | 'FIRST_LETTER') {
@@ -145,7 +183,7 @@ export class HintsBox implements OnDestroy {
 						const hasHintCues = Boolean(triadsForHint?.hint?.length)
 
 						if (hadThreeSelected && !hasHintCues) {
-							this.hintChoiceModalRef()?.nativeElement.close()
+							this.dismissActionSheet()
 							this.applyHintFailureForNonTriadSelection()
 							this.store.setIsFetchingHint(false)
 							return
@@ -190,7 +228,7 @@ export class HintsBox implements OnDestroy {
 							}
 
 							// Close the extra hint modal
-							this.hintChoiceModalRef()?.nativeElement.close()
+							this.dismissActionSheet()
 
 							// Only update selected cues if user didn't originally have 3 selected
 							// This preserves the user's selection when they request a hint for their selected triad
@@ -224,7 +262,7 @@ export class HintsBox implements OnDestroy {
 	 * Consumes a hint, applies hint+fail turn rules, shows WRONG_TRIAD, then resets after delay.
 	 */
 	private applyHintFailureForNonTriadSelection() {
-		this.hintChoiceModalRef()?.nativeElement.close()
+		this.dismissActionSheet()
 
 		const hints = this.store.hints()
 		const updatedHints = this.turnHintService.useHintToken(hints)

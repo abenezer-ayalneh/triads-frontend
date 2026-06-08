@@ -243,6 +243,8 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	initializeDailyGame() {
+		this.clearDailySession()
+		this.resetGameState()
 		this.store.setFinalClassicExtraSession(false)
 		this.cueFetchingState.set(RequestState.LOADING)
 		this.noTriadsMessage.set('')
