@@ -17,27 +17,23 @@
 			}
 		</section>
 
-		<section class="flex min-h-0 flex-1 flex-col">
-			<div class="daily-review-scroll-wrap relative min-h-0">
-				<div class="daily-review-scroll max-h-[min(52vh,26rem)] overflow-y-auto overscroll-y-contain pr-1 md:max-h-[min(56vh,28rem)]">
-					<div class="flex flex-col gap-2 pb-1 md:gap-3">
-						@for (triad of summary().triads; track triad.id) {
-							<div class="rounded-2xl border border-base-300 bg-base-100 px-4 py-3 shadow-sm md:px-4 md:py-3">
-								<div class="flex items-baseline justify-between gap-2">
-									<p class="text-lg font-bold text-base-content md:text-xl">{{ triad.keyword }}</p>
-									<p class="shrink-0 text-xs text-base-content/50">Triad {{ $index + 1 }}</p>
-								</div>
-								<ul class="mt-2 flex list-none flex-col gap-1.5 p-0 text-sm leading-snug text-base-content/80 md:gap-2 md:text-base">
-									@for (phrase of triad.fullPhrases; track phrase) {
-										<li
-											class="rounded-xl bg-base-200/70 px-2.5 py-1.5 md:px-3 md:py-2"
-											[innerHTML]="phrase | highlightKey: triad.keyword : 'text-[#5468ff]'"></li>
-									}
-								</ul>
-							</div>
-						}
+		<section class="flex flex-col">
+			<div class="flex flex-col gap-2 md:gap-3">
+				@for (triad of summary().triads; track triad.id) {
+					<div class="rounded-2xl border border-base-300 bg-base-100 px-4 py-3 shadow-sm md:px-4 md:py-3">
+						<div class="flex items-baseline justify-between gap-2">
+							<p class="text-lg font-bold text-base-content md:text-xl">{{ triad.keyword }}</p>
+							<p class="shrink-0 text-xs text-base-content/50">Triad {{ $index + 1 }}</p>
+						</div>
+						<ul class="mt-2 flex list-none flex-col gap-1.5 p-0 text-sm leading-snug text-base-content/80 md:gap-2 md:text-base">
+							@for (phrase of triad.fullPhrases; track phrase) {
+								<li
+									class="rounded-xl bg-base-200/70 px-2.5 py-1.5 md:px-3 md:py-2"
+									[innerHTML]="phrase | highlightKey: triad.keyword : 'text-[#5468ff]'"></li>
+							}
+						</ul>
 					</div>
-				</div>
+				}
 			</div>
 		</section>
 	</div>
