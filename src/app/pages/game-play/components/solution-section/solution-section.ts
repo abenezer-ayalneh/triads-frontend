@@ -2,7 +2,6 @@ import { AfterViewChecked, ChangeDetectorRef, Component, effect, ElementRef, inj
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'
 import { delay, filter, firstValueFrom, Subscription, tap } from 'rxjs'
 
-import { FormErrorMessageComponent } from '../../../../shared/components/form-error-message/form-error-message.component'
 import { AutoCapitalize } from '../../../../shared/directives/auto-capitalize'
 import { ReverseErase } from '../../../../shared/directives/reverse-erase'
 import { isApiError, parseApiError } from '../../../../shared/errors/api-error.util'
@@ -18,7 +17,7 @@ const REVERSE_ERASE_START_DELAY_MS = 250
 
 @Component({
 	selector: 'app-solution-section',
-	imports: [InputSet, ReactiveFormsModule, AutoCapitalize, ReverseErase, FormErrorMessageComponent],
+	imports: [InputSet, ReactiveFormsModule, AutoCapitalize, ReverseErase],
 	templateUrl: './solution-section.html',
 	styleUrl: './solution-section.scss',
 })
