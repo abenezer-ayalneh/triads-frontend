@@ -4,6 +4,7 @@ import { of, Subject } from 'rxjs'
 
 import { AssetPreloadService } from '../../shared/services/asset-preload.service'
 import { DailyPostPlayService } from '../../shared/services/daily-post-play.service'
+import { DailyRolloverService } from '../../shared/services/daily-rollover.service'
 import { SnackbarService } from '../../shared/services/snackbar.service'
 import { DailyReviewSummary } from '../game-play/interfaces/daily-review.interface'
 import { GamePlayApi } from '../game-play/services/game-play-api'
@@ -14,6 +15,7 @@ describe('HomePage', () => {
 	let fixture: ComponentFixture<HomePage>
 	let routerEvents$: Subject<NavigationEnd>
 	let dailyPostPlayService: jasmine.SpyObj<DailyPostPlayService>
+	let reentryRollover: (() => void) | undefined
 
 	const completedSummary: DailyReviewSummary = {
 		result: 'LOST',
@@ -25,6 +27,7 @@ describe('HomePage', () => {
 
 	beforeEach(async () => {
 		routerEvents$ = new Subject<NavigationEnd>()
+		reentryRollover = undefined
 		dailyPostPlayService = jasmine.createSpyObj<DailyPostPlayService>('DailyPostPlayService', ['loadCompletedDailySummary', 'shareScoreImage'])
 		dailyPostPlayService.loadCompletedDailySummary.and.resolveTo(completedSummary)
 		dailyPostPlayService.shareScoreImage.and.resolveTo()
@@ -56,6 +59,17 @@ describe('HomePage', () => {
 				{
 					provide: DailyPostPlayService,
 					useValue: dailyPostPlayService,
+				},
+				{
+					// Captures the re-entry handler so a test can simulate returning after a rollover.
+					provide: DailyRolloverService,
+					useValue: {
+						easternCalendarLabel: () => ({ month: 'JUN', day: '16' }),
+						startEasternDayWatcher: (handlers: { onReentryRollover?: () => void }) => {
+							reentryRollover = handlers.onReentryRollover
+							return jasmine.createSpy('stopEasternDayWatcher')
+						},
+					},
 				},
 				{
 					provide: SnackbarService,
@@ -108,5 +122,16 @@ describe('HomePage', () => {
 		await component.onShareCompletedDaily()
 
 		expect(dailyPostPlayService.shareScoreImage).toHaveBeenCalledWith(8, '2026-04-20')
+	})
+
+	// ADR-0002: stale post-Daily popups must not linger over a refreshed home view after a rollover.
+	it('dismisses open Play-More and Review popups on a rollover re-entry', () => {
+		component.playMoreDialogOpen.set(true)
+		component.reviewDialogOpen.set(true)
+
+		reentryRollover?.()
+
+		expect(component.playMoreDialogOpen()).toBeFalse()
+		expect(component.reviewDialogOpen()).toBeFalse()
 	})
 })

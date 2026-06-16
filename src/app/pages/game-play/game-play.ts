@@ -156,12 +156,13 @@ export class GamePlay implements OnInit, OnDestroy {
 	private stopEasternDayWatcher: (() => void) | null = null
 
 	/**
-	 * Eastern-time date key for the daily content currently on screen. Recorded whenever the daily
-	 * view loads any content (playable puzzle, no-schedule, error, or completed result) so that on
-	 * tab re-entry we can tell whether a rollover has made it stale. Robust even when the live
-	 * midnight timer has already fired, and uniform across states that have no `puzzleDate`.
+	 * Eastern-time date key for the play content currently on screen, for both Daily and Classic
+	 * Extra. Recorded whenever the view loads any content (playable puzzle/board, no-schedule, error,
+	 * or completed result) so that on tab re-entry we can tell whether a rollover has made it stale.
+	 * Robust even when the live midnight timer has already fired, and uniform across states that have
+	 * no `puzzleDate`. See ADR-0002.
 	 */
-	private dailyLoadEasternDateKey: string | null = null
+	private loadEasternDateKey: string | null = null
 
 	constructor() {
 		// Watch for game completion to check if welcome dialog should be shown
@@ -220,13 +221,14 @@ export class GamePlay implements OnInit, OnDestroy {
 	ngOnInit() {
 		// Initialize selected difficulty with current setting
 		this.selectedDifficulty.set(this.difficultyService.getDifficulty())
+		// The re-entry rollover guard applies to every play mode — Daily and Classic Extra alike
+		// (ADR-0002). Returning to a backgrounded board after the Eastern day has changed routes home.
+		// Intentionally no onTimerRollover: an actively-focused player must never be yanked off their
+		// board the instant midnight passes; the new day is picked up only when they return to a stale tab.
+		this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher({
+			onReentryRollover: () => this.handlePlayReentryRollover(),
+		})
 		if (this.store.gameMode() === 'daily') {
-			this.stopEasternDayWatcher = this.dailyRolloverService.startEasternDayWatcher({
-				// Intentionally no onTimerRollover: an actively-focused player must never be yanked
-				// off their board the instant midnight passes. The new puzzle is picked up only when
-				// they return to a stale tab.
-				onReentryRollover: () => this.handleDailyReentryRollover(),
-			})
 			this.initializeDailyGame()
 		} else {
 			this.initializeGame()
@@ -260,7 +262,7 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.subscriptions$.add(
 			dailyCues$.subscribe({
 				next: (response) => {
-					this.dailyLoadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
+					this.loadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
 					if (!response.scheduled) {
 						this.clearDailySession()
 						this.store.setDailyNoScheduleMessage(response.message)
@@ -318,7 +320,7 @@ export class GamePlay implements OnInit, OnDestroy {
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
 				error: (error) => {
-					this.dailyLoadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
+					this.loadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
 					const apiError = isApiError(error) ? error : parseApiError(error)
 					apiError.markHandled()
 					this.noTriadsMessage.set(apiError.userMessage)
@@ -341,6 +343,7 @@ export class GamePlay implements OnInit, OnDestroy {
 		this.subscriptions$.add(
 			classicCues$.subscribe({
 				next: (response) => {
+					this.loadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
 					const quota = extractClassicExtraQuota(response)
 					if (quota) {
 						this.store.setClassicExtraQuota(quota)
@@ -367,6 +370,7 @@ export class GamePlay implements OnInit, OnDestroy {
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
 				error: (error) => {
+					this.loadEasternDateKey = this.dailyRolloverService.getEasternDateKey()
 					const apiError = isApiError(error) ? error : parseApiError(error)
 					apiError.markHandled()
 					const quota = extractClassicExtraQuota(apiError.originalResponse?.error)
@@ -571,20 +575,18 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	/**
-	 * On returning to a backgrounded daily tab, route home if a rollover has made the on-screen
-	 * puzzle stale, so the next play passes through the home brain-warming intro instead of the
-	 * board auto-populating. Applies to every daily state (in-progress, completed, no-schedule,
-	 * error); the stale localStorage session is discarded on the next load because its puzzleDate
-	 * no longer matches today.
+	 * On returning to a backgrounded play tab, route home if a rollover has made the on-screen
+	 * content stale, so the next play passes through the home brain-warming intro instead of the
+	 * board auto-populating or a stale Classic Extra / Play-More screen lingering. Applies to every
+	 * play mode (Daily and Classic Extra) and every state (in-progress, completed, no-schedule,
+	 * error); the stale localStorage daily session is discarded on the next load because its
+	 * puzzleDate no longer matches today. See ADR-0002.
 	 */
-	private handleDailyReentryRollover() {
-		if (this.store.gameMode() !== 'daily') {
+	private handlePlayReentryRollover() {
+		if (!this.loadEasternDateKey) {
 			return
 		}
-		if (!this.dailyLoadEasternDateKey) {
-			return
-		}
-		if (this.dailyLoadEasternDateKey === this.dailyRolloverService.getEasternDateKey()) {
+		if (this.loadEasternDateKey === this.dailyRolloverService.getEasternDateKey()) {
 			return
 		}
 		void this.router.navigate(['/'])

@@ -66,14 +66,24 @@ const inProgressResponse: DailyCuesResponse = {
 	nextPuzzleAt: '2026-06-17T05:00:00.000Z',
 }
 
+const classicCuesResponse = {
+	triadGroupId: 7,
+	cues: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'],
+}
+
 describe('GamePlay', () => {
 	let component: GamePlay
 	let fixture: ComponentFixture<GamePlay>
+	let router: jasmine.SpyObj<Router>
+	let currentEasternDateKey: string
+	let reentryRollover: (() => void) | undefined
 
 	beforeEach(async () => {
 		localStorage.clear()
+		currentEasternDateKey = TODAY
+		reentryRollover = undefined
 
-		const router = jasmine.createSpyObj<Router>('Router', ['navigate'])
+		router = jasmine.createSpyObj<Router>('Router', ['navigate'])
 		router.navigate.and.resolveTo(true)
 
 		await TestBed.configureTestingModule({
@@ -86,7 +96,7 @@ describe('GamePlay', () => {
 					useValue: {
 						getDailyCues: jasmine.createSpy('getDailyCues').and.returnValue(of(inProgressResponse)),
 						getDailyTodayInfo: jasmine.createSpy('getDailyTodayInfo').and.returnValue(of({ scheduled: false, puzzleDate: TODAY })),
-						getCues: jasmine.createSpy('getCues').and.returnValue(of({ triadGroupId: null, cues: null })),
+						getCues: jasmine.createSpy('getCues').and.returnValue(of(classicCuesResponse)),
 					},
 				},
 				{
@@ -99,9 +109,16 @@ describe('GamePlay', () => {
 					},
 				},
 				{
-					// Returns a no-op unsubscribe and a fixed Eastern date so init never routes home on rollover.
+					// Captures the re-entry handler and reads a mutable Eastern date, so a test can simulate
+					// returning to a backgrounded tab after the day has rolled over.
 					provide: DailyRolloverService,
-					useValue: { startEasternDayWatcher: () => jasmine.createSpy('stopEasternDayWatcher'), getEasternDateKey: () => TODAY },
+					useValue: {
+						startEasternDayWatcher: (handlers: { onReentryRollover?: () => void }) => {
+							reentryRollover = handlers.onReentryRollover
+							return jasmine.createSpy('stopEasternDayWatcher')
+						},
+						getEasternDateKey: () => currentEasternDateKey,
+					},
 				},
 				{ provide: DailyPostPlayService, useValue: { loadReviewTriads: () => Promise.resolve([]) } },
 				{ provide: DifficultyService, useValue: { getDifficulty: () => Difficulty.RANDOM, setDifficulty: jasmine.createSpy('setDifficulty') } },
@@ -159,5 +176,39 @@ describe('GamePlay', () => {
 
 		expect(store.solvedTriads().length).toBe(0)
 		expect(store.cues()).toEqual(inProgressResponse.cues)
+	})
+
+	// ADR-0002: the re-entry rollover guard now covers Classic Extra play, not just the Daily. A bonus
+	// board left open across the Eastern midnight must route the returning player home for a clean slate.
+	it('routes home on re-entry after the Eastern day changes during Classic Extra play', () => {
+		TestBed.inject(GlobalStore).setGameMode('classic')
+		component.ngOnInit()
+
+		// A new Eastern day began while the tab was backgrounded.
+		currentEasternDateKey = '2026-06-17'
+		reentryRollover?.()
+
+		expect(router.navigate).toHaveBeenCalledWith(['/'])
+	})
+
+	it('stays put on re-entry within the same Eastern day during Classic Extra play', () => {
+		TestBed.inject(GlobalStore).setGameMode('classic')
+		component.ngOnInit()
+
+		reentryRollover?.()
+
+		expect(router.navigate).not.toHaveBeenCalled()
+	})
+
+	it('routes home on re-entry after the Eastern day changes during the Daily', () => {
+		const store = TestBed.inject(GlobalStore)
+		localStorage.setItem(DAILY_GAME_SESSION_STORAGE_KEY, JSON.stringify(savedSessionWith(TODAY)))
+		store.setGameMode('daily')
+		component.ngOnInit()
+
+		currentEasternDateKey = '2026-06-17'
+		reentryRollover?.()
+
+		expect(router.navigate).toHaveBeenCalledWith(['/'])
 	})
 })

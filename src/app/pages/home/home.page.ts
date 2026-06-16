@@ -89,6 +89,10 @@ export class HomePage implements OnInit, OnDestroy {
 			},
 			onReentryRollover: () => {
 				this.easternCalendarLabel.set(this.dailyRolloverService.easternCalendarLabel())
+				// Dismiss any stale post-Daily popups left open across the rollover so they cannot
+				// linger over a refreshed home view showing today's puzzle (ADR-0002).
+				this.playMoreDialogOpen.set(false)
+				this.reviewDialogOpen.set(false)
 				this.loadTodayInfo()
 			},
 		})
