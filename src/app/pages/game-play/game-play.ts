@@ -243,7 +243,12 @@ export class GamePlay implements OnInit, OnDestroy {
 	}
 
 	initializeDailyGame() {
-		this.clearDailySession()
+		// Do NOT clear the saved daily session here. This method runs on every (re)entry to the
+		// board, including the full page reload iOS Safari performs after discarding a backgrounded
+		// tab. Clearing now would wipe resumable progress before the restore logic below can read it
+		// (the backend does not remember mid-game progress, so localStorage is the only source).
+		// Stale sessions are still handled where it matters: the no-schedule and already-completed
+		// branches clear explicitly, and a fresh puzzle overwrites the snapshot.
 		this.resetGameState()
 		this.store.setFinalClassicExtraSession(false)
 		this.cueFetchingState.set(RequestState.LOADING)
