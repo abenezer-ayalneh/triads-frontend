@@ -67,6 +67,8 @@ export class GameResultDialog {
 
 	readonly reviewError = signal<string | null>(null)
 
+	private celebrationPlayed = false
+
 	private readonly assetPreloadService = inject(AssetPreloadService)
 
 	readonly scoreGifPath = computed(() => {
@@ -166,7 +168,8 @@ export class GameResultDialog {
 			if (this.store.gameMode() === 'daily') {
 				this.showResultActions.set(true)
 				this.showPlayAgainButton.set(true)
-				if (result === 'WON' && gameScore === 15) {
+				if (result === 'WON' && gameScore === 15 && !this.celebrationPlayed) {
+					this.celebrationPlayed = true
 					this.assetPreloadService.playSound(CELEBRATION_SOUND_PATH, { volume: 0.7 })
 				}
 				return
@@ -191,8 +194,8 @@ export class GameResultDialog {
 				this.showResultActions.set(true)
 				this.showPlayAgainButton.set(canPlayAgain)
 
-				// Check if perfect score (15) - trigger celebration
-				if (gameScore === 15) {
+				if (gameScore === 15 && !this.celebrationPlayed) {
+					this.celebrationPlayed = true
 					this.assetPreloadService.playSound(CELEBRATION_SOUND_PATH, { volume: 0.7 })
 				}
 			}

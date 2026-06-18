@@ -135,3 +135,123 @@ describe('HomePage', () => {
 		expect(component.reviewDialogOpen()).toBeFalse()
 	})
 })
+
+// Trello KxOrLjJv: the next-day Welcome must render even when yesterday's session ended with the
+// Daily completed and one or more bonus games played — the backend's today-scoped response is the
+// only source of truth, the home page must not retain yesterday's "Daily Completed" state.
+describe('HomePage — next-day fresh state', () => {
+	let component: HomePage
+	let fixture: ComponentFixture<HomePage>
+	let routerEvents$: Subject<NavigationEnd>
+	let getDailyTodayInfo: jasmine.Spy
+	let reentryRollover: (() => void) | undefined
+	let timerRollover: (() => void) | undefined
+
+	const freshTodayResponse = {
+		scheduled: true as const,
+		puzzleDate: '2026-06-17',
+		triadGroupId: 42,
+		challengeNumber: 1,
+		hasCompletedDaily: false,
+		classicExtrasUsed: 0,
+		classicExtrasRemaining: 3,
+		classicExtrasLimit: 3,
+		canPlayClassic: false,
+		classicBlockedReason: 'daily_required' as const,
+	}
+
+	const yesterdayCompletedResponse = {
+		scheduled: true as const,
+		puzzleDate: '2026-06-16',
+		triadGroupId: 41,
+		challengeNumber: 0,
+		hasCompletedDaily: true,
+		classicExtrasUsed: 1,
+		classicExtrasRemaining: 2,
+		classicExtrasLimit: 3,
+		canPlayClassic: true,
+		classicBlockedReason: null,
+	}
+
+	beforeEach(async () => {
+		routerEvents$ = new Subject<NavigationEnd>()
+		reentryRollover = undefined
+		timerRollover = undefined
+		getDailyTodayInfo = jasmine.createSpy('getDailyTodayInfo').and.returnValue(of(freshTodayResponse))
+
+		const dailyPostPlayService = jasmine.createSpyObj<DailyPostPlayService>('DailyPostPlayService', ['loadCompletedDailySummary', 'shareScoreImage'])
+
+		await TestBed.configureTestingModule({
+			imports: [HomePage],
+			providers: [
+				{ provide: GamePlayApi, useValue: { getDailyTodayInfo } },
+				{ provide: Router, useValue: { events: routerEvents$, navigate: jasmine.createSpy('navigate') } },
+				{ provide: AssetPreloadService, useValue: { imageVersion: () => 0, getImageUrl: (path: string) => path } },
+				{ provide: DailyPostPlayService, useValue: dailyPostPlayService },
+				{
+					provide: DailyRolloverService,
+					useValue: {
+						easternCalendarLabel: () => ({ month: 'JUN', day: '17' }),
+						startEasternDayWatcher: (handlers: { onTimerRollover?: () => void; onReentryRollover?: () => void }) => {
+							timerRollover = handlers.onTimerRollover
+							reentryRollover = handlers.onReentryRollover
+							return jasmine.createSpy('stopEasternDayWatcher')
+						},
+					},
+				},
+				{ provide: SnackbarService, useValue: jasmine.createSpyObj<SnackbarService>('SnackbarService', ['showSnackbar']) },
+			],
+		}).compileComponents()
+
+		fixture = TestBed.createComponent(HomePage)
+		component = fixture.componentInstance
+		component.store.setUser({
+			username: 'TestPlayer01',
+			scores: { 15: 0, 12: 0, 10: 0, 8: 0, 6: 0, 3: 0, 0: 0 },
+			firstGameDate: null,
+		})
+	})
+
+	function detectChangesAndSettle() {
+		fixture.detectChanges()
+	}
+
+	it('renders the Welcome play-now button on day N+1 when today has no attempt yet', () => {
+		detectChangesAndSettle()
+
+		expect(component.dailyScheduled()).toBeTrue()
+		expect(component.dailyCompleted()).toBeFalse()
+
+		const playNowButton = fixture.nativeElement.querySelector('app-brain-warming-play-button') as HTMLElement | null
+		expect(playNowButton).toBeTruthy()
+
+		const playMoreButton = Array.from(fixture.nativeElement.querySelectorAll('button')).find((btn) =>
+			(btn as HTMLButtonElement).textContent?.includes('Play More'),
+		)
+		expect(playMoreButton).toBeFalsy()
+	})
+
+	it('refreshes from yesterday-completed to today-Welcome on a timer rollover', () => {
+		getDailyTodayInfo.and.returnValue(of(yesterdayCompletedResponse))
+		detectChangesAndSettle()
+		expect(component.dailyCompleted()).toBeTrue()
+
+		getDailyTodayInfo.and.returnValue(of(freshTodayResponse))
+		timerRollover?.()
+		detectChangesAndSettle()
+
+		expect(component.dailyCompleted()).toBeFalse()
+	})
+
+	it('refreshes from yesterday-completed to today-Welcome on a re-entry rollover', () => {
+		getDailyTodayInfo.and.returnValue(of(yesterdayCompletedResponse))
+		detectChangesAndSettle()
+		expect(component.dailyCompleted()).toBeTrue()
+
+		getDailyTodayInfo.and.returnValue(of(freshTodayResponse))
+		reentryRollover?.()
+		detectChangesAndSettle()
+
+		expect(component.dailyCompleted()).toBeFalse()
+	})
+})

@@ -62,6 +62,7 @@ const inProgressResponse: DailyCuesResponse = {
 	attemptStatus: 'IN_PROGRESS',
 	triadGroupId: 42,
 	cues: ['SECOND', 'POKER', 'SHAKE', 'DEAD', 'LAND', 'PIPE'],
+	progress: null,
 	puzzleDate: TODAY,
 	nextPuzzleAt: '2026-06-17T05:00:00.000Z',
 }
@@ -175,7 +176,7 @@ describe('GamePlay', () => {
 		component.ngOnInit()
 
 		expect(store.solvedTriads().length).toBe(0)
-		expect(store.cues()).toEqual(inProgressResponse.cues)
+		expect(store.cues()).toEqual(inProgressResponse.scheduled && !inProgressResponse.alreadyCompleted ? inProgressResponse.cues : null)
 	})
 
 	// ADR-0002: the re-entry rollover guard now covers Classic Extra play, not just the Daily. A bonus

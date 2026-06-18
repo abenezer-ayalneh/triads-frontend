@@ -2,7 +2,6 @@ import { DatePipe } from '@angular/common'
 import { Component, computed, effect, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core'
 import { FormsModule, ReactiveFormsModule } from '@angular/forms'
 import { Router } from '@angular/router'
-import { IonModal } from '@ionic/angular/standalone'
 import { gsap } from 'gsap'
 import { AnimationOptions, LottieComponent } from 'ngx-lottie'
 import { Subscription } from 'rxjs'
@@ -37,6 +36,7 @@ import { GamePlayLogic } from './services/game-play-logic'
 
 const LOADING_LOTTIE_PATH = 'lotties/loading-lottie.json'
 const DAILY_GAME_SESSION_STORAGE_KEY = 'triads_daily_game_session_v1'
+const DAILY_PROGRESS_SAVE_DEBOUNCE_MS = 500
 
 interface DailyGameSessionSnapshot {
 	puzzleDate: string
@@ -78,7 +78,6 @@ interface DailyGameSessionSnapshot {
 		BubbleContainer,
 		WelcomeDialog,
 		Intro,
-		IonModal,
 	],
 	templateUrl: './game-play.html',
 	styleUrl: './game-play.scss',
@@ -123,6 +122,8 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	welcomeDialogTotalPoints = signal<number>(0)
 
+	private welcomeShownThisSession = false
+
 	protected readonly RequestState = RequestState
 
 	protected readonly length = length
@@ -154,6 +155,24 @@ export class GamePlay implements OnInit, OnDestroy {
 	private readonly solutionSectionRef = viewChild<SolutionSection>('solutionSection')
 
 	private stopEasternDayWatcher: (() => void) | null = null
+
+	private dailyProgressSaveTimeout: ReturnType<typeof setTimeout> | null = null
+
+	private lastServerSavedSnapshot: string | null = null
+
+	private dailyProgressSubscription: Subscription | null = null
+
+	private pendingDailyProgressSnapshot: DailyGameSessionSnapshot | null = null
+
+	private readonly flushDailyProgressOnHide = () => {
+		if (document.visibilityState === 'hidden') {
+			this.sendPendingDailyProgressNow()
+		}
+	}
+
+	private readonly flushDailyProgressOnPagehide = () => {
+		this.sendPendingDailyProgressNow()
+	}
 
 	/**
 	 * Eastern-time date key for the play content currently on screen, for both Daily and Classic
@@ -193,7 +212,7 @@ export class GamePlay implements OnInit, OnDestroy {
 				return
 			}
 
-			this.saveDailySession({
+			const snapshot: DailyGameSessionSnapshot = {
 				puzzleDate,
 				triadGroupId,
 				cues: this.store.cues(),
@@ -214,7 +233,14 @@ export class GamePlay implements OnInit, OnDestroy {
 				gameScore: this.store.gameScore(),
 				unsolvedTriads: this.store.unsolvedTriads(),
 				dailyNextPuzzleAt: this.store.dailyNextPuzzleAt(),
-			})
+			}
+			this.saveDailySession(snapshot)
+			// Won/Lost is finalised via postDailyComplete; the server clears progress at that point, so
+			// don't also keep pushing snapshot patches after the game ends.
+			if (snapshot.gamePlayState === GamePlayState.WON || snapshot.gamePlayState === GamePlayState.LOST) {
+				return
+			}
+			this.queueDailyProgressServerSave(snapshot)
 		})
 	}
 
@@ -229,6 +255,11 @@ export class GamePlay implements OnInit, OnDestroy {
 			onReentryRollover: () => this.handlePlayReentryRollover(),
 		})
 		if (this.store.gameMode() === 'daily') {
+			// iOS Safari can kill a backgrounded tab without firing ngOnDestroy; flush the debounced
+			// progress save the moment the page becomes hidden so the server captures the latest
+			// snapshot before the tab is discarded.
+			document.addEventListener('visibilitychange', this.flushDailyProgressOnHide)
+			window.addEventListener('pagehide', this.flushDailyProgressOnPagehide)
 			this.initializeDailyGame()
 		} else {
 			this.initializeGame()
@@ -238,6 +269,11 @@ export class GamePlay implements OnInit, OnDestroy {
 	ngOnDestroy() {
 		this.stopEasternDayWatcher?.()
 		this.stopEasternDayWatcher = null
+		document.removeEventListener('visibilitychange', this.flushDailyProgressOnHide)
+		window.removeEventListener('pagehide', this.flushDailyProgressOnPagehide)
+		this.sendPendingDailyProgressNow()
+		this.dailyProgressSubscription?.unsubscribe()
+		this.dailyProgressSubscription = null
 		// Reset game state when navigating away from the gameplay page
 		if (this.store.gameMode() !== 'daily') {
 			this.resetGameState()
@@ -248,9 +284,16 @@ export class GamePlay implements OnInit, OnDestroy {
 		// Do NOT clear the saved daily session here. This method runs on every (re)entry to the
 		// board, including the full page reload iOS Safari performs after discarding a backgrounded
 		// tab. Clearing now would wipe resumable progress before the restore logic below can read it
-		// (the backend does not remember mid-game progress, so localStorage is the only source).
-		// Stale sessions are still handled where it matters: the no-schedule and already-completed
-		// branches clear explicitly, and a fresh puzzle overwrites the snapshot.
+		// (the backend now also stores progress, but it can fall behind on the very last few hundred
+		// ms before a tab is killed). Stale sessions are still handled where it matters: the
+		// no-schedule and already-completed branches clear explicitly, and a fresh puzzle overwrites
+		// the snapshot.
+		this.lastServerSavedSnapshot = null
+		this.pendingDailyProgressSnapshot = null
+		if (this.dailyProgressSaveTimeout) {
+			clearTimeout(this.dailyProgressSaveTimeout)
+			this.dailyProgressSaveTimeout = null
+		}
 		this.resetGameState()
 		this.store.setFinalClassicExtraSession(false)
 		this.cueFetchingState.set(RequestState.LOADING)
@@ -284,17 +327,30 @@ export class GamePlay implements OnInit, OnDestroy {
 						return
 					}
 
+					// Server-side progress is the durable source of truth — it survives iOS Safari
+					// clearing localStorage. Prefer it; only fall back to the local snapshot when the
+					// server hasn't seen progress yet (legacy attempts).
+					const serverSession = this.parseServerProgress(response.progress, response.puzzleDate, response.triadGroupId)
+					if (serverSession) {
+						this.applyDailySession(serverSession)
+						this.lastServerSavedSnapshot = JSON.stringify(serverSession)
+						return
+					}
+
 					const restoredSession = this.getSavedDailySession()
 					const canRestoreSession = restoredSession?.puzzleDate === response.puzzleDate && restoredSession?.triadGroupId === response.triadGroupId
 					if (canRestoreSession && restoredSession) {
 						this.applyDailySession(restoredSession)
+						// Server hasn't seen this snapshot yet — push it now so it's safe even if
+						// localStorage gets evicted before the next state change.
+						this.queueDailyProgressServerSave(restoredSession, { immediate: true })
 						return
 					}
 
 					this.store.setDailyNextPuzzleAt(response.nextPuzzleAt)
 					this.store.setCues(response.cues)
 					this.store.setTriadGroupId(response.triadGroupId)
-					this.saveDailySession({
+					const freshSnapshot: DailyGameSessionSnapshot = {
 						puzzleDate: response.puzzleDate,
 						triadGroupId: response.triadGroupId,
 						cues: response.cues,
@@ -315,7 +371,9 @@ export class GamePlay implements OnInit, OnDestroy {
 						gameScore: 0,
 						unsolvedTriads: null,
 						dailyNextPuzzleAt: response.nextPuzzleAt,
-					})
+					}
+					this.saveDailySession(freshSnapshot)
+					this.queueDailyProgressServerSave(freshSnapshot, { immediate: true })
 					this.cueFetchingState.set(RequestState.READY)
 					this.store.setGamePlayState(GamePlayState.PLAYING)
 				},
@@ -505,6 +563,10 @@ export class GamePlay implements OnInit, OnDestroy {
 			return
 		}
 
+		if (this.welcomeShownThisSession) {
+			return
+		}
+
 		const totalGamesPlayed = Object.values(user.scores).reduce((sum, count) => sum + count, 0)
 		if (totalGamesPlayed < 5) {
 			return
@@ -519,16 +581,26 @@ export class GamePlay implements OnInit, OnDestroy {
 
 		if (successRate >= 0.6) {
 			this.welcomeDialogTotalPoints.set(Math.round(successRate * 100))
+			this.welcomeShownThisSession = true
 			this.showWelcomeDialog.set(true)
-
-			const updatedUser = { ...user, welcomeMessageShown: true }
-			this.store.setUser(updatedUser)
-			this.store.userService.setUser(updatedUser)
 		}
 	}
 
 	onWelcomeDialogClosed() {
 		this.showWelcomeDialog.set(false)
+	}
+
+	onWelcomeDialogDontShowAgain() {
+		this.showWelcomeDialog.set(false)
+
+		const user = this.store.user()
+		if (!user) {
+			return
+		}
+
+		const updatedUser = { ...user, welcomeMessageShown: true }
+		this.store.setUser(updatedUser)
+		this.store.userService.setUser(updatedUser)
 	}
 
 	private resetGameState() {
@@ -642,6 +714,64 @@ export class GamePlay implements OnInit, OnDestroy {
 
 	private clearDailySession() {
 		localStorage.removeItem(DAILY_GAME_SESSION_STORAGE_KEY)
+	}
+
+	private parseServerProgress(
+		raw: Record<string, unknown> | null | undefined,
+		puzzleDate: string,
+		triadGroupId: string | number,
+	): DailyGameSessionSnapshot | null {
+		if (!raw || typeof raw !== 'object') {
+			return null
+		}
+		const snapshot = raw as Partial<DailyGameSessionSnapshot>
+		if (snapshot.puzzleDate !== puzzleDate || snapshot.triadGroupId !== triadGroupId) {
+			return null
+		}
+		return snapshot as DailyGameSessionSnapshot
+	}
+
+	private queueDailyProgressServerSave(snapshot: DailyGameSessionSnapshot, options: { immediate?: boolean } = {}) {
+		const serialized = JSON.stringify(snapshot)
+		if (serialized === this.lastServerSavedSnapshot) {
+			return
+		}
+		this.pendingDailyProgressSnapshot = snapshot
+		if (this.dailyProgressSaveTimeout) {
+			clearTimeout(this.dailyProgressSaveTimeout)
+			this.dailyProgressSaveTimeout = null
+		}
+		if (options.immediate) {
+			this.sendPendingDailyProgressNow()
+			return
+		}
+		this.dailyProgressSaveTimeout = setTimeout(() => this.sendPendingDailyProgressNow(), DAILY_PROGRESS_SAVE_DEBOUNCE_MS)
+	}
+
+	private sendPendingDailyProgressNow() {
+		if (this.dailyProgressSaveTimeout) {
+			clearTimeout(this.dailyProgressSaveTimeout)
+			this.dailyProgressSaveTimeout = null
+		}
+		const snapshot = this.pendingDailyProgressSnapshot
+		if (!snapshot) {
+			return
+		}
+		const serialized = JSON.stringify(snapshot)
+		if (serialized === this.lastServerSavedSnapshot) {
+			this.pendingDailyProgressSnapshot = null
+			return
+		}
+		this.pendingDailyProgressSnapshot = null
+		this.lastServerSavedSnapshot = serialized
+		this.dailyProgressSubscription?.unsubscribe()
+		this.dailyProgressSubscription = this.gamePlayApi.putDailyProgress(snapshot as unknown as Record<string, unknown>).subscribe({
+			error: () => {
+				// Allow a retry on the next change if the save failed.
+				this.lastServerSavedSnapshot = null
+			},
+		})
+		this.subscriptions$.add(this.dailyProgressSubscription)
 	}
 
 	private refreshClassicExtraQuota() {
