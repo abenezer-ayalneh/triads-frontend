@@ -157,11 +157,10 @@
 	}
 
 	<!--Welcome Dialog-->
-	@if (store.gameMode() !== 'daily') {
-		<ion-modal [isOpen]="showWelcomeDialog()" (didDismiss)="onWelcomeDialogClosed()">
-			<ng-template>
-				<app-welcome-dialog [totalPoints]="welcomeDialogTotalPoints()" (whenClosed)="onWelcomeDialogClosed()" />
-			</ng-template>
-		</ion-modal>
+	@if (store.gameMode() !== 'daily' && showWelcomeDialog()) {
+		<app-welcome-dialog
+			[totalPoints]="welcomeDialogTotalPoints()"
+			(whenClosed)="onWelcomeDialogClosed()"
+			(whenDontShowAgain)="onWelcomeDialogDontShowAgain()" />
 	}
 </div>

@@ -1,4 +1,4 @@
-import { afterNextRender, Component, input, output, signal } from '@angular/core'
+import { Component, input, output } from '@angular/core'
 
 import { Dialog } from '../../../../shared/components/dialog/dialog'
 
@@ -13,13 +13,7 @@ export class WelcomeDialog {
 
 	whenClosed = output<void>()
 
-	isOpen = signal(true)
-
-	constructor() {
-		afterNextRender(() => {
-			this.isOpen.set(true)
-		})
-	}
+	whenDontShowAgain = output<void>()
 
 	getMessage(): string {
 		return 'You’re good at Triads!  Remember, you can click your name to change the difficulty level at any time.'
@@ -29,7 +23,11 @@ export class WelcomeDialog {
 		this.whenClosed.emit()
 	}
 
-	onBackdropClick(event: Event) {
+	onDontShowAgain() {
+		this.whenDontShowAgain.emit()
+	}
+
+	onBackdropClick(event: MouseEvent) {
 		if (event.target === event.currentTarget) {
 			this.onClose()
 		}

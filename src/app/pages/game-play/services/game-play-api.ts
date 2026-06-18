@@ -45,6 +45,7 @@ export type DailyCuesResponse =
 			attemptStatus: 'IN_PROGRESS'
 			triadGroupId: number
 			cues: string[]
+			progress: Record<string, unknown> | null
 			puzzleDate: string
 			nextPuzzleAt: string
 	  }
@@ -67,6 +68,12 @@ export class GamePlayApi {
 		return this.httpClient.post<{ ok: true; puzzleDate: string; nextPuzzleAt: string }>('triads/daily/complete', {
 			outcome,
 			score,
+		})
+	}
+
+	putDailyProgress(progress: Record<string, unknown>) {
+		return this.httpClient.put<{ ok: true; ignored: boolean }>('triads/daily/progress', {
+			progress,
 		})
 	}
 

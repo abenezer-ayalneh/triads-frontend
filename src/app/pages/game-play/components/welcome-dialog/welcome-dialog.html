@@ -1,6 +1,10 @@
-<app-dialog title="Welcome to Triads!" (whenClosed)="onClose()">
-	<p class="text-base md:text-lg">{{ getMessage() }}</p>
-	<div class="flex gap-2 landscape:max-md:gap-2 md:gap-3 justify-end">
-		<button class="btn btn-sm md:btn-md btn-primary" (click)="onClose()">Got it!</button>
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 backdrop-blur-sm px-4 overflow-y-auto" (click)="onBackdropClick($event)">
+	<div class="w-full max-w-md max-h-[90vh] flex flex-col bg-base-100 rounded-lg shadow-xl overflow-hidden">
+		<app-dialog title="Welcome to Triads!" (whenClosed)="onClose()">
+			<p class="text-base md:text-lg">{{ getMessage() }}</p>
+			<div class="flex gap-2 landscape:max-md:gap-2 md:gap-3 justify-end">
+				<button type="button" class="btn btn-sm md:btn-md btn-primary" (click)="onDontShowAgain()">Don't Show Again</button>
+			</div>
+		</app-dialog>
 	</div>
-</app-dialog>
+</div>

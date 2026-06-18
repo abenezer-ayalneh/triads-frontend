@@ -235,9 +235,9 @@ export class SolutionSection implements OnInit, AfterViewChecked, OnDestroy {
 	}
 
 	submitAnswer(answer: string | null) {
-		const trimmedAnswer = answer?.trim() ?? null
+		const trimmedAnswer = answer?.trim() ?? ''
 		const selectedCues = this.store.selectedCues()
-		if (trimmedAnswer !== null && trimmedAnswer.length > 0 && selectedCues && selectedCues.length === 3) {
+		if (trimmedAnswer.length > 0 && selectedCues && selectedCues.length === 3) {
 			this.store.setIsCheckingAnswer(true)
 			this.subscriptions$.add(
 				this.gamePlayApi.checkAnswer(selectedCues, trimmedAnswer).subscribe({

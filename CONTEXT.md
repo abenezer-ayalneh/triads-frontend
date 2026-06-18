@@ -31,3 +31,11 @@ _Avoid_: Date stamp, calendar icon
 **Eastern Day Watcher**:
 The shared service mechanism that detects rollover. It exposes two distinct signals: a live midnight-timer rollover and a re-entry (focus/visibility) rollover, so consumers can react to each independently.
 _Avoid_: Day timer, midnight watcher
+
+**Classic Extra**:
+A Classic game a player may start _after_ finishing today's Daily, capped at a small daily allowance and reset by the Daily Rollover. Locked until today's Daily is completed.
+_Avoid_: Bonus game, extra game, play more
+
+**Play-More Prompt**:
+The post-Daily invitation to start another Classic Extra, showing how many of the day's allowance remain. Appears both on the home screen and after a Classic Extra ends.
+_Avoid_: Play again screen, second-game page
